@@ -2971,16 +2971,6 @@
             showToast(`🎉 歡迎回來，${currentMemberName}！已升級每日 5 抽`);
         }
 
-        function loginWithGoogle() {
-            isMemberLoggedIn = true;
-            isAdminLoggedIn = false;
-            currentMemberName = 'Google食家';
-            dailyMaxQuota = 5;
-            dailyRemainingQuota = 5;
-            closeAuthModal();
-            updateQuotaUI();
-            showToast('🎉 已透過 Google 帳號成功登入！');
-        }
 
         function loginWithApple() {
             isMemberLoggedIn = true;
@@ -6046,7 +6036,7 @@ function doPost(e) {
             await syncAllDataFromGoogleSheetV4(false);
         };
     </script>
-    <!-- ==================== FIREBASE 真實會員登入與食評即時同步模組 ==================== -->
+   <!-- ==================== FIREBASE 真實會員登入與食評即時同步模組 ==================== -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { 
@@ -6070,7 +6060,6 @@ function doPost(e) {
         onSnapshot 
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    // 1. 初始化你的 pickforyou-hk Firebase 專案
     const firebaseConfig = {
         apiKey: "AIzaSyB29jk5aIgU0aBrJhldq0NEQEcx5iEv3SM",
         authDomain: "pickforyou-hk.firebaseapp.com",
@@ -6085,8 +6074,37 @@ function doPost(e) {
     const auth = getAuth(app);
     const db = getFirestore(app);
     const googleProvider = new GoogleAuthProvider();
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-    // 2. 將會員資料寫入 Firestore 的 users 集合
+    // 在登入視窗標題加上「🟢 雲端已連線」標記，方便確認新版程式碼已生效
+    const modalTitle = document.querySelector('#auth-modal h3');
+    if (modalTitle) {
+        modalTitle.innerHTML = '🔑 會員 / 管理員登入 <span class="text-[10px] text-emerald-400 font-mono-tag">(🟢 雲端已連線)</span>';
+    }
+
+    // 修正切換「登入 / 註冊」分頁時的底部按鈕文字
+    window.switchAuthTab = function(tab) {
+        const loginBtn = document.getElementById('auth-tab-login');
+        const regBtn = document.getElementById('auth-tab-register');
+        const extra = document.getElementById('auth-register-extra');
+        const submitBtn = document.getElementById('auth-submit-btn');
+        const errEl = document.getElementById('auth-error-msg');
+        if (errEl) errEl.classList.add('hidden');
+
+        if (tab === 'register') {
+            if (regBtn) regBtn.className = 'py-1.5 rounded text-xs font-black bg-pink-600 text-white';
+            if (loginBtn) loginBtn.className = 'py-1.5 rounded text-xs font-black text-gray-400';
+            if (extra) extra.classList.remove('hidden');
+            if (submitBtn) submitBtn.textContent = '立即免費註冊';
+        } else {
+            if (loginBtn) loginBtn.className = 'py-1.5 rounded text-xs font-black bg-pink-600 text-white';
+            if (regBtn) regBtn.className = 'py-1.5 rounded text-xs font-black text-gray-400';
+            if (extra) extra.classList.add('hidden');
+            if (submitBtn) submitBtn.textContent = '立即登入';
+        }
+    };
+
+    // 將真實會員資料寫入 Firestore 的 users 集合
     async function syncMemberToFirestore(user, customNickname = null) {
         if (!user) return;
         const userRef = doc(db, "users", user.uid);
@@ -6120,7 +6138,7 @@ function doPost(e) {
         }
     }
 
-    // 3. 監聽跨裝置登入狀態 (自動保持登入)
+    // 監聽真实 Firebase 登入狀態
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             isAdminLoggedIn = false;
@@ -6142,27 +6160,35 @@ function doPost(e) {
         }
     });
 
-    // 4. 接管「使用 Google 帳號一鍵登入」按鈕
+    // 真實 Google 彈窗登入
     window.loginWithGoogle = async function() {
         const errEl = document.getElementById('auth-error-msg');
         if (errEl) errEl.classList.add('hidden');
         try {
             const result = await signInWithPopup(auth, googleProvider);
             const user = result.user;
+            currentMemberName = user.displayName || (user.email ? user.email.split('@')[0] : "Google食家");
             await syncMemberToFirestore(user);
             closeAuthModal();
-            showToast(`🎉 歡迎 ${user.displayName || '食家'}！已透過 Google 登入並升級每日 5 抽`);
+            updateQuotaUI();
+            showToast(`🎉 歡迎 ${currentMemberName}！已透過 Google 真實帳號登入`);
         } catch (err) {
             console.error("Google 登入錯誤:", err);
+            let errMsg = `⚠️ Google 登入失敗 (${err.code || '未知錯誤'})`;
+            if (err.code === 'auth/unauthorized-domain') {
+                errMsg = "⚠️ 網域未授權：請到 Firebase Authentication -> 設定 -> 已授權網域 新增 pickforyouhk.github.io";
+            } else if (err.code === 'auth/popup-closed-by-user') {
+                errMsg = "⚠️ 你關閉了 Google 登入彈出視窗，請重新點擊登入";
+            }
             if (errEl) {
-                errEl.textContent = "⚠️ Google 登入失敗：請確認已在 pickforyouhk.github.io 正式網址操作並允許彈出視窗";
+                errEl.textContent = errMsg;
                 errEl.classList.remove('hidden');
             }
-            showToast("⚠️ Google 登入未完成，請確認彈出視窗或網域授權設定");
+            showToast(errMsg);
         }
     };
 
-    // 5. 接管「電郵登入 / 免費註冊 / 管理員登入」按鈕
+    // 真實電郵註冊 / 登入 / 管理員登入
     window.submitAuthForm = async function() {
         const email = document.getElementById('auth-email').value.trim();
         const pwd = document.getElementById('auth-password').value.trim();
@@ -6171,7 +6197,6 @@ function doPost(e) {
         const errEl = document.getElementById('auth-error-msg');
         if (errEl) errEl.classList.add('hidden');
 
-        // 保留原有管理員帳號 (admin / 8888)
         if (email.toLowerCase() === 'admin' && pwd === '8888') {
             isAdminLoggedIn = true;
             isMemberLoggedIn = true;
@@ -6213,8 +6238,9 @@ function doPost(e) {
                 showToast(`🎉 歡迎回來，${cred.user.displayName || email.split('@')[0]}！`);
             }
         } catch (err) {
-            let msg = "⚠️ 登入或註冊失敗，請檢查電郵與密碼";
+            let msg = `⚠️ 失敗 (${err.code || '請檢查設定'})`;
             if (err.code === 'auth/email-already-in-use') msg = "⚠️ 此電郵已經註冊過，請切換至「登入」分頁";
+            else if (err.code === 'auth/operation-not-allowed') msg = "⚠️ 請先到 Firebase Authentication -> 登入方式 啟用「電子郵件/密碼」";
             else if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') msg = "⚠️ 電郵或密碼不正確，如未有帳號請先點選上方「註冊」";
             if (errEl) {
                 errEl.textContent = msg;
@@ -6224,7 +6250,7 @@ function doPost(e) {
         }
     };
 
-    // 6. 接管「登出」邏輯
+    // 登出邏輯
     window.handleAuthClick = async function() {
         if (isMemberLoggedIn || isAdminLoggedIn) {
             try { await signOut(auth); } catch (e) {}
@@ -6243,12 +6269,11 @@ function doPost(e) {
         }
     };
 
-    // 7. Firestore 食評討論專區 (community_posts) 毫秒級即時監聽
+    // 食評討論專區 (community_posts) 即時同步
     const postsCol = collection(db, "community_posts");
     let hasSeededInitialPosts = false;
 
     onSnapshot(postsCol, async (snapshot) => {
-        // 若雲端資料庫首次啟用為空白，自動將網站原有的預設食評寫入雲端
         if (snapshot.empty && !hasSeededInitialPosts) {
             hasSeededInitialPosts = true;
             for (let i = 0; i < communityPostsDB.length; i++) {
@@ -6285,11 +6310,8 @@ function doPost(e) {
             writeLSv3(LS_V3.POSTS, communityPostsDB);
             renderCommunityPosts();
         }
-    }, (err) => {
-        console.warn("Firestore 即時食評監聽提示:", err);
     });
 
-    // 8. 接管「發佈食評討論帖」-> 即時寫入 Firestore 並同步所有用戶畫面
     window.submitCommunityPost = async function() {
         const author = document.getElementById('post-author-input').value.trim() || currentMemberName || '匿名食家';
         const rest = document.getElementById('post-rest-input').value.trim() || '香港地道食店';
@@ -6329,21 +6351,13 @@ function doPost(e) {
             writeLSv3(LS_V3.VOTES, votes);
             showToast('🚀 食評已即時同步至全港用戶畫面！');
         } catch (err) {
-            console.error("發佈食評失敗:", err);
             showToast('⚠️ 發佈失敗，請檢查網絡連線');
         }
-
-        // 保留原有 Google Sheet 備份通道
-        try {
-            await postToSheetV4('reviews', [postId, author, rest, dist, nowStr, encodeCloudImageV4(img), content]);
-        } catch (e) {}
     };
 
-    // 9. 接管「點讚 / Dislike」-> 即時更新 Firestore
     window.voteCommunityPost = async function(postId, type) {
         const post = communityPostsDB.find(p => p.id === postId);
         if (!post) return;
-
         let newLikes = post.likes || 0;
         let newDislikes = post.dislikes || 0;
         let nextVote = post.userVote;
@@ -6365,17 +6379,9 @@ function doPost(e) {
         else delete votes[postId];
         writeLSv3(LS_V3.VOTES, votes);
 
-        try {
-            await updateDoc(doc(db, "community_posts", postId), {
-                likes: newLikes,
-                dislikes: newDislikes
-            });
-        } catch (err) {
-            console.error("更新點讚失敗:", err);
-        }
+        await updateDoc(doc(db, "community_posts", postId), { likes: newLikes, dislikes: newDislikes });
     };
 
-    // 10. 接管「新增食評留言」-> 即時更新 Firestore
     window.addCommunityComment = async function(postId) {
         const input = document.getElementById(`comment-input-${postId}`);
         if (!input) return;
@@ -6385,32 +6391,15 @@ function doPost(e) {
         if (!post) return;
 
         const commentUser = isMemberLoggedIn ? currentMemberName : '食家網友';
-        const updatedComments = [...(post.comments || []), {
-            user: commentUser,
-            text: text,
-            time: new Date().toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit', hour12: false })
-        }];
+        const updatedComments = [...(post.comments || []), { user: commentUser, text: text }];
         input.value = '';
-
-        try {
-            await updateDoc(doc(db, "community_posts", postId), {
-                comments: updatedComments
-            });
-            showToast('💬 留言已即時同步發佈！');
-        } catch (err) {
-            console.error("發佈留言失敗:", err);
-        }
+        await updateDoc(doc(db, "community_posts", postId), { comments: updatedComments });
+        showToast('💬 留言已即時同步發佈！');
     };
 
-    // 11. 接管管理員「刪除食評」-> 即時從 Firestore 移除
     window.deleteCommunityPost = async function(postId) {
-        try {
-            await deleteDoc(doc(db, "community_posts", postId));
-            showToast('🗑️ 已從雲端即時刪除該篇食評討論帖');
-        } catch (err) {
-            console.error("刪除食評失敗:", err);
-        }
+        await deleteDoc(doc(db, "community_posts", postId));
+        showToast('🗑️ 已從雲端即時刪除該篇食評討論帖');
     };
-</script>
 </body>
 </html>
