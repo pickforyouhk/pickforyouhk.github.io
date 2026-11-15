@@ -423,16 +423,7 @@
                     </div>
                 </div>
 
-                <!-- 桌面版直達導航捷徑 (加入 whitespace-nowrap 防止折行) -->
-                <nav class="hidden lg:flex items-center space-x-1 bg-gray-900 px-1.5 py-1 rounded-xl border border-gray-800 overflow-x-auto no-scrollbar">
-                    <button onclick="switchModule('home')" id="top-nav-home" class="whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-black bg-pink-600 text-white transition">🎲 抽籤首頁</button>
-                    <button onclick="switchModule(1)" id="top-nav-1" class="whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:bg-gray-800 transition">🍴 85站盲盒</button>
-                    <button onclick="switchModule('nearby')" id="top-nav-nearby" class="whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:bg-gray-800 transition">📍 附近1KM</button>
-                    <button onclick="switchModule(2)" id="top-nav-2" class="whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:bg-gray-800 transition">🍳 三餐拍板</button>
-                    <button onclick="switchModule('news')" id="top-nav-news" class="whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:bg-gray-800 transition">⚡ 美食快訊</button>
-                    <button onclick="switchModule('community')" id="top-nav-community" class="whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:bg-gray-800 transition">📸 食評牆</button>
-                    <button onclick="switchModule(8)" id="top-nav-8" class="whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:bg-gray-800 transition">📖 餐廳名單</button>
-                </nav>
+                <!-- 已精簡頂部重複功能欄，統一由左上角 ☰ 功能選單導航 -->
 
                 <!-- 右側模式與會員按鈕 (手機版自動精簡寬度，確保登入鍵 100% 完整顯示) -->
                 <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
@@ -481,7 +472,7 @@
                 <div class="space-y-1">
                     <div class="text-[9px] font-mono-tag uppercase tracking-wider text-gray-500 px-2 mb-0.5">DISCOVERY & NEWS</div>
                     <button onclick="switchModule('home'); toggleSideMenu();" id="nav-btn-home" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-bold bg-pink-600 text-white transition">
-                        <span>🏠 抽籤首頁</span>
+                        <span>🏠 首頁</span>
                     </button>
                     <button onclick="switchModule('news'); toggleSideMenu();" id="nav-btn-news" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-bold text-gray-300 hover:bg-gray-800 transition">
                         <span>⚡ 每日最新飲食資訊</span>
@@ -527,7 +518,7 @@
             <!-- 回首頁快捷導航 -->
             <div id="step-back-bar" class="hidden flex items-center justify-end">
                 <button onclick="switchModule('home')" class="shrink-0 px-4 py-1.5 rounded-xl bg-gray-800 hover:bg-pink-600 border border-gray-700 text-xs font-black text-white shadow-xs transition">
-                    🏠 返回抽籤首頁
+                    🏠 返回首頁
                 </button>
             </div>
 
@@ -598,8 +589,8 @@
                                     <span class="text-xs font-mono-tag font-black uppercase tracking-wider text-white">INSTANT GACHA MACHINE // 1秒極速抽籤機</span>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-1.5">
-                                    <!-- 一般用戶顯示的簡潔狀態（不出現 Google Sheet 或讀取數據字眼） -->
-                                    <span id="home-public-ready-badge" class="text-[11px] font-mono-tag font-bold text-emerald-400">✨ 全港 85 站食肆已就緒</span>
+                                    <!-- 一般用戶不顯示雲端同步或資料庫餐廳數量（僅管理員可見雲端控制列） -->
+                                    <span id="home-public-ready-badge" class="hidden"></span>
 
                                     <!-- 🛡️ 管理員專屬雲端控制列（登入 Admin 後才顯示） -->
                                     <div id="home-admin-cloud-bar" class="hidden flex-wrap items-center gap-1.5">
@@ -952,7 +943,7 @@
 
                     <div class="p-4 rounded-xl bg-gradient-to-br from-emerald-950/60 via-gray-900 to-gray-900 border border-emerald-500/30 text-center space-y-3">
                         <div class="text-xs text-gray-300">
-                            在 <strong id="nearby-summary-station" class="text-emerald-300">荃灣</strong> 距離 <strong id="nearby-summary-dist" class="text-amber-300">500米</strong> 內共有 <strong id="nearby-summary-count" class="text-pink-400 font-mono-tag">0</strong> 間候選餐廳
+                            目前鎖定：<strong id="nearby-summary-station" class="text-emerald-300">荃灣</strong> 步行距離 <strong id="nearby-summary-dist" class="text-amber-300">500米</strong> 範圍內食肆<span id="nearby-admin-count-wrap" class="hidden">（🛡️ Admin：共 <strong id="nearby-summary-count" class="text-pink-400 font-mono-tag">0</strong> 間）</span>
                         </div>
                         <div id="nearby-rolling-display" class="hidden py-2 px-4 rounded-xl bg-gray-950/80 border border-emerald-500/40 text-base sm:text-xl font-black text-amber-300">
                             🎲 正在掃描附近食肆...
@@ -3372,6 +3363,11 @@
             if (stEl) stEl.textContent = currentNearbyStation;
             if (distEl) distEl.textContent = `${currentNearbyDistance}米`;
             if (countEl) countEl.textContent = candidates.length;
+            const nearbyAdminWrap = document.getElementById('nearby-admin-count-wrap');
+            if (nearbyAdminWrap) {
+                if (isAdminLoggedIn) nearbyAdminWrap.classList.remove('hidden');
+                else nearbyAdminWrap.classList.add('hidden');
+            }
 
             if (chipsEl) {
                 chipsEl.innerHTML = candidates.map(r => `
@@ -3560,9 +3556,10 @@
                             const count = m === '全部商場/街區'
                                 ? stationPool.length
                                 : stationPool.filter(r => (r.mall || '').trim() === m).length;
+                            const countSuffix = isAdminLoggedIn ? ` (${count}間)` : '';
                             const displayLabel = m === '全部商場/街區'
-                                ? `🏬 全部商場 / 街區 (預設全部・共 ${count} 間)`
-                                : `📍 ${m} (${count}間)`;
+                                ? `🏬 全部商場 / 街區 (預設全部${isAdminLoggedIn ? '・共 ' + count + ' 間' : ''})`
+                                : `📍 ${m}${countSuffix}`;
                             const safeVal = m.replace(/"/g, '&quot;');
                             return `<option value="${safeVal}" ${m === currentGachaMall ? 'selected' : ''}>${displayLabel}</option>`;
                         }).join('')}
@@ -3590,10 +3587,14 @@
             const el = document.getElementById('gacha-filter-summary');
             const pool = getFilteredGachaPool();
             if (el) {
-                const cloudNote = lastCloudSyncReport && lastCloudSyncReport.restRowsCount > 0
-                    ? ` <span class="text-emerald-400 font-mono-tag">(雲端已自動同步 ${lastCloudSyncReport.restRowsCount} 間)</span>`
-                    : '';
-                el.innerHTML = `目前篩選：<strong class="text-amber-300">${currentGachaStation}</strong> • <strong class="text-emerald-300">${currentGachaMall}</strong> • <strong class="text-pink-400">${currentGachaCuisine}</strong>（共 <strong class="text-white font-mono-tag">${pool.length}</strong> 間候選）${cloudNote}`;
+                if (isAdminLoggedIn) {
+                    const cloudNote = lastCloudSyncReport && lastCloudSyncReport.restRowsCount > 0
+                        ? ` <span class="text-emerald-400 font-mono-tag">[🛡️ Admin：資料庫候選 ${pool.length} 間｜雲端已同步 ${lastCloudSyncReport.restRowsCount} 間]</span>`
+                        : ` <span class="text-emerald-400 font-mono-tag">[🛡️ Admin：資料庫候選 ${pool.length} 間]</span>`;
+                    el.innerHTML = `目前篩選：<strong class="text-amber-300">${currentGachaStation}</strong> • <strong class="text-emerald-300">${currentGachaMall}</strong> • <strong class="text-pink-400">${currentGachaCuisine}</strong>${cloudNote}`;
+                } else {
+                    el.innerHTML = `目前篩選：<strong class="text-amber-300">${currentGachaStation}</strong> • <strong class="text-emerald-300">${currentGachaMall}</strong> • <strong class="text-pink-400">${currentGachaCuisine}</strong>`;
+                }
             }
         }
 
@@ -3736,9 +3737,10 @@
             });
 
             if (summary) {
+                const adminCountTag = isAdminLoggedIn ? `（🛡️ Admin：共 ${list.length} 間）` : '';
                 summary.textContent = kw
-                    ? `🔍 搜尋「${kw}」結果（共 ${list.length} 間）`
-                    : `🚇 ${dirStation}站 • ${dirCuisine}（共 ${list.length} 間）`;
+                    ? `🔍 搜尋「${kw}」結果${adminCountTag}`
+                    : `🚇 ${dirStation}站 • ${dirCuisine}${adminCountTag}`;
             }
 
             if (container) {
@@ -5855,7 +5857,7 @@ function doPost(e) {
                     statusBadge.className = 'cursor-pointer text-[11px] font-mono-tag font-bold text-emerald-400 hover:underline';
                 }
                 if (publicBadge) {
-                    publicBadge.textContent = `✨ 全港 85 站食肆已就緒 (${lastCloudSyncReport.restRowsCount}間雲端同步)`;
+                    publicBadge.textContent = '';
                 }
                 if (liveDot) {
                     liveDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
@@ -6143,6 +6145,10 @@ function doPost(e) {
             }
         }
         window.renderHomeHotReviews();
+        if (typeof renderGachaMallsAndCuisines === 'function') renderGachaMallsAndCuisines();
+        if (typeof updateGachaSummary === 'function') updateGachaSummary();
+        if (typeof renderDirectoryListOnly === 'function') renderDirectoryListOnly();
+        if (typeof renderNearbyCandidates === 'function') renderNearbyCandidates();
     };
 
     // 4. 在每次渲染食評列表時，同步更新首頁熱門評論與未登入留言框提示
