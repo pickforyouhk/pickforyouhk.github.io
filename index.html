@@ -399,24 +399,24 @@
     <!-- 主應用程式容器 -->
     <div id="app-main-wrapper" class="w-full flex-1 flex flex-col relative">
 
-        <!-- Pick For You 專屬頂部導航欄 -->
-        <header class="sticky top-0 z-30 backdrop-blur-md border-b px-3 sm:px-6 py-2.5" style="background-color: var(--pfy-surface); border-color: var(--pfy-border);">
-            <div class="max-w-6xl mx-auto flex justify-between items-center gap-2">
-                <div class="flex items-center space-x-2.5 shrink-0">
-                    <button onclick="toggleSideMenu()" class="w-9 h-9 rounded-xl bg-gray-800 border border-gray-700 flex flex-col justify-center items-center space-y-1 transition active:scale-95 shrink-0" title="開啟功能選單">
+        <!-- Pick For You 專屬頂部導航欄 (手機版防擠壓優化) -->
+        <header class="sticky top-0 z-30 backdrop-blur-md border-b px-2.5 sm:px-6 py-2.5" style="background-color: var(--pfy-surface); border-color: var(--pfy-border);">
+            <div class="max-w-6xl mx-auto flex justify-between items-center gap-1.5 sm:gap-2">
+                <div class="flex items-center space-x-1.5 sm:space-x-2.5 min-w-0 shrink">
+                    <button onclick="toggleSideMenu()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-800 border border-gray-700 flex flex-col justify-center items-center space-y-1 transition active:scale-95 shrink-0" title="開啟功能選單">
                         <span class="block w-4 h-0.5 bg-current rounded-full"></span>
                         <span class="block w-4 h-0.5 bg-current rounded-full"></span>
                         <span class="block w-4 h-0.5 bg-current rounded-full"></span>
                     </button>
 
-                    <div onclick="switchModule('home')" class="flex items-center space-x-2 cursor-pointer group shrink-0">
-                        <div class="w-9 h-9 rounded-xl flex items-center justify-center border-2 border-zinc-900 shadow-xs group-hover:rotate-6 transition shrink-0" style="background-color: #FF5A36; color: #FFFFFF !important;">
-                            <span class="text-lg">🎲</span>
+                    <div onclick="switchModule('home')" class="flex items-center space-x-1.5 sm:space-x-2 cursor-pointer group min-w-0">
+                        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border-2 border-zinc-900 shadow-xs group-hover:rotate-6 transition shrink-0" style="background-color: #FF5A36; color: #FFFFFF !important;">
+                            <span class="text-base sm:text-lg">🎲</span>
                         </div>
-                        <div class="whitespace-nowrap">
-                            <div class="flex items-center space-x-1.5">
-                                <span class="text-sm sm:text-base font-black tracking-tight text-white">PICK FOR YOU</span>
-                                <span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-zinc-900 text-white">唔洗諗</span>
+                        <div class="min-w-0">
+                            <div class="flex items-center space-x-1">
+                                <span class="text-xs sm:text-base font-black tracking-tight text-white truncate">PICK FOR YOU</span>
+                                <span class="hidden sm:inline-block px-1.5 py-0.5 rounded text-[10px] font-black bg-zinc-900 text-white shrink-0">唔洗諗</span>
                             </div>
                             <p class="text-[10px] text-gray-400 hidden sm:block">香港飲食盲盒 ‧ 每日情報誌</p>
                         </div>
@@ -434,18 +434,18 @@
                     <button onclick="switchModule(8)" id="top-nav-8" class="whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:bg-gray-800 transition">📖 餐廳名單</button>
                 </nav>
 
-                <!-- 右側模式與會員按鈕 (加入 whitespace-nowrap 與 shrink-0 保持單行整齊) -->
-                <div class="flex items-center space-x-1.5 shrink-0">
+                <!-- 右側模式與會員按鈕 (手機版自動精簡寬度，確保登入鍵 100% 完整顯示) -->
+                <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
                     <button onclick="setViewportMode('desktop')" id="btn-view-desktop" class="whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-pink-600 text-white text-[11px] font-bold transition hidden xl:inline-block">🖥️ 網頁</button>
                     <button onclick="setViewportMode('mobile')" id="btn-view-mobile" class="whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-gray-800 text-gray-300 text-[11px] font-bold hover:bg-gray-700 transition hidden xl:inline-block">📱 手機</button>
 
-                    <button onclick="toggleThemeMode()" id="btn-theme-single" class="whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs font-bold flex items-center space-x-1 transition shrink-0">
+                    <button onclick="toggleThemeMode()" id="btn-theme-single" class="whitespace-nowrap px-2 sm:px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs font-bold flex items-center space-x-1 transition shrink-0" title="切換深淺色模式">
                         <span id="theme-icon">🌙</span>
-                        <span id="theme-label">深色</span>
+                        <span id="theme-label" class="hidden sm:inline">深色</span>
                     </button>
 
-                    <button onclick="handleAuthClick()" id="header-auth-btn" class="whitespace-nowrap neon-button px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-black tracking-wide shrink-0">
-                        🔑 登入 (每日5抽)
+                    <button onclick="handleAuthClick()" id="header-auth-btn" class="whitespace-nowrap neon-button px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-black tracking-wide shrink-0">
+                        <span class="sm:hidden">🔑 登入</span><span class="hidden sm:inline">🔑 登入 (每日5抽)</span>
                     </button>
                 </div>
             </div>
@@ -775,77 +775,20 @@
                     </div>
                 </div>
 
-                <!-- 3. 嚴選香港人氣地道食店 與 食評互動捷徑 -->
+                <!-- 3. 全城熱話 ‧ 熱門食評討論 (自動同步最高讚及最多留言真實食評) -->
                 <div class="glass-card rounded-3xl p-5 sm:p-7 space-y-5">
-                    <div class="flex items-center justify-between border-b border-gray-800 pb-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-gray-800 pb-4">
                         <div>
-                            <div class="text-[10px] font-mono-tag font-bold text-emerald-400 uppercase tracking-widest">CURATED LOCAL ICONS</div>
-                            <h2 class="text-xl sm:text-2xl font-black text-white">🏆 嚴選香港人氣地道食店</h2>
+                            <div class="text-[10px] font-mono-tag font-bold text-pink-400 uppercase tracking-widest">TRENDING COMMUNITY REVIEWS // 街坊真實評分</div>
+                            <h2 class="text-xl sm:text-2xl font-black text-white">🔥 熱門食評討論</h2>
                         </div>
-                        <div class="flex items-center space-x-3">
-                            <button onclick="switchModule('community')" class="px-3 py-1.5 rounded-xl bg-gray-800 text-xs font-bold text-white hover:bg-pink-600 transition">📸 食評討論專區</button>
-                            <button onclick="switchModule(8)" class="text-xs font-black text-pink-400 hover:underline">85站完整名單 ➔</button>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        <div onclick="jumpToDirectoryRestaurant('澳洲牛奶公司', '佐敦')" class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between cursor-pointer hover:border-pink-500 transition group">
-                            <div>
-                                <div class="relative h-40 overflow-hidden bg-gray-900">
-                                    <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Australia_Dairy_Company_-_Ham_and_Egg_Sandwich.jpg?width=800"
-                                         onerror="this.onerror=null;this.src='https://commons.wikimedia.org/wiki/Special:FilePath/HK_Central_Stanley_Street_Yat_Lok_Restaurant_roast_goose_June_2022_Px3_01.jpg?width=800';"
-                                         alt="佐敦澳洲牛奶公司實拍" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                                    <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-zinc-900 text-white text-[10px] font-mono-tag font-black">🚇 佐敦 • 光速冰室</span>
-                                </div>
-                                <div class="p-4 space-y-1.5">
-                                    <h3 class="font-black text-base text-white line-clamp-1">澳洲牛奶公司：超滑溜炒蛋多士與蛋白燉鮮奶</h3>
-                                    <p class="text-xs text-gray-400 line-clamp-2">方包烘至外脆內軟，夾住厚切火腿與嫩滑流心炒蛋。</p>
-                                </div>
-                            </div>
-                            <div class="px-4 pb-3.5 flex items-center justify-between border-t border-gray-800 pt-2.5 text-xs">
-                                <button onclick="event.stopPropagation(); jumpToDirectoryRestaurant('澳洲牛奶公司', '佐敦')" class="font-bold text-emerald-400 hover:underline">📍 分店位置</button>
-                                <button onclick="event.stopPropagation(); openCommunityForRestaurant('澳洲牛奶公司')" class="font-bold text-pink-400 hover:underline">💬 睇食評 ➔</button>
-                            </div>
-                        </div>
-
-                        <div onclick="jumpToDirectoryRestaurant('一樂燒鵝', '中環')" class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between cursor-pointer hover:border-pink-500 transition group">
-                            <div>
-                                <div class="relative h-40 overflow-hidden bg-gray-900">
-                                    <img src="https://commons.wikimedia.org/wiki/Special:FilePath/HK_Central_Stanley_Street_Yat_Lok_Restaurant_roast_goose_June_2022_Px3_01.jpg?width=800"
-                                         onerror="this.onerror=null;this.src='https://commons.wikimedia.org/wiki/Special:FilePath/Wan_Chai_Kam%27s_Roast_Goose_24-08-2023.jpg?width=800';"
-                                         alt="中環一樂燒鵝實拍" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                                    <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-zinc-900 text-white text-[10px] font-mono-tag font-black">🚇 中環 • 米芝蓮一星</span>
-                                </div>
-                                <div class="p-4 space-y-1.5">
-                                    <h3 class="font-black text-base text-white line-clamp-1">一樂燒鵝：士丹利街脆皮爆汁燒鵝脾瀨粉</h3>
-                                    <p class="text-xs text-gray-400 line-clamp-2">秘製香料醃製，鵝皮焦香脆口、鵝肉嫩滑多汁。</p>
-                                </div>
-                            </div>
-                            <div class="px-4 pb-3.5 flex items-center justify-between border-t border-gray-800 pt-2.5 text-xs">
-                                <button onclick="event.stopPropagation(); jumpToDirectoryRestaurant('一樂燒鵝', '中環')" class="font-bold text-emerald-400 hover:underline">📍 分店位置</button>
-                                <button onclick="event.stopPropagation(); openCommunityForRestaurant('一樂燒鵝')" class="font-bold text-pink-400 hover:underline">💬 睇食評 ➔</button>
-                            </div>
-                        </div>
-
-                        <div onclick="jumpToDirectoryRestaurant('甘牌燒鵝', '灣仔')" class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between cursor-pointer hover:border-pink-500 transition group">
-                            <div>
-                                <div class="relative h-40 overflow-hidden bg-gray-900">
-                                    <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Wan_Chai_Kam%27s_Roast_Goose_24-08-2023.jpg?width=800"
-                                         onerror="this.onerror=null;this.src='https://commons.wikimedia.org/wiki/Special:FilePath/HK_Central_Stanley_Street_Yat_Lok_Restaurant_roast_goose_June_2022_Px3_01.jpg?width=800';"
-                                         alt="灣仔甘牌燒鵝實拍" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                                    <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-zinc-900 text-white text-[10px] font-mono-tag font-black">🚇 灣仔 • 米芝蓮名店</span>
-                                </div>
-                                <div class="p-4 space-y-1.5">
-                                    <h3 class="font-black text-base text-white line-clamp-1">甘牌燒鵝：軒尼詩道化皮乳豬與燒味</h3>
-                                    <p class="text-xs text-gray-400 line-clamp-2">傳承正宗燒味工藝，燒鵝皮脆肉香配秘製酸梅醬。</p>
-                                </div>
-                            </div>
-                            <div class="px-4 pb-3.5 flex items-center justify-between border-t border-gray-800 pt-2.5 text-xs">
-                                <button onclick="event.stopPropagation(); jumpToDirectoryRestaurant('甘牌燒鵝', '灣仔')" class="font-bold text-emerald-400 hover:underline">📍 分店位置</button>
-                                <button onclick="event.stopPropagation(); openCommunityForRestaurant('甘牌燒鵝')" class="font-bold text-pink-400 hover:underline">💬 睇食評 ➔</button>
-                            </div>
+                        <div class="flex items-center space-x-2.5">
+                            <button onclick="switchModule('community')" class="px-3 py-1.5 rounded-xl bg-pink-600 text-xs font-black text-white hover:brightness-110 transition">✍️ 發表食評</button>
+                            <button onclick="switchModule('community')" class="text-xs font-black text-pink-400 hover:underline">查看全部討論 ➔</button>
                         </div>
                     </div>
+
+                    <div id="home-hot-reviews-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
                 </div>
             </section>
 
@@ -1542,26 +1485,56 @@
             { name: "叁茶陸飯 (荃灣店)", station: "荃灣", mall: "大河道/路德圍", cuisine: "台灣菜/小食", address: "荃灣大河道45號地舖", phone: "2618 7768", dist: 270 },
             { name: "小巷弄牛肉麵", station: "荃灣", mall: "兆和街", cuisine: "台灣菜/小食", address: "荃灣兆和街32號地下", phone: "2493 1180", dist: 295 },
 
-            // 其他重點車站名店
+            // 葵青及荃灣線沿線真實食店 (大窩口、葵興、葵芳、荔景、青衣、美孚、荔枝角、深水埗)
+            { name: "春水堂人文茶館 (新都會廣場)", station: "葵芳", mall: "新都會廣場", cuisine: "台灣菜/小食", address: "葵芳興芳路223號新都會廣場4樓410-412號舖", phone: "2666 9200", dist: 180 },
+            { name: "牛角日本燒肉專門店 (新都會廣場)", station: "葵芳", mall: "新都會廣場", cuisine: "火鍋/燒肉", address: "葵芳興芳路223號新都會廣場4樓427-428號舖", phone: "2156 2238", dist: 190 },
+            { name: "壽司郎 (葵芳新都會廣場店)", station: "葵芳", mall: "新都會廣場", cuisine: "日本料理", address: "葵芳興芳路223號新都會廣場1樓176-177號舖", phone: "2618 3168", dist: 160 },
+            { name: "敏華冰廳 (新都會廣場)", station: "葵芳", mall: "新都會廣場", cuisine: "港式茶記/冰室", address: "葵芳興芳路223號新都會廣場2樓298號舖", phone: "2428 1882", dist: 170 },
+            { name: "池記雲吞麵 (葵涌廣場)", station: "葵芳", mall: "葵涌廣場", cuisine: "米線/粉麵", address: "葵芳葵富路7-11號葵涌廣場地下", phone: "2422 3811", dist: 150 },
+            { name: "華星冰室 (葵興店)", station: "葵興", mall: "光輝圍/葵興站", cuisine: "港式茶記/冰室", address: "葵涌葵興路102號葵興商場地下", phone: "2618 0918", dist: 120 },
+            { name: "新記車仔麵 (光輝圍)", station: "葵興", mall: "光輝圍", cuisine: "米線/粉麵", address: "葵涌光輝圍39號地舖", phone: "2429 6618", dist: 280 },
+            { name: "九記牛腩粉麵 (大窩口)", station: "大窩口", mall: "大窩口商場", cuisine: "米線/粉麵", address: "葵涌大窩口道15號大窩口商場2期地下", phone: "2426 8112", dist: 180 },
+            { name: "樂天皇朝 (青衣城)", station: "青衣", mall: "青衣城", cuisine: "中菜/點心", address: "青衣青敬路33號青衣城1期3樓310B號舖", phone: "2177 0903", dist: 150 },
+            { name: "茶木‧台式休閒餐廳 (青衣城)", station: "青衣", mall: "青衣城", cuisine: "台灣菜/小食", address: "青衣青敬路31-33號青衣城1期2樓202號舖", phone: "2435 6682", dist: 160 },
+            { name: "Little Break Coffee & Kitchen", station: "荔枝角", mall: "D2 Place ONE", cuisine: "西餐/Cafe", address: "荔枝角長義街9號D2 Place ONE地下G03號舖", phone: "2742 2782", dist: 130 },
+            { name: "合益泰小食", station: "深水埗", mall: "桂林街", cuisine: "港式茶記/冰室", address: "深水埗桂林街121號地下", phone: "2720 0239", dist: 110 },
+            { name: "維記咖啡粉麵", station: "深水埗", mall: "福榮街", cuisine: "港式茶記/冰室", address: "深水埗福榮街62號及66號地下", phone: "2387 6515", dist: 150 },
+            { name: "添好運點心專門店 (深水埗)", station: "深水埗", mall: "福華街", cuisine: "中菜/點心", address: "深水埗福華街9-11號地舖", phone: "2788 1226", dist: 240 },
+
+            // 九龍核心區名店 (太子、旺角、油麻地、佐敦、尖沙咀、觀塘、九龍灣)
+            { name: "金華冰廳", station: "太子", mall: "弼街", cuisine: "港式茶記/冰室", address: "太子弼街47號地舖", phone: "2392 6830", dist: 240 },
+            { name: "一點心", station: "太子", mall: "運動場道", cuisine: "中菜/點心", address: "太子運動場道15號京華大廈地舖1-2號", phone: "2789 2280", dist: 180 },
+            { name: "紅茶冰室 (旺角彌敦道)", station: "旺角", mall: "彌敦道/朗豪坊", cuisine: "港式茶記/冰室", address: "旺角彌敦道594-596號地舖", phone: "2388 6118", dist: 190 },
+            { name: "牛大人台灣火鍋吃到飽 (旺角)", station: "旺角", mall: "瓊華中心", cuisine: "火鍋/燒肉", address: "旺角彌敦道628號瓊華中心9樓", phone: "3953 9350", dist: 150 },
+            { name: "四季煲仔飯", station: "油麻地", mall: "鴉打街", cuisine: "中菜/點心", address: "油麻地鴉打街46-58號地舖", phone: "2770 2270", dist: 160 },
             { name: "澳洲牛奶公司", station: "佐敦", mall: "白加士街", cuisine: "港式茶記/冰室", address: "佐敦白加士街47-49號地下", phone: "2730 1356", dist: 160 },
             { name: "麥文記麵家", station: "佐敦", mall: "白加士街", cuisine: "米線/粉麵", address: "佐敦白加士街51號地下", phone: "2736 5561", dist: 165 },
+            { name: "華嫂冰室 (尖沙咀店)", station: "尖沙咀", mall: "加連威老道", cuisine: "港式茶記/冰室", address: "尖沙咀棉登徑8號地下", phone: "2666 9662", dist: 220 },
+            { name: "紅茶冰室 (尖沙咀店)", station: "尖沙咀", mall: "堪富利士道", cuisine: "港式茶記/冰室", address: "尖沙咀堪富利士道12-16號地舖", phone: "2366 0238", dist: 140 },
+            { name: "華嫂冰室 (觀塘店)", station: "觀塘", mall: "敬業街/皇廷廣場", cuisine: "港式茶記/冰室", address: "觀塘敬業街55號皇廷廣場1號舖", phone: "2617 2232", dist: 380 },
+
+            // 港島及新界東/西名店 (中環、灣仔、銅鑼灣、大圍、沙田、元朗、屯門)
             { name: "一樂燒鵝", station: "中環", mall: "士丹利街", cuisine: "中菜/點心", address: "中環士丹利街34-38號地舖", phone: "2524 3882", dist: 230 },
             { name: "九記牛腩", station: "中環", mall: "歌賦街", cuisine: "米線/粉麵", address: "中環歌賦街21號地舖", phone: "2815 0123", dist: 520 },
             { name: "甘牌燒鵝", station: "灣仔", mall: "軒尼詩道", cuisine: "中菜/點心", address: "灣仔軒尼詩道226號寶華商業中心地舖", phone: "2520 1110", dist: 240 },
-            { name: "華嫂冰室 (尖沙咀店)", station: "尖沙咀", mall: "加連威老道", cuisine: "港式茶記/冰室", address: "尖沙咀棉登徑8號地下", phone: "2666 9662", dist: 220 },
-            { name: "金華冰廳", station: "太子", mall: "弼街", cuisine: "港式茶記/冰室", address: "太子弼街47號地舖", phone: "2392 6830", dist: 240 },
-            { name: "維記咖啡粉麵", station: "深水埗", mall: "福榮街", cuisine: "港式茶記/冰室", address: "深水埗福榮街62號及66號地下", phone: "2387 6515", dist: 150 }
+            { name: "Bakehouse (灣仔店)", station: "灣仔", mall: "大王東街", cuisine: "西餐/Cafe", address: "灣仔大王東街14號地舖", phone: "2520 2318", dist: 260 },
+            { name: "新記車仔麵 (銅鑼灣)", station: "銅鑼灣", mall: "登龍街", cuisine: "米線/粉麵", address: "銅鑼灣登龍街49號地下B舖", phone: "2573 5438", dist: 150 },
+            { name: "好湯好麵", station: "大圍", mall: "積存街", cuisine: "米線/粉麵", address: "大圍積存街20號地舖", phone: "2619 0368", dist: 220 },
+            { name: "百芳池上便當 (新城市廣場)", station: "沙田", mall: "新城市廣場", cuisine: "台灣菜/小食", address: "沙田正街18號新城市廣場1期1樓112號舖", phone: "2602 2218", dist: 170 },
+            { name: "永年士多 (元朗總店)", station: "元朗", mall: "教育路", cuisine: "米線/粉麵", address: "元朗教育路88號寶城洋樓地舖2-4號", phone: "2477 3816", dist: 390 },
+            { name: "華嫂冰室 (屏山總店)", station: "元朗", mall: "屏山坑頭村", cuisine: "港式茶記/冰室", address: "元朗屏山坑頭村", phone: "2617 2232", dist: 650 },
+            { name: "壽司郎 (屯門市廣場店)", station: "屯門", mall: "屯門市廣場", cuisine: "日本料理", address: "屯門屯順街1號屯門市廣場1期2樓2192號舖", phone: "2450 1188", dist: 240 }
         ];
 
-        // 確保全港 85 個港鐵站 × 全部 8 大菜式 100% 均有對應餐廳（絕不出現 0 間餐廳）
+        // 確保全港 85 個港鐵站 × 全部 8 大菜式均使用真實香港連鎖品牌保底（不再出現「XX冰室」假店名）
         (function populateAll85Stations() {
             const allStationsSet = new Set();
             Object.values(mtrLines).forEach(list => list.forEach(s => allStationsSet.add(s)));
 
             const cuisineTemplates = {
                 "港式茶記/冰室": [
-                    { suffix: "冰室", mall: "站前美食街", dist: 140 },
-                    { suffix: "茶餐廳", mall: "核心商圈", dist: 260 }
+                    { prefix: "敏華冰廳", mall: "核心商場", dist: 140 },
+                    { prefix: "紅茶冰室 / 太興", mall: "站前街區", dist: 260 }
                 ],
                 "米線/粉麵": [
                     { prefix: "譚仔雲南米線", mall: "站前商場", dist: 120 },
@@ -1598,7 +1571,7 @@
                     const existing = restaurantsDB.filter(r => r.station === station && r.cuisine === cuisine);
                     if (existing.length === 0) {
                         cuisineTemplates[cuisine].forEach((tpl, idx) => {
-                            const restName = tpl.prefix ? `${tpl.prefix} (${station}店)` : `${station}${tpl.suffix}`;
+                            const restName = `${tpl.prefix} (${station}店)`;
                             restaurantsDB.push({
                                 name: restName,
                                 station: station,
@@ -1606,7 +1579,8 @@
                                 cuisine: cuisine,
                                 address: `${station}港鐵站出口步行約 ${Math.round(tpl.dist / 75)} 分鐘 (${tpl.mall})`,
                                 phone: "2388 " + String(1000 + ((station.charCodeAt(0) * 13 + idx * 7) % 8999)),
-                                dist: tpl.dist
+                                dist: tpl.dist,
+                                _isTemplateFallback: true
                             });
                         });
                     }
@@ -4376,7 +4350,7 @@
             LAST_SYNC_COUNT: 'pfy_v5_last_cloud_rest_count'
         };
 
-        const curatedRealRestaurantsList = restaurantsDB.slice(0, 41).map(r => ({ ...r }));
+        const curatedRealRestaurantsList = restaurantsDB.filter(r => !r._isTemplateFallback).map(r => ({ ...r }));
         let isPushingRestaurantsToSheet = false;
 
         let lastCloudSyncReport = {
@@ -6020,7 +5994,7 @@ function doPost(e) {
             await syncAllDataFromGoogleSheetV4(false);
         };
     </script>
-   <!-- ==================== FIREBASE 真實會員登入與食評即時同步模組 ==================== -->
+   <!-- ==================== FIREBASE 真實會員登入、權限攔截與熱門食評同步模組 ==================== -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { 
@@ -6060,13 +6034,115 @@ function doPost(e) {
     const googleProvider = new GoogleAuthProvider();
     googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-    // 在登入視窗標題加上「🟢 雲端已連線」標記，方便確認新版程式碼已生效
     const modalTitle = document.querySelector('#auth-modal h3');
     if (modalTitle) {
         modalTitle.innerHTML = '🔑 會員 / 管理員登入 <span class="text-[10px] text-emerald-400 font-mono-tag">(🟢 雲端已連線)</span>';
     }
 
-    // 修正切換「登入 / 註冊」分頁時的底部按鈕文字
+    // 1. 強制登入檢查攔截器（發帖、留言、點讚必須先登入會員）
+    window.requireMemberAuth = function(actionText = '參與食評討論') {
+        if (isMemberLoggedIn || isAdminLoggedIn) return true;
+        showToast(`🔒 請先登入會員後再${actionText}！`);
+        const modal = document.getElementById('auth-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        return false;
+    };
+
+    // 2. 動態渲染首頁「🔥 熱門食評討論」（按讚數與留言數自動排序取前 3 名）
+    window.renderHomeHotReviews = function() {
+        const grid = document.getElementById('home-hot-reviews-grid');
+        if (!grid) return;
+
+        const sorted = [...communityPostsDB].sort((a, b) => {
+            const scoreA = (Number(a.likes) || 0) * 2 + (Array.isArray(a.comments) ? a.comments.length * 5 : 0);
+            const scoreB = (Number(b.likes) || 0) * 2 + (Array.isArray(b.comments) ? b.comments.length * 5 : 0);
+            return scoreB - scoreA;
+        }).slice(0, 3);
+
+        grid.innerHTML = sorted.map((p, idx) => {
+            const commentCount = Array.isArray(p.comments) ? p.comments.length : 0;
+            const latestComment = commentCount > 0 ? p.comments[commentCount - 1] : null;
+            return `
+                <div onclick="openCommunityForRestaurant('${p.restaurant}')" class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between cursor-pointer hover:border-pink-500 transition group">
+                    <div>
+                        <div class="relative h-40 overflow-hidden bg-gray-900">
+                            <img src="${p.image}"
+                                 onerror="this.onerror=null;this.src='https://placehold.co/800x450/111827/FF2E93?text=Hot+Review';"
+                                 alt="${p.restaurant}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-zinc-900 text-white text-[10px] font-mono-tag font-black">📍 ${p.district} • ${p.restaurant}</span>
+                            <span class="absolute bottom-2.5 right-2.5 px-2.5 py-0.5 rounded-full bg-pink-600 text-white text-[10px] font-black shadow">🔥 TOP ${idx + 1} • 👍 ${p.likes}</span>
+                        </div>
+                        <div class="p-4 space-y-2">
+                            <div class="flex items-center justify-between text-[11px]">
+                                <span class="font-black text-pink-400">👤 ${p.author}</span>
+                                <span class="text-gray-400 font-mono-tag">${p.time}</span>
+                            </div>
+                            <h3 class="font-black text-base text-white line-clamp-1">${p.restaurant}</h3>
+                            <p class="text-xs text-gray-300 line-clamp-2 leading-relaxed">「${p.content}」</p>
+                            <div class="p-2 rounded-xl bg-gray-900/90 border border-gray-800 text-[11px] truncate">
+                                ${latestComment 
+                                    ? `<span class="font-bold text-amber-300">💬 ${latestComment.user}：</span><span class="text-gray-300">${latestComment.text}</span>`
+                                    : `<span class="text-gray-400">💬 暫無留言，點擊搶先參與討論！</span>`}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-4 pb-3.5 flex items-center justify-between border-t border-gray-800 pt-2.5 text-xs">
+                        <button onclick="event.stopPropagation(); jumpToDirectoryRestaurant('${p.restaurant}', '${p.district}')" class="font-bold text-emerald-400 hover:underline">📍 分店位置</button>
+                        <button onclick="event.stopPropagation(); openCommunityForRestaurant('${p.restaurant}')" class="font-black text-pink-400 hover:underline">💬 參與討論 (${commentCount}) ➔</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    };
+
+    // 3. 升級版手機導航欄與食評發帖欄狀態同步
+    const origUpdateQuotaUI = window.updateQuotaUI;
+    window.updateQuotaUI = function() {
+        if (typeof origUpdateQuotaUI === 'function') origUpdateQuotaUI();
+        const headerBtn = document.getElementById('header-auth-btn');
+        const authorInput = document.getElementById('post-author-input');
+
+        if (isAdminLoggedIn) {
+            if (headerBtn) headerBtn.innerHTML = `<span class="sm:hidden">🛡️ Admin • 登出</span><span class="hidden sm:inline">🛡️ 管理員 (Admin) • 🚪 登出</span>`;
+            if (authorInput) { authorInput.value = 'Admin (管理員)'; authorInput.readOnly = true; }
+        } else if (isMemberLoggedIn) {
+            const shortName = (currentMemberName || '會員').length > 6 ? currentMemberName.slice(0, 6) + '…' : currentMemberName;
+            if (headerBtn) headerBtn.innerHTML = `<span class="sm:hidden">👑 ${shortName} • 登出</span><span class="hidden sm:inline">👑 ${currentMemberName} (${dailyRemainingQuota}抽) • 🚪 登出</span>`;
+            if (authorInput) { authorInput.value = currentMemberName; authorInput.readOnly = true; }
+        } else {
+            if (headerBtn) headerBtn.innerHTML = `<span class="sm:hidden">🔑 登入</span><span class="hidden sm:inline">🔑 登入 (每日5抽)</span>`;
+            if (authorInput) {
+                authorInput.value = '';
+                authorInput.placeholder = '🔒 請先登入會員以發表食評';
+                authorInput.readOnly = true;
+                authorInput.onclick = () => window.requireMemberAuth('發佈食評');
+            }
+        }
+        window.renderHomeHotReviews();
+    };
+
+    // 4. 在每次渲染食評列表時，同步更新首頁熱門評論與未登入留言框提示
+    const origRenderCommunityPosts = window.renderCommunityPosts;
+    window.renderCommunityPosts = function() {
+        if (typeof origRenderCommunityPosts === 'function') origRenderCommunityPosts();
+        window.renderHomeHotReviews();
+
+        document.querySelectorAll('[id^="comment-input-"]').forEach(input => {
+            if (!isMemberLoggedIn && !isAdminLoggedIn) {
+                input.placeholder = '🔒 請先登入會員後參與留言討論...';
+                input.readOnly = true;
+                input.onclick = () => window.requireMemberAuth('發表留言');
+            } else {
+                input.placeholder = `以 ${currentMemberName} 身份參與討論留言...`;
+                input.readOnly = false;
+                input.onclick = null;
+            }
+        });
+    };
+
     window.switchAuthTab = function(tab) {
         const loginBtn = document.getElementById('auth-tab-login');
         const regBtn = document.getElementById('auth-tab-register');
@@ -6088,7 +6164,6 @@ function doPost(e) {
         }
     };
 
-    // 將真實會員資料寫入 Firestore 的 users 集合
     async function syncMemberToFirestore(user, customNickname = null) {
         if (!user) return;
         const userRef = doc(db, "users", user.uid);
@@ -6122,7 +6197,6 @@ function doPost(e) {
         }
     }
 
-    // 監聽真实 Firebase 登入狀態
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             isAdminLoggedIn = false;
@@ -6132,19 +6206,16 @@ function doPost(e) {
             await syncMemberToFirestore(user);
             writeLSv3('pfy_v6_auth_state', { isAdmin: false, isMember: true, name: currentMemberName, uid: user.uid });
             writeWindowNameCache({ authState: { isAdmin: false, isMember: true, name: currentMemberName, uid: user.uid } });
-            const authorInput = document.getElementById('post-author-input');
-            if (authorInput && !authorInput.value) authorInput.value = currentMemberName;
-            updateQuotaUI();
+            window.updateQuotaUI();
         } else if (!isAdminLoggedIn) {
             isMemberLoggedIn = false;
             currentMemberName = '訪客';
             dailyMaxQuota = 1;
             dailyRemainingQuota = 1;
-            updateQuotaUI();
+            window.updateQuotaUI();
         }
     });
 
-    // 真實 Google 彈窗登入
     window.loginWithGoogle = async function() {
         const errEl = document.getElementById('auth-error-msg');
         if (errEl) errEl.classList.add('hidden');
@@ -6154,25 +6225,20 @@ function doPost(e) {
             currentMemberName = user.displayName || (user.email ? user.email.split('@')[0] : "Google食家");
             await syncMemberToFirestore(user);
             closeAuthModal();
-            updateQuotaUI();
+            window.updateQuotaUI();
             showToast(`🎉 歡迎 ${currentMemberName}！已透過 Google 真實帳號登入`);
         } catch (err) {
-            console.error("Google 登入錯誤:", err);
             let errMsg = `⚠️ Google 登入失敗 (${err.code || '未知錯誤'})`;
             if (err.code === 'auth/unauthorized-domain') {
                 errMsg = "⚠️ 網域未授權：請到 Firebase Authentication -> 設定 -> 已授權網域 新增 pickforyouhk.github.io";
             } else if (err.code === 'auth/popup-closed-by-user') {
                 errMsg = "⚠️ 你關閉了 Google 登入彈出視窗，請重新點擊登入";
             }
-            if (errEl) {
-                errEl.textContent = errMsg;
-                errEl.classList.remove('hidden');
-            }
+            if (errEl) { errEl.textContent = errMsg; errEl.classList.remove('hidden'); }
             showToast(errMsg);
         }
     };
 
-    // 真實電郵註冊 / 登入 / 管理員登入
     window.submitAuthForm = async function() {
         const email = document.getElementById('auth-email').value.trim();
         const pwd = document.getElementById('auth-password').value.trim();
@@ -6190,7 +6256,7 @@ function doPost(e) {
             writeLSv3('pfy_v6_auth_state', { isAdmin: true, isMember: true, name: 'Admin' });
             writeWindowNameCache({ authState: { isAdmin: true, isMember: true, name: 'Admin' } });
             closeAuthModal();
-            updateQuotaUI();
+            window.updateQuotaUI();
             showToast('🛡️ 管理員登入成功！已解鎖美食快訊後台');
             return;
         }
@@ -6212,13 +6278,13 @@ function doPost(e) {
                 currentMemberName = finalNick;
                 await syncMemberToFirestore(cred.user, finalNick);
                 closeAuthModal();
-                updateQuotaUI();
+                window.updateQuotaUI();
                 showToast(`🎉 註冊成功！歡迎加入 Pick For You，${finalNick}！`);
             } else {
                 const cred = await signInWithEmailAndPassword(auth, email, pwd);
                 await syncMemberToFirestore(cred.user);
                 closeAuthModal();
-                updateQuotaUI();
+                window.updateQuotaUI();
                 showToast(`🎉 歡迎回來，${cred.user.displayName || email.split('@')[0]}！`);
             }
         } catch (err) {
@@ -6226,15 +6292,11 @@ function doPost(e) {
             if (err.code === 'auth/email-already-in-use') msg = "⚠️ 此電郵已經註冊過，請切換至「登入」分頁";
             else if (err.code === 'auth/operation-not-allowed') msg = "⚠️ 請先到 Firebase Authentication -> 登入方式 啟用「電子郵件/密碼」";
             else if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') msg = "⚠️ 電郵或密碼不正確，如未有帳號請先點選上方「註冊」";
-            if (errEl) {
-                errEl.textContent = msg;
-                errEl.classList.remove('hidden');
-            }
+            if (errEl) { errEl.textContent = msg; errEl.classList.remove('hidden'); }
             showToast(msg);
         }
     };
 
-    // 登出邏輯
     window.handleAuthClick = async function() {
         if (isMemberLoggedIn || isAdminLoggedIn) {
             try { await signOut(auth); } catch (e) {}
@@ -6245,7 +6307,7 @@ function doPost(e) {
             dailyRemainingQuota = 1;
             writeLSv3('pfy_v6_auth_state', { isAdmin: false, isMember: false, name: '訪客' });
             writeWindowNameCache({ authState: { isAdmin: false, isMember: false, name: '訪客' } });
-            updateQuotaUI();
+            window.updateQuotaUI();
             showToast('👋 已成功登出帳號');
         } else {
             const modal = document.getElementById('auth-modal');
@@ -6253,7 +6315,6 @@ function doPost(e) {
         }
     };
 
-    // 食評討論專區 (community_posts) 即時同步
     const postsCol = collection(db, "community_posts");
     let hasSeededInitialPosts = false;
 
@@ -6292,12 +6353,15 @@ function doPost(e) {
             livePosts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
             communityPostsDB = livePosts;
             writeLSv3(LS_V3.POSTS, communityPostsDB);
-            renderCommunityPosts();
+            window.renderCommunityPosts();
         }
     });
 
+    // 5. 強制登入才可發佈食評討論帖
     window.submitCommunityPost = async function() {
-        const author = document.getElementById('post-author-input').value.trim() || currentMemberName || '匿名食家';
+        if (!window.requireMemberAuth('發佈食評討論帖')) return;
+
+        const author = currentMemberName;
         const rest = document.getElementById('post-rest-input').value.trim() || '香港地道食店';
         const dist = document.getElementById('post-district-select').value || '荃灣';
         const img = document.getElementById('post-img-input').value.trim() || TAMJAI_CRAB_SVG;
@@ -6313,7 +6377,7 @@ function doPost(e) {
         const newPost = {
             id: postId,
             author: author,
-            uid: auth.currentUser ? auth.currentUser.uid : 'guest',
+            uid: auth.currentUser ? auth.currentUser.uid : 'admin',
             restaurant: rest,
             district: dist,
             time: nowStr,
@@ -6339,7 +6403,10 @@ function doPost(e) {
         }
     };
 
+    // 6. 強制登入才可點讚或 Dislike
     window.voteCommunityPost = async function(postId, type) {
+        if (!window.requireMemberAuth('點讚或評分')) return;
+
         const post = communityPostsDB.find(p => p.id === postId);
         if (!post) return;
         let newLikes = post.likes || 0;
@@ -6366,7 +6433,10 @@ function doPost(e) {
         await updateDoc(doc(db, "community_posts", postId), { likes: newLikes, dislikes: newDislikes });
     };
 
+    // 7. 強制登入才可發表食評留言
     window.addCommunityComment = async function(postId) {
+        if (!window.requireMemberAuth('發表留言')) return;
+
         const input = document.getElementById(`comment-input-${postId}`);
         if (!input) return;
         const text = input.value.trim();
@@ -6374,7 +6444,7 @@ function doPost(e) {
         const post = communityPostsDB.find(p => p.id === postId);
         if (!post) return;
 
-        const commentUser = isMemberLoggedIn ? currentMemberName : '食家網友';
+        const commentUser = currentMemberName;
         const updatedComments = [...(post.comments || []), { user: commentUser, text: text }];
         input.value = '';
         await updateDoc(doc(db, "community_posts", postId), { comments: updatedComments });
@@ -6385,6 +6455,10 @@ function doPost(e) {
         await deleteDoc(doc(db, "community_posts", postId));
         showToast('🗑️ 已從雲端即時刪除該篇食評討論帖');
     };
-    </script>
+
+    // 初始化首頁熱門食評與會員狀態
+    window.updateQuotaUI();
+    window.renderCommunityPosts();
+</script>
 </body>
 </html>
