@@ -3534,6 +3534,11 @@
             `).join('');
         }
 
+        function onGachaMallSelectChange(val) {
+            currentGachaMall = val || '全部商場/街區';
+            updateGachaSummary();
+        }
+
         function renderGachaMallsAndCuisines() {
             const mallBox = document.getElementById('mall-buttons-container');
             const cuisineBox = document.getElementById('cuisine-buttons-container');
@@ -3542,11 +3547,27 @@
                 ? restaurantsDB
                 : restaurantsDB.filter(r => r.station === currentGachaStation);
 
-            const malls = ['全部商場/街區', ...new Set(stationPool.map(r => r.mall))];
+            const uniqueMalls = [...new Set(stationPool.map(r => (r.mall || '').trim()).filter(Boolean))];
+            if (currentGachaMall !== '全部商場/街區' && !uniqueMalls.includes(currentGachaMall)) {
+                currentGachaMall = '全部商場/街區';
+            }
+            const malls = ['全部商場/街區', ...uniqueMalls];
+
             if (mallBox) {
-                mallBox.innerHTML = malls.map(m => `
-                    <button onclick="currentGachaMall='${m}'; renderGachaMallsAndCuisines(); updateGachaSummary();" class="px-2.5 py-1 rounded-lg text-xs font-bold transition ${m === currentGachaMall ? 'bg-emerald-600 text-white font-black' : 'bg-gray-800 text-gray-300'}">${m}</button>
-                `).join('');
+                mallBox.innerHTML = `
+                    <select id="gacha-mall-select" onchange="onGachaMallSelectChange(this.value)" class="w-full sm:w-80 px-3.5 py-2 rounded-xl bg-gray-800 border border-gray-700 text-xs sm:text-sm font-black text-white outline-none cursor-pointer shadow-xs transition">
+                        ${malls.map(m => {
+                            const count = m === '全部商場/街區'
+                                ? stationPool.length
+                                : stationPool.filter(r => (r.mall || '').trim() === m).length;
+                            const displayLabel = m === '全部商場/街區'
+                                ? `🏬 全部商場 / 街區 (預設全部・共 ${count} 間)`
+                                : `📍 ${m} (${count}間)`;
+                            const safeVal = m.replace(/"/g, '&quot;');
+                            return `<option value="${safeVal}" ${m === currentGachaMall ? 'selected' : ''}>${displayLabel}</option>`;
+                        }).join('')}
+                    </select>
+                `;
             }
 
             if (cuisineBox) {
