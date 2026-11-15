@@ -6046,5 +6046,371 @@ function doPost(e) {
             await syncAllDataFromGoogleSheetV4(false);
         };
     </script>
+    <!-- ==================== FIREBASE 真實會員登入與食評即時同步模組 ==================== -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { 
+        getAuth, 
+        GoogleAuthProvider, 
+        signInWithPopup, 
+        createUserWithEmailAndPassword, 
+        signInWithEmailAndPassword, 
+        updateProfile, 
+        onAuthStateChanged, 
+        signOut 
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { 
+        getFirestore, 
+        collection, 
+        doc, 
+        setDoc, 
+        getDoc, 
+        updateDoc, 
+        deleteDoc, 
+        onSnapshot 
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    // 1. 初始化你的 pickforyou-hk Firebase 專案
+    const firebaseConfig = {
+        apiKey: "AIzaSyB29jk5aIgU0aBrJhldq0NEQEcx5iEv3SM",
+        authDomain: "pickforyou-hk.firebaseapp.com",
+        projectId: "pickforyou-hk",
+        storageBucket: "pickforyou-hk.firebasestorage.app",
+        messagingSenderId: "489583672194",
+        appId: "1:489583672194:web:b0ce39d1d9427d5cdead9b",
+        measurementId: "G-LVR80QRJB8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    // 2. 將會員資料寫入 Firestore 的 users 集合
+    async function syncMemberToFirestore(user, customNickname = null) {
+        if (!user) return;
+        const userRef = doc(db, "users", user.uid);
+        const displayName = customNickname || user.displayName || (user.email ? user.email.split('@')[0] : "食家會員");
+        const todayStr = new Date().toISOString().slice(0, 10);
+
+        try {
+            const snap = await getDoc(userRef);
+            let quotaToSet = 5;
+            if (snap.exists()) {
+                const data = snap.data();
+                if (data.lastQuotaDate === todayStr && typeof data.remainingQuota === "number") {
+                    quotaToSet = data.remainingQuota;
+                }
+            }
+            await setDoc(userRef, {
+                uid: user.uid,
+                email: user.email || "",
+                displayName: displayName,
+                photoURL: user.photoURL || "",
+                provider: (user.providerData && user.providerData[0]) ? user.providerData[0].providerId : "password",
+                dailyMaxQuota: 5,
+                remainingQuota: quotaToSet,
+                lastQuotaDate: todayStr,
+                lastLoginAt: new Date().toISOString()
+            }, { merge: true });
+
+            dailyRemainingQuota = quotaToSet;
+        } catch (err) {
+            console.warn("Firestore 會員資料同步提示:", err);
+        }
+    }
+
+    // 3. 監聽跨裝置登入狀態 (自動保持登入)
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            isAdminLoggedIn = false;
+            isMemberLoggedIn = true;
+            currentMemberName = user.displayName || (user.email ? user.email.split('@')[0] : "食家會員");
+            dailyMaxQuota = 5;
+            await syncMemberToFirestore(user);
+            writeLSv3('pfy_v6_auth_state', { isAdmin: false, isMember: true, name: currentMemberName, uid: user.uid });
+            writeWindowNameCache({ authState: { isAdmin: false, isMember: true, name: currentMemberName, uid: user.uid } });
+            const authorInput = document.getElementById('post-author-input');
+            if (authorInput && !authorInput.value) authorInput.value = currentMemberName;
+            updateQuotaUI();
+        } else if (!isAdminLoggedIn) {
+            isMemberLoggedIn = false;
+            currentMemberName = '訪客';
+            dailyMaxQuota = 1;
+            dailyRemainingQuota = 1;
+            updateQuotaUI();
+        }
+    });
+
+    // 4. 接管「使用 Google 帳號一鍵登入」按鈕
+    window.loginWithGoogle = async function() {
+        const errEl = document.getElementById('auth-error-msg');
+        if (errEl) errEl.classList.add('hidden');
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const user = result.user;
+            await syncMemberToFirestore(user);
+            closeAuthModal();
+            showToast(`🎉 歡迎 ${user.displayName || '食家'}！已透過 Google 登入並升級每日 5 抽`);
+        } catch (err) {
+            console.error("Google 登入錯誤:", err);
+            if (errEl) {
+                errEl.textContent = "⚠️ Google 登入失敗：請確認已在 pickforyouhk.github.io 正式網址操作並允許彈出視窗";
+                errEl.classList.remove('hidden');
+            }
+            showToast("⚠️ Google 登入未完成，請確認彈出視窗或網域授權設定");
+        }
+    };
+
+    // 5. 接管「電郵登入 / 免費註冊 / 管理員登入」按鈕
+    window.submitAuthForm = async function() {
+        const email = document.getElementById('auth-email').value.trim();
+        const pwd = document.getElementById('auth-password').value.trim();
+        const nick = document.getElementById('auth-nickname').value.trim();
+        const isRegisterMode = !document.getElementById('auth-register-extra').classList.contains('hidden');
+        const errEl = document.getElementById('auth-error-msg');
+        if (errEl) errEl.classList.add('hidden');
+
+        // 保留原有管理員帳號 (admin / 8888)
+        if (email.toLowerCase() === 'admin' && pwd === '8888') {
+            isAdminLoggedIn = true;
+            isMemberLoggedIn = true;
+            currentMemberName = 'Admin';
+            dailyMaxQuota = 999;
+            dailyRemainingQuota = 999;
+            writeLSv3('pfy_v6_auth_state', { isAdmin: true, isMember: true, name: 'Admin' });
+            writeWindowNameCache({ authState: { isAdmin: true, isMember: true, name: 'Admin' } });
+            closeAuthModal();
+            updateQuotaUI();
+            showToast('🛡️ 管理員登入成功！已解鎖美食快訊後台');
+            return;
+        }
+
+        if (!email || !email.includes('@')) {
+            if (errEl) { errEl.textContent = "⚠️ 請輸入有效的電郵地址（例如 name@gmail.com）"; errEl.classList.remove('hidden'); }
+            return;
+        }
+        if (pwd.length < 6) {
+            if (errEl) { errEl.textContent = "⚠️ 密碼長度請至少輸入 6 個字元"; errEl.classList.remove('hidden'); }
+            return;
+        }
+
+        try {
+            if (isRegisterMode) {
+                const cred = await createUserWithEmailAndPassword(auth, email, pwd);
+                const finalNick = nick || email.split('@')[0];
+                await updateProfile(cred.user, { displayName: finalNick });
+                currentMemberName = finalNick;
+                await syncMemberToFirestore(cred.user, finalNick);
+                closeAuthModal();
+                updateQuotaUI();
+                showToast(`🎉 註冊成功！歡迎加入 Pick For You，${finalNick}！`);
+            } else {
+                const cred = await signInWithEmailAndPassword(auth, email, pwd);
+                await syncMemberToFirestore(cred.user);
+                closeAuthModal();
+                updateQuotaUI();
+                showToast(`🎉 歡迎回來，${cred.user.displayName || email.split('@')[0]}！`);
+            }
+        } catch (err) {
+            let msg = "⚠️ 登入或註冊失敗，請檢查電郵與密碼";
+            if (err.code === 'auth/email-already-in-use') msg = "⚠️ 此電郵已經註冊過，請切換至「登入」分頁";
+            else if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') msg = "⚠️ 電郵或密碼不正確，如未有帳號請先點選上方「註冊」";
+            if (errEl) {
+                errEl.textContent = msg;
+                errEl.classList.remove('hidden');
+            }
+            showToast(msg);
+        }
+    };
+
+    // 6. 接管「登出」邏輯
+    window.handleAuthClick = async function() {
+        if (isMemberLoggedIn || isAdminLoggedIn) {
+            try { await signOut(auth); } catch (e) {}
+            isMemberLoggedIn = false;
+            isAdminLoggedIn = false;
+            currentMemberName = '訪客';
+            dailyMaxQuota = 1;
+            dailyRemainingQuota = 1;
+            writeLSv3('pfy_v6_auth_state', { isAdmin: false, isMember: false, name: '訪客' });
+            writeWindowNameCache({ authState: { isAdmin: false, isMember: false, name: '訪客' } });
+            updateQuotaUI();
+            showToast('👋 已成功登出帳號');
+        } else {
+            const modal = document.getElementById('auth-modal');
+            if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+        }
+    };
+
+    // 7. Firestore 食評討論專區 (community_posts) 毫秒級即時監聽
+    const postsCol = collection(db, "community_posts");
+    let hasSeededInitialPosts = false;
+
+    onSnapshot(postsCol, async (snapshot) => {
+        // 若雲端資料庫首次啟用為空白，自動將網站原有的預設食評寫入雲端
+        if (snapshot.empty && !hasSeededInitialPosts) {
+            hasSeededInitialPosts = true;
+            for (let i = 0; i < communityPostsDB.length; i++) {
+                const p = communityPostsDB[i];
+                try {
+                    await setDoc(doc(db, "community_posts", p.id), {
+                        ...p,
+                        createdAt: Date.now() - (i * 60000)
+                    });
+                } catch (e) {}
+            }
+            return;
+        }
+
+        const userVotes = readLSv3(LS_V3.VOTES, {});
+        const livePosts = [];
+        snapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            if (data && data.restaurant && data.content) {
+                livePosts.push({
+                    ...data,
+                    id: docSnap.id,
+                    comments: Array.isArray(data.comments) ? data.comments : [],
+                    likes: Number(data.likes || 0),
+                    dislikes: Number(data.dislikes || 0),
+                    userVote: userVotes[docSnap.id] || null
+                });
+            }
+        });
+
+        if (livePosts.length > 0) {
+            livePosts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            communityPostsDB = livePosts;
+            writeLSv3(LS_V3.POSTS, communityPostsDB);
+            renderCommunityPosts();
+        }
+    }, (err) => {
+        console.warn("Firestore 即時食評監聽提示:", err);
+    });
+
+    // 8. 接管「發佈食評討論帖」-> 即時寫入 Firestore 並同步所有用戶畫面
+    window.submitCommunityPost = async function() {
+        const author = document.getElementById('post-author-input').value.trim() || currentMemberName || '匿名食家';
+        const rest = document.getElementById('post-rest-input').value.trim() || '香港地道食店';
+        const dist = document.getElementById('post-district-select').value || '荃灣';
+        const img = document.getElementById('post-img-input').value.trim() || TAMJAI_CRAB_SVG;
+        const content = document.getElementById('post-content-input').value.trim();
+
+        if (!content) {
+            showToast('⚠️ 請輸入你嘅食評內容');
+            return;
+        }
+
+        const postId = 'post_' + Date.now();
+        const nowStr = new Date().toLocaleString('zh-HK', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+        const newPost = {
+            id: postId,
+            author: author,
+            uid: auth.currentUser ? auth.currentUser.uid : 'guest',
+            restaurant: rest,
+            district: dist,
+            time: nowStr,
+            image: img,
+            content: content,
+            likes: 1,
+            dislikes: 0,
+            comments: [],
+            createdAt: Date.now()
+        };
+
+        document.getElementById('post-content-input').value = '';
+        currentCommunityPage = 1;
+
+        try {
+            await setDoc(doc(db, "community_posts", postId), newPost);
+            const votes = readLSv3(LS_V3.VOTES, {});
+            votes[postId] = 'like';
+            writeLSv3(LS_V3.VOTES, votes);
+            showToast('🚀 食評已即時同步至全港用戶畫面！');
+        } catch (err) {
+            console.error("發佈食評失敗:", err);
+            showToast('⚠️ 發佈失敗，請檢查網絡連線');
+        }
+
+        // 保留原有 Google Sheet 備份通道
+        try {
+            await postToSheetV4('reviews', [postId, author, rest, dist, nowStr, encodeCloudImageV4(img), content]);
+        } catch (e) {}
+    };
+
+    // 9. 接管「點讚 / Dislike」-> 即時更新 Firestore
+    window.voteCommunityPost = async function(postId, type) {
+        const post = communityPostsDB.find(p => p.id === postId);
+        if (!post) return;
+
+        let newLikes = post.likes || 0;
+        let newDislikes = post.dislikes || 0;
+        let nextVote = post.userVote;
+
+        if (post.userVote === type) {
+            if (type === 'like') newLikes = Math.max(0, newLikes - 1);
+            else newDislikes = Math.max(0, newDislikes - 1);
+            nextVote = null;
+        } else {
+            if (post.userVote === 'like') newLikes = Math.max(0, newLikes - 1);
+            if (post.userVote === 'dislike') newDislikes = Math.max(0, newDislikes - 1);
+            if (type === 'like') newLikes++;
+            else newDislikes++;
+            nextVote = type;
+        }
+
+        const votes = readLSv3(LS_V3.VOTES, {});
+        if (nextVote) votes[postId] = nextVote;
+        else delete votes[postId];
+        writeLSv3(LS_V3.VOTES, votes);
+
+        try {
+            await updateDoc(doc(db, "community_posts", postId), {
+                likes: newLikes,
+                dislikes: newDislikes
+            });
+        } catch (err) {
+            console.error("更新點讚失敗:", err);
+        }
+    };
+
+    // 10. 接管「新增食評留言」-> 即時更新 Firestore
+    window.addCommunityComment = async function(postId) {
+        const input = document.getElementById(`comment-input-${postId}`);
+        if (!input) return;
+        const text = input.value.trim();
+        if (!text) return;
+        const post = communityPostsDB.find(p => p.id === postId);
+        if (!post) return;
+
+        const commentUser = isMemberLoggedIn ? currentMemberName : '食家網友';
+        const updatedComments = [...(post.comments || []), {
+            user: commentUser,
+            text: text,
+            time: new Date().toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit', hour12: false })
+        }];
+        input.value = '';
+
+        try {
+            await updateDoc(doc(db, "community_posts", postId), {
+                comments: updatedComments
+            });
+            showToast('💬 留言已即時同步發佈！');
+        } catch (err) {
+            console.error("發佈留言失敗:", err);
+        }
+    };
+
+    // 11. 接管管理員「刪除食評」-> 即時從 Firestore 移除
+    window.deleteCommunityPost = async function(postId) {
+        try {
+            await deleteDoc(doc(db, "community_posts", postId));
+            showToast('🗑️ 已從雲端即時刪除該篇食評討論帖');
+        } catch (err) {
+            console.error("刪除食評失敗:", err);
+        }
+    };
+</script>
 </body>
 </html>
