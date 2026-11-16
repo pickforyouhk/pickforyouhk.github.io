@@ -529,55 +529,58 @@
                 <div class="pfy-gacha-ticket rounded-3xl p-5 sm:p-8">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
 
-                        <!-- 左欄：品牌主張與四大進階搵食入口 -->
-                        <div class="lg:col-span-5 space-y-4">
-                            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-pink-500/20 text-pink-400 text-[11px] font-black font-mono-tag">
-                                <span>🎲 HK FOOD DECISION ENGINE</span>
+                        <!-- 左欄：超醒目主視覺標語 ＋ 精簡版四項進階工具列 -->
+                        <div class="lg:col-span-5 space-y-5">
+                            <div class="space-y-3">
+                                <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-pink-500/20 text-pink-400 text-xs font-black font-mono-tag shadow-2xs">
+                                    <span>🎲 HK NO.1 FOOD DECISION ENGINE</span>
+                                </div>
+                                <h1 class="text-3xl sm:text-4xl xl:text-[44px] font-black tracking-tight text-white leading-[1.18]">
+                                    <span class="inline-block text-4xl sm:text-5xl xl:text-[52px] mb-1">隨便？是但？</span><br>
+                                    <span>交俾 <span class="px-2.5 py-0.5 rounded-xl border-2 border-zinc-900 shadow-xs inline-block transform -rotate-1" style="background-color: #FF5A36; color: #FFFFFF !important;">Pick For You</span></span><br>
+                                    <span class="text-pink-400 underline decoration-wavy decoration-4 underline-offset-8 mt-1 inline-block">一秒拍板！</span>
+                                </h1>
+                                <p class="text-xs sm:text-sm text-gray-300 leading-relaxed pt-1">
+                                    專為香港選擇困難症而設嘅飲食抽籤與第一手新餐情報誌。一撳即抽全港 85 站食肆、1KM 步行雷達與每日最新著數。
+                                </p>
                             </div>
-                            <h1 class="text-2xl sm:text-3xl xl:text-[34px] font-black tracking-tight text-white leading-snug">
-                                隨便？是但？<br><span class="whitespace-nowrap">交俾 <span class="text-pink-400 underline decoration-wavy decoration-2 underline-offset-4">Pick For You</span> 一秒拍板！</span>
-                            </h1>
-                            <p class="text-xs sm:text-sm text-gray-300 leading-relaxed">
-                                專為香港選擇困難症而設嘅飲食抽籤與第一手新餐情報誌。收錄全港 85 個港鐵站餐廳、100M-1KM 步行範圍定位與每日最新優惠。
-                            </p>
 
-                            <!-- 四格快捷進階模式卡 -->
-                            <div class="grid grid-cols-2 gap-2.5 pt-1">
-                                <button onclick="switchModule(1)" class="p-3 rounded-2xl bg-gray-900 hover:border-pink-500 border border-gray-800 text-left transition group">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-lg">🍴</span>
-                                        <span class="text-[10px] font-mono-tag font-bold text-gray-400 group-hover:text-pink-400">85 STATIONS ➔</span>
-                                    </div>
-                                    <div class="font-black text-xs sm:text-sm text-white mt-1">全港餐廳盲盒</div>
-                                    <div class="text-[11px] text-gray-400">按港鐵站・商場篩選</div>
-                                </button>
+                            <!-- 縮小版四項進階功能捷徑（紧凑膠囊按鈕，不搶主舞台焦點） -->
+                            <div class="pt-2 border-t border-gray-800/80 space-y-1.5">
+                                <div class="text-[10px] font-mono-tag font-bold text-gray-400 uppercase tracking-wider">MORE TOOLS // 進階搵食工具</div>
+                                <div class="grid grid-cols-2 gap-1.5">
+                                    <button onclick="switchModule(1)" class="px-2.5 py-2 rounded-xl bg-gray-900 hover:border-pink-500 border border-gray-800 flex items-center justify-between text-left transition group">
+                                        <div class="flex items-center space-x-1.5 min-w-0">
+                                            <span class="text-sm shrink-0">🍴</span>
+                                            <span class="font-bold text-xs text-white truncate">全港餐廳盲盒</span>
+                                        </div>
+                                        <span class="text-[10px] font-mono-tag text-gray-400 group-hover:text-pink-400 shrink-0">85站 ➔</span>
+                                    </button>
 
-                                <button onclick="switchModule('nearby')" class="p-3 rounded-2xl bg-gray-900 hover:border-emerald-500 border border-gray-800 text-left transition group">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-lg">📍</span>
-                                        <span class="text-[10px] font-mono-tag font-bold text-emerald-400">GPS 100M-1KM ➔</span>
-                                    </div>
-                                    <div class="font-black text-xs sm:text-sm text-white mt-1">附近餐廳雷達</div>
-                                    <div class="text-[11px] text-gray-400">即時定位身邊食肆</div>
-                                </button>
+                                    <button onclick="switchModule('nearby')" class="px-2.5 py-2 rounded-xl bg-gray-900 hover:border-emerald-500 border border-gray-800 flex items-center justify-between text-left transition group">
+                                        <div class="flex items-center space-x-1.5 min-w-0">
+                                            <span class="text-sm shrink-0">📍</span>
+                                            <span class="font-bold text-xs text-white truncate">附近餐廳雷達</span>
+                                        </div>
+                                        <span class="text-[10px] font-mono-tag text-emerald-400 shrink-0">GPS ➔</span>
+                                    </button>
 
-                                <button onclick="switchModule(2)" class="p-3 rounded-2xl bg-gray-900 hover:border-amber-500 border border-gray-800 text-left transition group">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-lg">🍳</span>
-                                        <span class="text-[10px] font-mono-tag font-bold text-amber-400">3-MEALS ➔</span>
-                                    </div>
-                                    <div class="font-black text-xs sm:text-sm text-white mt-1">一日三餐抽抽樂</div>
-                                    <div class="text-[11px] text-gray-400">早午晚＋宵夜拉霸</div>
-                                </button>
+                                    <button onclick="switchModule(2)" class="px-2.5 py-2 rounded-xl bg-gray-900 hover:border-amber-500 border border-gray-800 flex items-center justify-between text-left transition group">
+                                        <div class="flex items-center space-x-1.5 min-w-0">
+                                            <span class="text-sm shrink-0">🍳</span>
+                                            <span class="font-bold text-xs text-white truncate">一日三餐抽抽樂</span>
+                                        </div>
+                                        <span class="text-[10px] font-mono-tag text-amber-400 shrink-0">三餐 ➔</span>
+                                    </button>
 
-                                <button onclick="switchModule(8)" class="p-3 rounded-2xl bg-gray-900 hover:border-pink-500 border border-gray-800 text-left transition group">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-lg">📖</span>
-                                        <span class="text-[10px] font-mono-tag font-bold text-gray-400 group-hover:text-pink-400">ARCHIVE ➔</span>
-                                    </div>
-                                    <div class="font-black text-xs sm:text-sm text-white mt-1">全港餐廳名單</div>
-                                    <div class="text-[11px] text-gray-400">地址電話・食評直連</div>
-                                </button>
+                                    <button onclick="switchModule(8)" class="px-2.5 py-2 rounded-xl bg-gray-900 hover:border-pink-500 border border-gray-800 flex items-center justify-between text-left transition group">
+                                        <div class="flex items-center space-x-1.5 min-w-0">
+                                            <span class="text-sm shrink-0">📖</span>
+                                            <span class="font-bold text-xs text-white truncate">全港餐廳名單</span>
+                                        </div>
+                                        <span class="text-[10px] font-mono-tag text-gray-400 group-hover:text-pink-400 shrink-0">名單 ➔</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -688,34 +691,34 @@
                                 </div>
                             </div>
 
-                            <!-- STEP 1: 二選一模式切換 (抽菜色 vs 抽餐廳) -->
+                            <!-- STEP 1: 二選一模式切換 (預設抽餐廳，並移除「真實食肆」字眼) -->
                             <div class="space-y-2">
                                 <label class="block text-xs font-black text-gray-300">1️⃣ 先揀你想點樣抽（二選一）：</label>
                                 <div class="flex flex-wrap items-center gap-2.5">
                                     <div class="inline-flex p-1 rounded-xl bg-gray-800 border border-gray-700">
-                                        <button onclick="setHomeQuickDrawMode('cuisine')" id="home-qmode-cuisine" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-black bg-pink-600 text-white transition shadow-xs">
-                                            🍜 抽菜色 (8大菜系)
+                                        <button onclick="setHomeQuickDrawMode('restaurant')" id="home-qmode-restaurant" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-black bg-pink-600 text-white transition shadow-xs">
+                                            🏠 抽餐廳
                                         </button>
-                                        <button onclick="setHomeQuickDrawMode('restaurant')" id="home-qmode-restaurant" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold text-gray-300 hover:text-white transition">
-                                            🏠 抽餐廳 (真實食肆)
+                                        <button onclick="setHomeQuickDrawMode('cuisine')" id="home-qmode-cuisine" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold text-gray-300 hover:text-white transition">
+                                            🍜 抽菜色 (8大菜系)
                                         </button>
                                     </div>
 
-                                    <select id="home-quick-station-select" class="hidden px-3 py-2 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs sm:text-sm font-bold outline-none cursor-pointer">
+                                    <select id="home-quick-station-select" class="px-3 py-2 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs sm:text-sm font-bold outline-none cursor-pointer">
                                         <option value="全港隨機">🚇 全港隨機 (85站)</option>
                                     </select>
                                 </div>
                             </div>
 
-                            <!-- STEP 2: 觸發抽籤按鈕組 -->
+                            <!-- STEP 2: 觸發抽籤按鈕組 (預設一鍵抽餐廳) -->
                             <div class="space-y-2">
                                 <label class="block text-xs font-black text-gray-300">2️⃣ 撳掣即刻拍板：</label>
                                 <div class="flex flex-col sm:flex-row gap-3">
-                                    <button onclick="triggerHomeQuickDraw()" id="btn-home-quick-draw" class="neon-button flex-1 py-3.5 px-6 rounded-2xl text-sm sm:text-base font-black tracking-wide flex items-center justify-center space-x-2">
-                                        <span>🎲 立即一鍵抽菜色！</span>
+                                    <button onclick="triggerHomeQuickDraw()" id="btn-home-quick-draw" class="neon-button flex-1 py-4 px-6 rounded-2xl text-base sm:text-lg font-black tracking-wide flex items-center justify-center space-x-2">
+                                        <span>🎲 立即一鍵抽餐廳！</span>
                                     </button>
                                     <button onclick="triggerHomeThreeMealsDraw()" id="btn-home-3meals-draw" class="py-3.5 px-5 rounded-2xl bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs sm:text-sm font-black text-white transition flex items-center justify-center space-x-1.5">
-                                        <span>🍳 抽齊早午晚三餐</span>
+                                        <span>🍳 抽齊三餐餐廳</span>
                                     </button>
                                 </div>
                             </div>
@@ -2293,7 +2296,7 @@
         }
 
         // ==================== 5. 首頁二選一極速拍板：「抽菜式」/「抽餐廳」 ====================
-        let homeQuickDrawMode = 'cuisine';
+        let homeQuickDrawMode = 'restaurant';
         let homeQuickDrawRolling = false;
 
         // 產生「🎲 骰子由左邊跳滾到中間 + 爆開光環」舞台 HTML（已移除紅圈提示字）
@@ -2372,7 +2375,36 @@
             }
         }
 
+        // 預設全域額度守衛（確保在任何網速下非會員抽1次即鎖定並彈出登入視窗）
+        window.checkAndConsumeQuota = function(featureKey) {
+            if (isAdminLoggedIn) return true;
+            const todayStr = new Date().toISOString().slice(0, 10);
+            if (isMemberLoggedIn) {
+                if (typeof dailyRemainingQuota !== 'number') dailyRemainingQuota = 5;
+                if (dailyRemainingQuota <= 0) {
+                    showToast('🔒 今日會員 5 次抽籤額度已用完！明日請早');
+                    return false;
+                }
+                dailyRemainingQuota--;
+                updateQuotaUI();
+                localStorage.setItem('pfy_member_quota_' + todayStr, dailyRemainingQuota);
+                return true;
+            } else {
+                const guestKey = `pfy_guest_used_${featureKey}_${todayStr}`;
+                if (localStorage.getItem(guestKey) === 'true') {
+                    showToast('🔒 非會員每日免費抽 1 次！請先登入會員享每日 5 抽');
+                    handleAuthClick();
+                    return false;
+                }
+                localStorage.setItem(guestKey, 'true');
+                dailyRemainingQuota = 0;
+                updateQuotaUI();
+                return true;
+            }
+        };
+
         function triggerHomeThreeMealsDraw() {
+            if (!checkAndConsumeQuota('home_3meals')) return;
             if (homeQuickDrawRolling) return;
             const stage = document.getElementById('home-quick-draw-stage');
             if (!stage) return;
@@ -2474,6 +2506,7 @@
         }
 
         function triggerHomeQuickDraw(forcedCuisine) {
+            if (!checkAndConsumeQuota('home_gacha')) return;
             if (homeQuickDrawRolling) return;
             const stage = document.getElementById('home-quick-draw-stage');
             if (!stage) return;
@@ -2654,6 +2687,7 @@
         }
 
         function spinSingleMealSlot(slotKey, delayStopMs = 920) {
+            if (!checkAndConsumeQuota('meals_planner')) return;
             const box = document.getElementById(`meal-slot-${slotKey}`);
             const linkBtn = document.getElementById(`meal-link-${slotKey}`);
             if (!box) return;
@@ -2751,6 +2785,7 @@
         }
 
         function spinMealIdea(period) {
+            if (!checkAndConsumeQuota('meals_planner')) return;
             const box = document.getElementById('meal-idea-result');
             if (!box) return;
             if (mealPlannerMode === 'restaurant') {
@@ -3398,6 +3433,7 @@
         }
 
         function spinNearbyRestaurant() {
+            if (!checkAndConsumeQuota('nearby_radar')) return;
             const candidates = restaurantsDB.filter(r => r.station === currentNearbyStation && (r.dist || 350) <= currentNearbyDistance);
             if (candidates.length === 0) {
                 showToast('⚠️ 此範圍內暫無候選食肆，請調大步行距離');
@@ -3600,19 +3636,10 @@
 
         function spinRestaurantGacha() {
             if (isGachaRolling) return;
-            if (!isAdminLoggedIn && dailyRemainingQuota <= 0) {
-                showToast('🔒 今日抽籤次數已用完！登入會員即可享每日 5 抽');
-                handleAuthClick();
-                return;
-            }
+            if (!checkAndConsumeQuota('gacha_85')) return;
 
             let pool = getFilteredGachaPool();
             if (pool.length === 0) pool = restaurantsDB;
-
-            if (!isAdminLoggedIn) {
-                dailyRemainingQuota = Math.max(0, dailyRemainingQuota - 1);
-                updateQuotaUI();
-            }
 
             isGachaRolling = true;
             const boxStage = document.getElementById('gacha-box-stage');
@@ -4298,6 +4325,7 @@
         }
 
         function flipDestinyCoin() {
+            if (!checkAndConsumeQuota('destiny_coin')) return;
             const a = document.getElementById('coin-opt-a').value.trim() || '選項A';
             const b = document.getElementById('coin-opt-b').value.trim() || '選項B';
             const vis = document.getElementById('coin-visual');
@@ -4310,6 +4338,7 @@
         }
 
         function spinCustomWheel() {
+            if (!checkAndConsumeQuota('custom_wheel')) return;
             const val = document.getElementById('custom-wheel-input').value.trim();
             const arr = val.split(',').map(s => s.trim()).filter(Boolean);
             if (arr.length === 0) { showToast('⚠️ 請輸入抽籤項目'); return; }
@@ -6011,7 +6040,7 @@ function doPost(e) {
             initNearbySelect();
             renderCommunityPosts();
             updateQuotaUI();
-            setHomeQuickDrawMode('cuisine');
+            setHomeQuickDrawMode('restaurant');
             // 先載入本地 IndexedDB 與 window.name 快訊及自訂圖片，再執行 Google Sheet 同步，防止雲端舊資料覆蓋本地修改
             await loadNewsFromIndependentDB();
             await syncAllDataFromGoogleSheetV4(false);
@@ -6061,6 +6090,41 @@ function doPost(e) {
     if (modalTitle) {
         modalTitle.innerHTML = '🔑 會員 / 管理員登入 <span class="text-[10px] text-emerald-400 font-mono-tag">(🟢 雲端已連線)</span>';
     }
+
+    // 0. 方案 A 獨立額度與全站共用額度檢查函數
+    window.checkAndConsumeQuota = function(featureKey) {
+        if (isAdminLoggedIn) return true;
+        const todayStr = new Date().toISOString().slice(0, 10);
+        
+        if (isMemberLoggedIn) {
+            if (typeof dailyRemainingQuota !== 'number') dailyRemainingQuota = 5;
+            if (dailyRemainingQuota <= 0) {
+                showToast('🔒 今日會員 5 次抽籤額度已用完！明日請早');
+                return false;
+            }
+            dailyRemainingQuota--;
+            updateQuotaUI();
+            
+            if (auth.currentUser) {
+                const userRef = doc(db, "users", auth.currentUser.uid);
+                setDoc(userRef, { remainingQuota: dailyRemainingQuota, lastQuotaDate: todayStr }, { merge: true }).catch(e => {});
+            }
+            localStorage.setItem('pfy_member_quota_' + todayStr, dailyRemainingQuota);
+            return true;
+        } else {
+            // Guest: per feature independent limit of 1 per day
+            const guestKey = `pfy_guest_used_${featureKey}_${todayStr}`;
+            const alreadyUsed = localStorage.getItem(guestKey);
+            if (alreadyUsed === 'true') {
+                showToast('🔒 訪客每個抽籤功能每日免費體驗 1 次，登入會員即可享每日 5 抽！');
+                handleAuthClick();
+                return false;
+            }
+            localStorage.setItem(guestKey, 'true');
+            return true;
+        }
+    };
+
 
     // 1. 強制登入檢查攔截器（發帖、留言、點讚必須先登入會員）
     window.requireMemberAuth = function(actionText = '參與食評討論') {
