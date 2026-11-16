@@ -274,7 +274,10 @@
         .animate-marquee {
             display: inline-block;
             white-space: nowrap;
-            animation: marquee 32s linear infinite;
+            animation: marquee 75s linear infinite;
+        }
+        div.w-full.bg-zinc-900:hover .animate-marquee {
+            animation-play-state: paused;
         }
 
         @keyframes gachaBoxShake {
@@ -1778,7 +1781,7 @@
         let dailyUpdatesDB = [...defaultDailyUpdatesDB];
         let currentHomeNewsFilter = 'all';
         let newsSearchKeyword = '';
-        let newsVisibleCount = 10;
+        let newsVisibleCount = 50;
 
         // ==================== 4. IndexedDB v2 全域秒開快取引擎 (同時保存快訊高清圖片 + 雲端餐廳名單) ====================
         const IDB_NAME = 'PickForYouIndependentDB';
@@ -2102,9 +2105,9 @@
         function renderHomeDailyUpdates() {
             const grid = document.getElementById('home-daily-updates-grid');
             if (!grid) return;
-            const list = (currentHomeNewsFilter === 'all'
+            const list = currentHomeNewsFilter === 'all'
                 ? dailyUpdatesDB
-                : dailyUpdatesDB.filter(n => n.type === currentHomeNewsFilter)).slice(0, 6);
+                : dailyUpdatesDB.filter(n => n.type === currentHomeNewsFilter);
 
             grid.innerHTML = list.map(item => `
                 <div onclick="openNewsDetail('${item.id}')" class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between cursor-pointer hover:border-pink-500 transition group">
@@ -2228,12 +2231,12 @@
         function onNewsSearchInput() {
             const input = document.getElementById('news-search-input');
             newsSearchKeyword = input ? input.value.trim().toLowerCase() : '';
-            newsVisibleCount = 10;
+            newsVisibleCount = 8;
             renderFullNewsModule();
         }
 
         function loadMoreNewsItems() {
-            newsVisibleCount += 10;
+            newsVisibleCount += 8;
             renderFullNewsModule();
         }
 
