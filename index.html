@@ -3712,13 +3712,7 @@
                                 <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-800">
                                     <button onclick="jumpToDirectoryRestaurant('${winner.name}', '${winner.station}')" class="px-3.5 py-1.5 rounded-xl bg-pink-600 text-white text-xs font-black">📖 餐廳名單詳情</button>
                                     <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(winner.name + ' ' + winner.address)}" target="_blank" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-black">🗺️ Google Map 導航</a>
-                                    <a href="https://api.whatsapp.com/send?text=${encodeURIComponent('【Pick For You 拍板結果】
-🏠 ' + winner.name + '
-🚇 地鐵站：' + winner.station + '站 (' + winner.mall + ')
-🍜 菜式：' + winner.cuisine + '
-📍 地址：' + winner.address + '
-📞 電話：' + winner.phone + '
-🗺️ Google Map：https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(winner.name + ' ' + winner.address))}" target="_blank" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black flex items-center space-x-1 shadow transition"><span>🟢 WhatsApp 拍板分享</span></a>
+                                    <button onclick="shareResultToWhatsApp('${winner.name.replace(/'/g, "\'")}', '${winner.station}', '${winner.mall.replace(/'/g, "\'")}', '${winner.cuisine}', '${winner.address.replace(/'/g, "\'")}', '${winner.phone}')" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black flex items-center space-x-1 shadow transition"><span>🟢 WhatsApp 拍板分享</span></button>
                                     <button onclick="toggleFavorite('${winner.name}', '${winner.station}', '${winner.address}')" class="px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-pink-400 text-xs font-bold">❤️ 收藏</button>
                                 </div>
                             </div>
@@ -3728,10 +3722,15 @@
             }, 70);
         }
 
-                function onGachaSmartSearchInput(kw) {
+                function shareResultToWhatsApp(name, station, mall, cuisine, address, phone) {
+            const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(name + ' ' + address);
+            const text = `【Pick For You 拍板結果】\n🏠 ${name}\n🚇 地鐵站：${station}站 (${mall})\n🍜 菜式：${cuisine}\n📍 地址：${address}\n📞 電話：${phone}\n🗺️ Google Map：${mapUrl}`;
+            window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(text), '_blank');
+        }
+
+        function onGachaSmartSearchInput(kw) {
             const query = (kw || '').trim().toLowerCase();
             if (!query) return;
-            // Search in mtrLines
             for (const [line, stations] of Object.entries(mtrLines)) {
                 for (const st of stations) {
                     if (st.toLowerCase().includes(query)) {
@@ -3742,7 +3741,6 @@
                     }
                 }
             }
-            // Search in restaurantsDB malls/names
             const foundRest = restaurantsDB.find(r => r.mall.toLowerCase().includes(query) || r.name.toLowerCase().includes(query) || r.address.toLowerCase().includes(query));
             if (foundRest) {
                 const st = foundRest.station;
