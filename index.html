@@ -288,32 +288,32 @@
             animation: gachaBoxShake 0.35s ease-in-out infinite;
         }
 
-        /* 🎲 骰子由左邊跳滾到中間位置再爆開特效 */
+        /* 🎲 骰子由左邊跳滾到中間位置再爆開特效 (修正縮放比例與高度，確保 100% 完整顯示不裁切) */
         @keyframes diceJumpRollLeftToCenter {
             0% {
-                transform: translateX(-180px) translateY(-42px) rotate(-540deg) scale(0.65);
-                opacity: 0.2;
+                transform: translateX(-160px) translateY(-24px) rotate(-540deg) scale(0.7);
+                opacity: 0.25;
             }
             24% {
-                transform: translateX(-125px) translateY(0px) rotate(-380deg) scale(1.12, 0.86);
+                transform: translateX(-115px) translateY(0px) rotate(-380deg) scale(1.08, 0.88);
                 opacity: 1;
             }
             44% {
-                transform: translateX(-75px) translateY(-34px) rotate(-220deg) scale(0.95, 1.06);
+                transform: translateX(-68px) translateY(-20px) rotate(-220deg) scale(0.95, 1.05);
             }
             64% {
-                transform: translateX(-32px) translateY(0px) rotate(-90deg) scale(1.15, 0.85);
+                transform: translateX(-28px) translateY(0px) rotate(-90deg) scale(1.1, 0.88);
             }
             78% {
-                transform: translateX(-8px) translateY(-18px) rotate(-15deg) scale(1.05);
+                transform: translateX(-6px) translateY(-12px) rotate(-15deg) scale(1.04);
             }
             90% {
-                transform: translateX(0px) translateY(0px) rotate(0deg) scale(1.25);
-                filter: drop-shadow(0 0 12px rgba(255, 90, 54, 0.85));
+                transform: translateX(0px) translateY(0px) rotate(0deg) scale(1.18);
+                filter: drop-shadow(0 0 10px rgba(255, 90, 54, 0.75));
             }
             100% {
-                transform: translateX(0px) translateY(0px) rotate(12deg) scale(1.55);
-                filter: drop-shadow(0 0 22px rgba(255, 90, 54, 1));
+                transform: translateX(0px) translateY(0px) rotate(8deg) scale(1.12);
+                filter: drop-shadow(0 0 14px rgba(255, 90, 54, 0.85));
             }
         }
         .animate-dice-roll-center {
@@ -996,7 +996,7 @@
 
                     <div class="p-4 rounded-2xl bg-gradient-to-b from-gray-900/90 to-gray-950 border border-pink-500/30 text-center space-y-3 overflow-hidden">
                         <div id="gacha-filter-summary" class="text-xs text-gray-300">正在載入候選池...</div>
-                        <div id="gacha-box-stage" class="relative h-20 flex flex-col items-center justify-center overflow-hidden">
+                        <div id="gacha-box-stage" class="relative h-28 py-3 flex flex-col items-center justify-center overflow-visible">
                             <div id="gacha-box-visual" class="w-14 h-14 mx-auto rounded-2xl border-2 border-zinc-900 flex items-center justify-center text-3xl shadow-lg transition" style="background-color: #FF5A36; color: #FFFFFF !important;">
                                 🎲
                             </div>
@@ -2302,9 +2302,9 @@
         // 產生「🎲 骰子由左邊跳滾到中間 + 爆開光環」舞台 HTML（已移除紅圈提示字）
         function getDiceJumpRollStageHTML(statusTitle, rollingCandidateText) {
             return `
-                <div class="relative py-3 px-2 overflow-hidden flex flex-col items-center justify-center">
+                <div class="relative py-4 px-2 overflow-visible flex flex-col items-center justify-center">
                     <!-- 骰子跳躍軌跡虛線 (左至中) -->
-                    <div class="relative w-full max-w-md h-16 flex items-center justify-center">
+                    <div class="relative w-full max-w-md h-24 flex items-center justify-center">
                         <div class="absolute left-6 right-1/2 top-1/2 border-b-2 border-dashed border-pink-500/35 pointer-events-none"></div>
                         <!-- 中央爆開光環 -->
                         <div class="w-14 h-14 rounded-full border-4 border-pink-500 animate-dice-burst-wave absolute pointer-events-none"></div>
@@ -2696,7 +2696,7 @@
             const targetStation = stSel ? stSel.value : '全港隨機';
 
             box.innerHTML = `
-                <div class="relative overflow-hidden py-2 flex flex-col items-center justify-center">
+                <div class="relative overflow-visible py-4 flex flex-col items-center justify-center">
                     <div class="w-10 h-10 rounded-xl border-2 border-zinc-900 flex items-center justify-center text-xl shadow animate-dice-roll-center" style="background-color: #FF5A36; color: #FFFFFF !important;">
                         🎲
                     </div>
