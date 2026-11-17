@@ -2461,9 +2461,10 @@
                         const d = mealSlotPool.dinner[Math.floor(Math.random() * mealSlotPool.dinner.length)];
                         stage.innerHTML = `
                             <div class="animate-winner-pop space-y-3 text-left">
-                                <div class="flex items-center justify-between border-b border-gray-800 pb-2">
+                                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-800 pb-2">
                                     <span class="px-2.5 py-0.5 rounded bg-pink-600 text-white text-[11px] font-black">💥 骰子爆出！今日三餐菜色拍板</span>
-                                    <div class="flex space-x-2">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <button onclick="shareThreeMealsToWhatsApp('菜色', '${b.icon} ${b.name}', '${l.icon} ${l.name}', '${d.icon} ${d.name}')" class="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-[11px] font-black shadow transition">🟢 WhatsApp 拍板分享</button>
                                         <button onclick="setMealPlannerMode('cuisine'); switchModule(2); spinAllThreeMeals();" class="text-[11px] font-bold text-amber-300 hover:underline">進入三餐專頁 ➔</button>
                                         <button onclick="triggerHomeThreeMealsDraw()" class="text-[11px] font-bold text-pink-400 hover:underline">🎲 重擲三餐</button>
                                     </div>
@@ -2494,9 +2495,10 @@
                         const dRest = pickRestaurantForMealSlot('dinner', targetStation);
                         stage.innerHTML = `
                             <div class="animate-winner-pop space-y-3 text-left">
-                                <div class="flex items-center justify-between border-b border-gray-800 pb-2">
+                                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-800 pb-2">
                                     <span class="px-2.5 py-0.5 rounded bg-amber-400 text-black text-[11px] font-black">💥 骰子爆出！今日三餐餐廳拍板 (${targetStation})</span>
-                                    <div class="flex space-x-2">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <button onclick="shareThreeMealsToWhatsApp('餐廳 (${targetStation})', '${bRest.name.replace(/'/g, "\'")} (${bRest.station}・${bRest.mall})', '${lRest.name.replace(/'/g, "\'")} (${lRest.station}・${lRest.mall})', '${dRest.name.replace(/'/g, "\'")} (${dRest.station}・${dRest.mall})')" class="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-[11px] font-black shadow transition">🟢 WhatsApp 拍板分享</button>
                                         <button onclick="setMealPlannerMode('restaurant'); switchModule(2); spinAllThreeMeals();" class="text-[11px] font-bold text-emerald-400 hover:underline">進入三餐專頁 ➔</button>
                                         <button onclick="triggerHomeThreeMealsDraw()" class="text-[11px] font-bold text-pink-400 hover:underline">🎲 重擲三餐</button>
                                     </div>
@@ -2575,6 +2577,9 @@
                                     <button onclick="triggerHomeQuickDraw('${winC.name}')" class="neon-button px-3.5 py-2 rounded-xl text-xs font-black">
                                         🎲 擲骰抽埋呢款菜式嘅餐廳！
                                     </button>
+                                    <button onclick="shareCuisineToWhatsApp('${winC.icon}', '${winC.name}', '${winC.desc.replace(/'/g, "\'")}')" class="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black flex items-center space-x-1 shadow transition">
+                                        <span>🟢 WhatsApp 拍板分享</span>
+                                    </button>
                                     <button onclick="triggerHomeQuickDraw()" class="px-3 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-bold text-gray-200">
                                         🔄 再擲一次
                                     </button>
@@ -2609,12 +2614,15 @@
                                     <div class="text-xs text-gray-300">📍 ${winR.address} | 📞 ${winR.phone}</div>
                                 </div>
                                 <div class="flex flex-wrap gap-1.5 shrink-0">
-                                    <button onclick="jumpToDirectoryRestaurant('${winR.name}', '${winR.station}')" class="px-3 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-black">
+                                    <button onclick="jumpToDirectoryRestaurant('${winR.name.replace(/'/g, "\'")}', '${winR.station}')" class="px-3 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-black">
                                         📖 餐廳名單
                                     </button>
                                     <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(winR.name + ' ' + winR.address)}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black">
                                         🗺️ 導航
                                     </a>
+                                    <button onclick="shareResultToWhatsApp('${winR.name.replace(/'/g, "\'")}', '${winR.station}', '${winR.mall.replace(/'/g, "\'")}', '${winR.cuisine}', '${winR.address.replace(/'/g, "\'")}', '${winR.phone}')" class="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black flex items-center space-x-1 shadow transition">
+                                        <span>🟢 WhatsApp 拍板分享</span>
+                                    </button>
                                     <button onclick="triggerHomeQuickDraw()" class="px-3 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-bold">
                                         🎲 重擲
                                     </button>
@@ -3501,8 +3509,9 @@
                                 <div onclick="jumpToDirectoryRestaurant('${winner.name}', '${winner.station}')" class="text-lg font-black text-white hover:text-pink-400 cursor-pointer">${winner.name}</div>
                                 <div class="text-xs text-gray-300">📍 ${winner.address} | 📞 ${winner.phone}</div>
                                 <div class="flex flex-wrap gap-2 pt-1">
-                                    <button onclick="jumpToDirectoryRestaurant('${winner.name}', '${winner.station}')" class="px-3 py-1.5 rounded-lg bg-pink-600 text-white text-xs font-black">📖 打開餐廳名單</button>
+                                    <button onclick="jumpToDirectoryRestaurant('${winner.name.replace(/'/g, "\'")}', '${winner.station}')" class="px-3 py-1.5 rounded-lg bg-pink-600 text-white text-xs font-black">📖 打開餐廳名單</button>
                                     <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(winner.name + ' ' + winner.address)}" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-black">🗺️ Google Map 導航</a>
+                                    <button onclick="shareResultToWhatsApp('${winner.name.replace(/'/g, "\'")}', '${winner.station}', '${winner.mall.replace(/'/g, "\'")}', '${winner.cuisine}', '${winner.address.replace(/'/g, "\'")}', '${winner.phone}')" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black flex items-center space-x-1 shadow transition"><span>🟢 WhatsApp 拍板分享</span></button>
                                 </div>
                             </div>
                         `;
@@ -3729,7 +3738,17 @@
 
                 function shareResultToWhatsApp(name, station, mall, cuisine, address, phone) {
             const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(name + ' ' + address);
-            const text = `【Pick For You 拍板結果】\n🏠 ${name}\n🚇 地鐵站：${station}站 (${mall})\n🍜 菜式：${cuisine}\n📍 地址：${address}\n📞 電話：${phone}\n🗺️ Google Map：${mapUrl}`;
+            const text = `【Pick For You 一秒拍板結果】\n🏠 ${name}\n🚇 地鐵站：${station}站 (${mall})\n🍜 菜式：${cuisine}\n📍 地址：${address}\n📞 電話：${phone}\n🗺️ Google Map：${mapUrl}\n🎲 一齊抽盲盒：https://pickforyouhk.github.io/`;
+            window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(text), '_blank');
+        }
+
+        function shareCuisineToWhatsApp(icon, name, desc) {
+            const text = `【Pick For You 一秒拍板菜色】\n${icon} 今餐拍板食：${name}！\n💡 推薦美食：${desc}\n🎲 唔洗諗一秒拍板：https://pickforyouhk.github.io/`;
+            window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(text), '_blank');
+        }
+
+        function shareThreeMealsToWhatsApp(modeTitle, bText, lText, dText) {
+            const text = `【Pick For You 今日三餐${modeTitle}拍板】\n🌅 早餐：${bText}\n☀️ 午餐：${lText}\n🌙 晚餐：${dText}\n🎲 一鍵抽三餐：https://pickforyouhk.github.io/`;
             window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(text), '_blank');
         }
 
