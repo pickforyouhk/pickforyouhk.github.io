@@ -2895,7 +2895,12 @@
                 if (drawerQuota) drawerQuota.textContent = `剩餘 ${dailyRemainingQuota}/${dailyMaxQuota}`;
                 if (drawerAuthBtn) drawerAuthBtn.textContent = `🔑 立即登入 / 免費註冊`;
                 if (drawerAdminBtn) drawerAdminBtn.classList.add('hidden');
-                if (gachaPill) gachaPill.textContent = `訪客剩餘：${dailyRemainingQuota}/${dailyMaxQuota} 抽`;
+                if (gachaPill) {
+                    gachaPill.textContent = `訪客剩餘：${dailyRemainingQuota}/${dailyMaxQuota} 抽`;
+                    gachaPill.className = dailyRemainingQuota <= 0
+                        ? 'px-2.5 py-1 rounded-full bg-rose-600 text-white text-[11px] font-black font-mono-tag shadow-xs'
+                        : 'px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[11px] font-bold font-mono-tag';
+                }
                 if (adminPanel) adminPanel.classList.add('hidden');
                 if (homeAdminBtn) homeAdminBtn.classList.add('hidden');
                 if (homeAdminPushNewsBtn) homeAdminPushNewsBtn.classList.add('hidden');
@@ -6010,6 +6015,7 @@ function doPost(e) {
             syncAllUrlInputsUI(getActiveGoogleSheetAPI());
 
             // 自動恢復管理員 / 會員登入狀態（避免每次更新程式碼都要重新輸入 admin / 8888）
+            const todayStr = new Date().toISOString().slice(0, 10);
             const wnCache = readWindowNameCache();
             const savedAuth = readLSv3('pfy_v6_auth_state', (wnCache && wnCache.authState) || null);
             if (savedAuth && savedAuth.isAdmin) {
@@ -6023,7 +6029,13 @@ function doPost(e) {
                 isMemberLoggedIn = true;
                 currentMemberName = savedAuth.name || '食家會員';
                 dailyMaxQuota = 5;
-                dailyRemainingQuota = 5;
+                const savedMemberQuota = readLSv3('pfy_member_quota_' + todayStr, 5);
+                dailyRemainingQuota = typeof savedMemberQuota === 'number' ? savedMemberQuota : 5;
+            } else {
+                const guestKeys = ['home_gacha', 'gacha_85', 'home_3meals', 'nearby_radar', 'meals_planner', 'destiny_coin', 'custom_wheel'];
+                const alreadyUsedToday = guestKeys.some(k => localStorage.getItem(`pfy_guest_used_${k}_${todayStr}`) === 'true');
+                dailyMaxQuota = 1;
+                dailyRemainingQuota = alreadyUsedToday ? 0 : 1;
             }
 
             // 1. 恢復已快取的雲端餐廳名單 (同時檢查 window.name 與 LocalStorage)
@@ -6149,6 +6161,15 @@ function doPost(e) {
         modalTitle.innerHTML = '🔑 會員 / 管理員登入 <span class="text-[10px] text-emerald-400 font-mono-tag">(🟢 雲端已連線)</span>';
     }
 
+    // 輔助函數：即時讀取訪客今日剩餘額度 (0 或 1)
+    window.getGuestRemainingQuota = function(featureKey = 'gacha_85') {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const guestKeys = ['home_gacha', 'gacha_85', 'home_3meals', 'nearby_radar', 'meals_planner', 'destiny_coin', 'custom_wheel'];
+        const usedSpecific = localStorage.getItem(`pfy_guest_used_${featureKey}_${todayStr}`) === 'true';
+        const usedAny = guestKeys.some(k => localStorage.getItem(`pfy_guest_used_${k}_${todayStr}`) === 'true');
+        return (usedSpecific || usedAny) ? 0 : 1;
+    };
+
     // 0. 方案 A 獨立額度與全站共用額度檢查函數
     window.checkAndConsumeQuota = function(featureKey) {
         if (isAdminLoggedIn) return true;
@@ -6158,27 +6179,32 @@ function doPost(e) {
             if (typeof dailyRemainingQuota !== 'number') dailyRemainingQuota = 5;
             if (dailyRemainingQuota <= 0) {
                 showToast('🔒 今日會員 5 次抽籤額度已用完！明日請早');
+                window.updateQuotaUI();
                 return false;
             }
             dailyRemainingQuota--;
-            updateQuotaUI();
+            localStorage.setItem('pfy_member_quota_' + todayStr, dailyRemainingQuota);
+            window.updateQuotaUI();
             
             if (auth.currentUser) {
                 const userRef = doc(db, "users", auth.currentUser.uid);
                 setDoc(userRef, { remainingQuota: dailyRemainingQuota, lastQuotaDate: todayStr }, { merge: true }).catch(e => {});
             }
-            localStorage.setItem('pfy_member_quota_' + todayStr, dailyRemainingQuota);
             return true;
         } else {
-            // Guest: per feature independent limit of 1 per day
             const guestKey = `pfy_guest_used_${featureKey}_${todayStr}`;
-            const alreadyUsed = localStorage.getItem(guestKey);
-            if (alreadyUsed === 'true') {
-                showToast('🔒 訪客每個抽籤功能每日免費體驗 1 次，登入會員即可享每日 5 抽！');
+            const alreadyUsed = localStorage.getItem(guestKey) === 'true' || window.getGuestRemainingQuota(featureKey) === 0;
+            if (alreadyUsed) {
+                dailyRemainingQuota = 0;
+                window.updateQuotaUI();
+                showToast('🔒 訪客每日免費體驗 1 次已用完，請登入會員享每日 5 抽！');
                 handleAuthClick();
                 return false;
             }
             localStorage.setItem(guestKey, 'true');
+            localStorage.setItem(`pfy_guest_used_gacha_85_${todayStr}`, 'true');
+            dailyRemainingQuota = 0;
+            window.updateQuotaUI();
             return true;
         }
     };
@@ -6246,6 +6272,10 @@ function doPost(e) {
     // 3. 升級版手機導航欄與食評發帖欄狀態同步
     const origUpdateQuotaUI = window.updateQuotaUI;
     window.updateQuotaUI = function() {
+        if (!isAdminLoggedIn && !isMemberLoggedIn && typeof window.getGuestRemainingQuota === 'function') {
+            dailyMaxQuota = 1;
+            dailyRemainingQuota = window.getGuestRemainingQuota('gacha_85');
+        }
         if (typeof origUpdateQuotaUI === 'function') origUpdateQuotaUI();
         const headerBtn = document.getElementById('header-auth-btn');
         const authorInput = document.getElementById('post-author-input');
@@ -6360,7 +6390,7 @@ function doPost(e) {
             isMemberLoggedIn = false;
             currentMemberName = '訪客';
             dailyMaxQuota = 1;
-            dailyRemainingQuota = 1;
+            dailyRemainingQuota = typeof window.getGuestRemainingQuota === 'function' ? window.getGuestRemainingQuota('gacha_85') : 1;
             window.updateQuotaUI();
         }
     });
@@ -6453,7 +6483,7 @@ function doPost(e) {
             isAdminLoggedIn = false;
             currentMemberName = '訪客';
             dailyMaxQuota = 1;
-            dailyRemainingQuota = 1;
+            dailyRemainingQuota = typeof window.getGuestRemainingQuota === 'function' ? window.getGuestRemainingQuota('gacha_85') : 0;
             writeLSv3('pfy_v6_auth_state', { isAdmin: false, isMember: false, name: '訪客' });
             writeWindowNameCache({ authState: { isAdmin: false, isMember: false, name: '訪客' } });
             window.updateQuotaUI();
