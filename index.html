@@ -930,9 +930,14 @@
                             <span class="text-[10px] font-mono-tag text-emerald-400 font-bold">NEARBY RADAR // 100M - 1KM</span>
                             <h2 class="text-xl font-black text-white mt-0.5">📍 附近餐廳與 Google Map 地圖</h2>
                         </div>
-                        <button onclick="detectUserGPS()" id="btn-gps-locate" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black flex items-center space-x-1 shadow transition">
-                            <span>📡 獲取即時 GPS 位置</span>
-                        </button>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <button onclick="scanMapRestaurantsIntoPool()" id="btn-scan-map-rests" class="px-3 py-2 rounded-xl bg-amber-400 hover:brightness-105 text-black text-xs font-black flex items-center space-x-1 shadow transition" title="自動掃描此港鐵站範圍內的真實地圖食肆並匯入候選池">
+                                <span>🗺️ 掃描地圖周邊食肆加入名單</span>
+                            </button>
+                            <button onclick="detectUserGPS()" id="btn-gps-locate" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black flex items-center space-x-1 shadow transition">
+                                <span>📡 獲取即時 GPS 位置</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="rounded-xl overflow-hidden border border-gray-800 bg-gray-900 relative shadow-lg">
@@ -989,7 +994,17 @@
                     </div>
 
                     <div class="space-y-2">
-                        <h3 class="text-xs font-black text-white">📋 此範圍內候選食肆（點擊可連接至餐廳名單）：</h3>
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h3 class="text-xs font-black text-white">📋 此範圍內候選食肆（點擊可連接至餐廳名單）：</h3>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <button onclick="copyRestaurantsTSVForGoogleSheet('nearby')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-black transition shadow-xs" title="複製後可直接在 Google Sheet 按 Ctrl+V 貼上整批餐廳">
+                                    📋 複製此區食肆 (直貼 Google Sheet)
+                                </button>
+                                <button onclick="exportRestaurantsCSV('nearby')" class="px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-amber-300 text-[11px] font-black transition">
+                                    📥 匯出此區 Excel (.csv)
+                                </button>
+                            </div>
+                        </div>
                         <div id="nearby-candidates-list" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1"></div>
                     </div>
                 </div>
@@ -1120,8 +1135,17 @@
                             <span class="text-[10px] font-mono-tag text-emerald-400 font-bold">VERIFIED DIRECTORY // 85 MTR STATIONS</span>
                             <h2 class="text-xl font-black text-white">📖 全港餐廳名單</h2>
                         </div>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <input id="dir-search-input" type="text" oninput="renderDirectoryListOnly()" placeholder="🔍 搜尋餐廳、商場..." class="px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-xs text-white w-full sm:w-44">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <button onclick="scanMapRestaurantsIntoPool(dirStation)" class="px-2.5 py-1.5 rounded-lg bg-amber-400 hover:brightness-105 text-black text-[11px] font-black transition shadow-xs" title="自動從地圖抓取目前所選港鐵站周邊食肆並加入候選池">
+                                🗺️ 掃描此站地圖食肆
+                            </button>
+                            <button onclick="copyRestaurantsTSVForGoogleSheet('curated')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-black transition shadow-xs" title="一鍵複製精選及已掃描餐廳，直接在 Google Sheet 按 Ctrl+V 即可貼上">
+                                📋 複製名單貼入 Sheet
+                            </button>
+                            <button onclick="exportRestaurantsCSV('curated')" class="px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-amber-300 text-[11px] font-black transition">
+                                📥 匯出 Excel (.csv)
+                            </button>
+                            <input id="dir-search-input" type="text" oninput="renderDirectoryListOnly()" placeholder="🔍 搜尋餐廳、商場..." class="px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-xs text-white w-full sm:w-40">
                         </div>
                     </div>
 
@@ -1468,11 +1492,31 @@
             "深水埗": { lat: 22.3308, lng: 114.1622 }, "太子": { lat: 22.3245, lng: 114.1683 }, "旺角": { lat: 22.3192, lng: 114.1694 },
             "油麻地": { lat: 22.3130, lng: 114.1706 }, "佐敦": { lat: 22.3049, lng: 114.1717 }, "尖沙咀": { lat: 22.2975, lng: 114.1722 },
             "金鐘": { lat: 22.2790, lng: 114.1655 }, "中環": { lat: 22.2819, lng: 114.1582 }, "灣仔": { lat: 22.2775, lng: 114.1732 },
-            "銅鑼灣": { lat: 22.2804, lng: 114.1840 }, "北角": { lat: 22.2912, lng: 114.2005 }, "太古": { lat: 22.2847, lng: 114.2165 },
-            "觀塘": { lat: 22.3122, lng: 114.2263 }, "九龍灣": { lat: 22.3235, lng: 114.2141 }, "鑽石山": { lat: 22.3401, lng: 114.2016 },
-            "大圍": { lat: 22.3729, lng: 114.1786 }, "沙田": { lat: 22.3827, lng: 114.1875 }, "大埔墟": { lat: 22.4446, lng: 114.1698 },
-            "元朗": { lat: 22.4461, lng: 114.0347 }, "屯門": { lat: 22.3953, lng: 113.9731 }, "青衣": { lat: 22.3585, lng: 114.1070 },
-            "東涌": { lat: 22.2891, lng: 113.9413 }, "將軍澳": { lat: 22.3075, lng: 114.2600 }
+            "銅鑼灣": { lat: 22.2804, lng: 114.1840 }, "天后": { lat: 22.2827, lng: 114.1919 }, "炮台山": { lat: 22.2882, lng: 114.1936 },
+            "北角": { lat: 22.2912, lng: 114.2005 }, "鰂魚涌": { lat: 22.2879, lng: 114.2121 }, "太古": { lat: 22.2847, lng: 114.2165 },
+            "西灣河": { lat: 22.2823, lng: 114.2219 }, "筲箕灣": { lat: 22.2789, lng: 114.2289 }, "杏花邨": { lat: 22.2769, lng: 114.2398 },
+            "柴灣": { lat: 22.2646, lng: 114.2372 }, "堅尼地城": { lat: 22.2812, lng: 114.1287 }, "香港大學": { lat: 22.2842, lng: 114.1355 },
+            "西營盤": { lat: 22.2858, lng: 114.1427 }, "上環": { lat: 22.2864, lng: 114.1519 }, "黃埔": { lat: 22.3051, lng: 114.1896 },
+            "何文田": { lat: 22.3094, lng: 114.1828 }, "石硤尾": { lat: 22.3319, lng: 114.1687 }, "九龍塘": { lat: 22.3369, lng: 114.1761 },
+            "樂富": { lat: 22.3381, lng: 114.1870 }, "黃大仙": { lat: 22.3418, lng: 114.1939 }, "鑽石山": { lat: 22.3401, lng: 114.2016 },
+            "彩虹": { lat: 22.3349, lng: 114.2089 }, "九龍灣": { lat: 22.3235, lng: 114.2141 }, "牛頭角": { lat: 22.3154, lng: 114.2191 },
+            "觀塘": { lat: 22.3122, lng: 114.2263 }, "藍田": { lat: 22.3067, lng: 114.2330 }, "油塘": { lat: 22.2979, lng: 114.2372 },
+            "調景嶺": { lat: 22.3042, lng: 114.2525 }, "屯門": { lat: 22.3953, lng: 113.9731 }, "兆康": { lat: 22.4119, lng: 113.9788 },
+            "天水圍": { lat: 22.4481, lng: 114.0017 }, "朗屏": { lat: 22.4477, lng: 114.0253 }, "元朗": { lat: 22.4461, lng: 114.0347 },
+            "錦上路": { lat: 22.4347, lng: 114.0634 }, "南昌": { lat: 22.3267, lng: 114.1533 }, "柯士甸": { lat: 22.3048, lng: 114.1664 },
+            "尖東": { lat: 22.2956, lng: 114.1741 }, "紅磡": { lat: 22.3029, lng: 114.1816 }, "土瓜灣": { lat: 22.3173, lng: 114.1875 },
+            "宋皇臺": { lat: 22.3258, lng: 114.1916 }, "啟德": { lat: 22.3304, lng: 114.1995 }, "顯徑": { lat: 22.3640, lng: 114.1708 },
+            "大圍": { lat: 22.3729, lng: 114.1786 }, "車公廟": { lat: 22.3747, lng: 114.1862 }, "沙田圍": { lat: 22.3771, lng: 114.1949 },
+            "第一城": { lat: 22.3879, lng: 114.2040 }, "石門": { lat: 22.3880, lng: 114.2085 }, "大水坑": { lat: 22.4088, lng: 114.2231 },
+            "恆安": { lat: 22.4176, lng: 114.2259 }, "馬鞍山": { lat: 22.4248, lng: 114.2317 }, "烏溪沙": { lat: 22.4287, lng: 114.2439 },
+            "會展": { lat: 22.2816, lng: 114.1746 }, "旺角東": { lat: 22.3222, lng: 114.1726 }, "沙田": { lat: 22.3827, lng: 114.1875 },
+            "火炭": { lat: 22.3953, lng: 114.1984 }, "大學": { lat: 22.4132, lng: 114.2102 }, "大埔墟": { lat: 22.4446, lng: 114.1698 },
+            "太和": { lat: 22.4511, lng: 114.1612 }, "粉嶺": { lat: 22.4921, lng: 114.1387 }, "上水": { lat: 22.5012, lng: 114.1279 },
+            "香港": { lat: 22.2849, lng: 114.1581 }, "九龍": { lat: 22.3048, lng: 114.1615 }, "奧運": { lat: 22.3166, lng: 114.1604 },
+            "青衣": { lat: 22.3585, lng: 114.1070 }, "東涌": { lat: 22.2891, lng: 113.9413 }, "將軍澳": { lat: 22.3075, lng: 114.2600 },
+            "坑口": { lat: 22.3156, lng: 114.2644 }, "寶琳": { lat: 22.3226, lng: 114.2580 }, "康城": { lat: 22.2958, lng: 114.2689 },
+            "海洋公園": { lat: 22.2486, lng: 114.1742 }, "黃竹坑": { lat: 22.2482, lng: 114.1678 }, "利東": { lat: 22.2422, lng: 114.1561 },
+            "海怡半島": { lat: 22.2435, lng: 114.1481 }
         };
 
         const allCuisines = [
@@ -4966,10 +5010,22 @@ function doPost(e) {
             }
         }
 
-        // 下載餐廳名單 CSV 檔案 (支援只下載 41 間真實精選餐廳或全港完整名單)
-        function exportRestaurantsCSV(scope = 'all') {
+        // 取得指定範圍的餐廳清單（支援 nearby 附近範圍、curated 精選與地圖掃描真實餐廳、或 all 全部）
+        function getTargetRestaurantsForExport(scope = 'curated') {
+            if (scope === 'nearby') {
+                return restaurantsDB.filter(r => r.station === currentNearbyStation && (r.dist || 350) <= currentNearbyDistance);
+            }
+            if (scope === 'curated') {
+                const nonFallback = restaurantsDB.filter(r => !r._isTemplateFallback);
+                return nonFallback.length > 0 ? nonFallback : curatedRealRestaurantsList;
+            }
+            return restaurantsDB;
+        }
+
+        // 下載餐廳名單 Excel 相容 CSV 檔案 (內置 UTF-8 BOM，Excel 雙擊直接打開不亂碼，亦可在 Google Sheet 匯入)
+        function exportRestaurantsCSV(scope = 'curated') {
             const headers = ['station', 'name', 'address', 'cuisine', 'mall', 'phone', 'dist'];
-            const targetList = scope === 'curated' ? curatedRealRestaurantsList : restaurantsDB;
+            const targetList = getTargetRestaurantsForExport(scope);
             const rows = targetList.map(r => {
                 const combinedInfo = `${r.address} ｜ ${r.cuisine} ｜ ${r.mall} ｜ ${r.phone} ｜ ${r.dist || 300}m`;
                 return [
@@ -4983,15 +5039,131 @@ function doPost(e) {
                 ].map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',');
             });
 
+            const labelMap = { nearby: `${currentNearbyStation}附近`, curated: '精選及地圖掃描', all: '全港完整' };
             const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `PickForYou_餐廳名單_${targetList.length}間.csv`;
+            a.download = `PickForYou_${labelMap[scope] || '候選池'}餐廳名單_${targetList.length}間.csv`;
             a.click();
             URL.revokeObjectURL(url);
-            showToast(`📥 已下載 ${targetList.length} 間餐廳 CSV 試算表檔！可在 Google Sheet 按「檔案 ➔ 匯入」`);
+            showToast(`📥 已匯出 ${targetList.length} 間餐廳 Excel (.csv)！可直接用 Excel 打開或匯入 Google Sheet`);
+        }
+
+        // 📋 一鍵複製餐廳為 Tab 分隔格式 (TSV)，可直接在 Google Sheet 按 Ctrl+V 貼上整批餐廳！
+        function copyRestaurantsTSVForGoogleSheet(scope = 'curated') {
+            const targetList = getTargetRestaurantsForExport(scope);
+            if (!targetList || targetList.length === 0) {
+                showToast('⚠️ 目前範圍沒有可複製的餐廳');
+                return;
+            }
+            const tsvRows = targetList.map(r => {
+                const combinedInfo = `${r.address} ｜ ${r.cuisine} ｜ ${r.mall} ｜ ${r.phone} ｜ ${r.dist || 300}m`;
+                return [
+                    r.station,
+                    r.name,
+                    combinedInfo,
+                    r.cuisine,
+                    r.mall,
+                    r.phone,
+                    r.dist || 300
+                ].map(cell => String(cell ?? '').replace(/[\t\r\n]+/g, ' ')).join('\t');
+            });
+            const tsvText = tsvRows.join('\n');
+            const ta = document.createElement('textarea');
+            ta.value = tsvText;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast(`📋 已複製 ${targetList.length} 間餐廳！請打開 Google Sheet 的 restaurants 分頁直接按 Ctrl+V 貼上`);
+        }
+
+        // 🗺️ 自動掃描 OpenStreetMap (Overpass API) 港鐵站周邊真實餐廳並加入候選池 + 本地快取
+        let isScanningMapRests = false;
+        async function scanMapRestaurantsIntoPool(targetStationOverride = null) {
+            if (isScanningMapRests) {
+                showToast('⏳ 正在掃描地圖周邊食肆中，請稍候...');
+                return;
+            }
+            const st = targetStationOverride || currentNearbyStation || '荃灣';
+            const coord = stationCoords[st] || stationCoords['荃灣'];
+            const radiusMeters = Math.min(1000, Math.max(350, currentNearbyDistance || 500));
+
+            isScanningMapRests = true;
+            const scanBtn = document.getElementById('btn-scan-map-rests');
+            const origBtnHtml = scanBtn ? scanBtn.innerHTML : '';
+            if (scanBtn) scanBtn.innerHTML = '<span>⏳ 正在掃描地圖食肆...</span>';
+            showToast(`🗺️ 正在掃描「${st}站」方圓 ${radiusMeters}m 內的地圖真實食肆...`);
+
+            try {
+                const query = `[out:json][timeout:12];(node["amenity"~"restaurant|cafe|fast_food"](around:${radiusMeters},${coord.lat},${coord.lng});way["amenity"~"restaurant|cafe|fast_food"](around:${radiusMeters},${coord.lat},${coord.lng}););out center 45;`;
+                const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query);
+                const res = await fetch(url);
+                const data = await res.json();
+                const elements = (data && Array.isArray(data.elements)) ? data.elements : [];
+
+                const existingNames = new Set(restaurantsDB.map(r => `${r.station}__${r.name.toLowerCase()}`));
+                const newlyAdded = [];
+
+                elements.forEach(el => {
+                    const tags = el.tags || {};
+                    const rawName = (tags['name:zh-Hant'] || tags['name:zh'] || tags.name || '').trim();
+                    if (!rawName || rawName.length < 2) return;
+                    const key = `${st}__${rawName.toLowerCase()}`;
+                    if (existingNames.has(key)) return;
+
+                    const elLat = el.lat || (el.center && el.center.lat) || coord.lat;
+                    const elLng = el.lon || (el.center && el.center.lon) || coord.lng;
+                    const distMeters = Math.max(50, Math.min(1000, Math.round(Math.hypot(elLat - coord.lat, elLng - coord.lng) * 111000)));
+
+                    const street = tags['addr:street'] || '';
+                    const housenumber = tags['addr:housenumber'] || '';
+                    const mallOrBuilding = tags['addr:place'] || tags['building'] || (street ? `${st}${street}` : `${st}站周邊商圈`);
+                    const fullAddr = (street || housenumber)
+                        ? `${st}${street}${housenumber ? housenumber + '號' : ''}`
+                        : `${st}港鐵站步行約 ${Math.max(1, Math.round(distMeters / 75))} 分鐘`;
+                    const phoneStr = tags.phone || tags['contact:phone'] || '詳見店舖資料';
+                    const rawCui = (tags.cuisine || '') + ' ' + (tags.amenity || '');
+
+                    const newRestObj = {
+                        name: rawName,
+                        station: st,
+                        mall: mallOrBuilding.length <= 18 ? mallOrBuilding : `${st}周邊街區`,
+                        cuisine: inferCuisineV4(rawName, rawCui),
+                        address: fullAddr,
+                        phone: phoneStr,
+                        dist: distMeters
+                    };
+
+                    existingNames.add(key);
+                    newlyAdded.push(newRestObj);
+                });
+
+                if (newlyAdded.length > 0) {
+                    restaurantsDB.unshift(...newlyAdded);
+                    curatedRealRestaurantsList.unshift(...newlyAdded);
+
+                    // 保存至本地自訂餐廳快取，刷新不會消失
+                    const savedCustom = readLSv3(LS_V3.RESTS, []);
+                    const combinedCustom = [...newlyAdded, ...savedCustom];
+                    writeLSv3(LS_V3.RESTS, combinedCustom);
+                    writeWindowNameCache({ cachedRestaurants: combinedCustom });
+
+                    initGachaModuleUI();
+                    initDirectoryUI();
+                    renderNearbyCandidates();
+                    showToast(`🎉 成功從地圖掃描並新增 ${newlyAdded.length} 間「${st}站」真實食肆！可按「📥 匯出 Excel」或「📋 複製貼入 Sheet」`);
+                } else {
+                    showToast(`✅ 「${st}站」周邊地圖食肆已全部在候選池內（或可調大步行距離再掃描）`);
+                }
+            } catch (err) {
+                showToast('⚠️ 地圖伺服器連線繁忙，請稍後再試或直接匯出現有候選池');
+            } finally {
+                isScanningMapRests = false;
+                if (scanBtn) scanBtn.innerHTML = origBtnHtml;
+            }
         }
 
         // 在網頁直接新增餐廳並即時寫入 Google Sheet
