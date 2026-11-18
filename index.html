@@ -544,7 +544,7 @@
         </aside>
 
         <!-- 主內容區 -->
-        <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-5 py-5 space-y-6">
+        <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-5 py-5 pb-24 md:pb-8 space-y-6">
 
             <!-- 回首頁快捷導航 -->
             <div id="step-back-bar" class="hidden flex items-center justify-end">
@@ -737,6 +737,17 @@
 
                                     <select id="home-quick-station-select" class="px-3 py-2 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs sm:text-sm font-bold outline-none cursor-pointer">
                                         <option value="全港隨機">🚇 全港隨機 (85站)</option>
+                                    </select>
+                                    <select id="home-quick-cuisine-select" class="px-3 py-2 rounded-xl bg-gray-800 border border-gray-700 text-white text-xs sm:text-sm font-bold outline-none cursor-pointer">
+                                        <option value="全部菜式">🍜 全部菜式 (不限)</option>
+                                        <option value="港式茶記/冰室">☕ 港式茶記/冰室</option>
+                                        <option value="米線/粉麵">🍜 米線/粉麵</option>
+                                        <option value="日本料理">🍣 日本料理</option>
+                                        <option value="台灣菜/小食">🧋 台灣菜/小食</option>
+                                        <option value="西餐/Cafe">🍔 西餐/Cafe</option>
+                                        <option value="火鍋/燒肉">🥩 火鍋/燒肉</option>
+                                        <option value="中菜/點心">🥟 中菜/點心</option>
+                                        <option value="東南亞菜">🍲 東南亞菜</option>
                                     </select>
                                 </div>
                             </div>
@@ -996,7 +1007,7 @@
                     <div class="space-y-2">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <h3 class="text-xs font-black text-white">📋 此範圍內候選食肆（點擊可連接至餐廳名單）：</h3>
-                            <div class="flex flex-wrap items-center gap-1.5">
+                            <div id="nearby-admin-export-btns" class="hidden flex-wrap items-center gap-1.5">
                                 <button onclick="copyRestaurantsTSVForGoogleSheet('nearby')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-black transition shadow-xs" title="複製後可直接在 Google Sheet 按 Ctrl+V 貼上整批餐廳">
                                     📋 複製此區食肆 (直貼 Google Sheet)
                                 </button>
@@ -1139,12 +1150,14 @@
                             <button onclick="scanMapRestaurantsIntoPool(dirStation)" class="px-2.5 py-1.5 rounded-lg bg-amber-400 hover:brightness-105 text-black text-[11px] font-black transition shadow-xs" title="自動從地圖抓取目前所選港鐵站周邊食肆並加入候選池">
                                 🗺️ 掃描此站地圖食肆
                             </button>
-                            <button onclick="copyRestaurantsTSVForGoogleSheet('curated')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-black transition shadow-xs" title="一鍵複製精選及已掃描餐廳，直接在 Google Sheet 按 Ctrl+V 即可貼上">
-                                📋 複製名單貼入 Sheet
-                            </button>
-                            <button onclick="exportRestaurantsCSV('curated')" class="px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-amber-300 text-[11px] font-black transition">
-                                📥 匯出 Excel (.csv)
-                            </button>
+                            <span id="dir-admin-export-btns" class="hidden flex-wrap items-center gap-1.5">
+                                <button onclick="copyRestaurantsTSVForGoogleSheet('curated')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-black transition shadow-xs" title="一鍵複製精選及已掃描餐廳，直接在 Google Sheet 按 Ctrl+V 即可貼上">
+                                    📋 複製名單貼入 Sheet
+                                </button>
+                                <button onclick="exportRestaurantsCSV('curated')" class="px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-amber-300 text-[11px] font-black transition">
+                                    📥 匯出 Excel (.csv)
+                                </button>
+                            </span>
                             <input id="dir-search-input" type="text" oninput="renderDirectoryListOnly()" placeholder="🔍 搜尋餐廳、商場..." class="px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-xs text-white w-full sm:w-40">
                         </div>
                     </div>
@@ -1422,16 +1435,46 @@
         </div>
     </div>
 
-    <!-- 彈窗 3：我的收藏夾視窗 -->
+    <!-- 彈窗 3：我的收藏夾視窗（新增：喺口袋名單入面隨機抽一間！） -->
     <div id="fav-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-        <div class="glass-card rounded-2xl max-w-md w-full p-5 space-y-3">
-            <div class="flex justify-between items-center">
+        <div class="glass-card rounded-2xl max-w-md w-full p-5 space-y-3.5 border-2 border-pink-500/50 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-2.5">
                 <h3 class="text-base font-black text-white">❤️ 我的口袋餐廳</h3>
-                <button onclick="closeFavModal()" class="w-7 h-7 rounded-full bg-gray-800 text-gray-400 text-xs">✕</button>
+                <button onclick="closeFavModal()" class="w-7 h-7 rounded-full bg-gray-800 text-gray-400 text-xs font-black">✕</button>
             </div>
-            <div id="fav-list-container" class="space-y-2 max-h-72 overflow-y-auto"></div>
+            <div id="fav-list-container" class="space-y-2 max-h-60 overflow-y-auto"></div>
+            <div id="fav-random-winner-box" class="hidden p-3.5 rounded-xl bg-gray-950 border-2 border-amber-400 text-left space-y-1.5"></div>
+            <div class="pt-2 border-t border-gray-800 flex gap-2">
+                <button onclick="spinFromFavorites()" class="neon-button flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center space-x-1.5">
+                    <span>🎲 喺我嘅口袋名單入面隨機抽一間！</span>
+                </button>
+            </div>
         </div>
     </div>
+
+    <!-- 📱 手機版專屬底部固定導航欄 (Bottom Tab Bar，單手一秒極速切換) -->
+    <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t px-2 py-1.5 flex justify-around items-center backdrop-blur-md shadow-2xl" style="background-color: var(--pfy-surface); border-color: var(--pfy-border);">
+        <button onclick="switchModule('home')" id="bnav-home" class="flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-pink-400 font-black transition scale-105">
+            <span class="text-base leading-none">🏠</span>
+            <span class="text-[10px] mt-1">首頁</span>
+        </button>
+        <button onclick="switchModule(1)" id="bnav-1" class="flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-gray-400 font-bold transition">
+            <span class="text-base leading-none">🍴</span>
+            <span class="text-[10px] mt-1">85站盲盒</span>
+        </button>
+        <button onclick="switchModule('nearby')" id="bnav-nearby" class="flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-gray-400 font-bold transition">
+            <span class="text-base leading-none">📍</span>
+            <span class="text-[10px] mt-1">附近1KM</span>
+        </button>
+        <button onclick="switchModule('community')" id="bnav-community" class="flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-gray-400 font-bold transition">
+            <span class="text-base leading-none">📸</span>
+            <span class="text-[10px] mt-1">食評</span>
+        </button>
+        <button onclick="openFavModal()" id="bnav-fav" class="relative flex-col items-center justify-center py-1 px-2.5 rounded-xl text-gray-400 font-bold flex transition">
+            <span class="text-base leading-none">❤️</span>
+            <span class="text-[10px] mt-1">收藏</span>
+        </button>
+    </nav>
 
     <!-- 彈窗 4：App / Web App 開啟定位權限詢問視窗 -->
     <div id="gps-permission-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
@@ -1604,67 +1647,20 @@
             { name: "壽司郎 (屯門市廣場店)", station: "屯門", mall: "屯門市廣場", cuisine: "日本料理", address: "屯門屯順街1號屯門市廣場1期2樓2192號舖", phone: "2450 1188", dist: 240 }
         ];
 
-        // 確保全港 85 個港鐵站 × 全部 8 大菜式均使用真實香港連鎖品牌保底（不再出現「XX冰室」假店名）
-        (function populateAll85Stations() {
-            const allStationsSet = new Set();
-            Object.values(mtrLines).forEach(list => list.forEach(s => allStationsSet.add(s)));
-
-            const cuisineTemplates = {
-                "港式茶記/冰室": [
-                    { prefix: "敏華冰廳", mall: "核心商場", dist: 140 },
-                    { prefix: "紅茶冰室 / 太興", mall: "站前街區", dist: 260 }
-                ],
-                "米線/粉麵": [
-                    { prefix: "譚仔雲南米線", mall: "站前商場", dist: 120 },
-                    { prefix: "譚仔三哥米線", mall: "核心商圈", dist: 230 }
-                ],
-                "日本料理": [
-                    { prefix: "壽司郎 Sushiro", mall: "大型商場", dist: 210 },
-                    { prefix: "元気寿司", mall: "站前商場", dist: 310 }
-                ],
-                "台灣菜/小食": [
-                    { prefix: "茶木‧台式休閒餐廳", mall: "站前商場", dist: 190 },
-                    { prefix: "阿木台灣麵", mall: "美食街區", dist: 320 }
-                ],
-                "西餐/Cafe": [
-                    { prefix: "麥當勞 McDonald's", mall: "站前廣場", dist: 95 },
-                    { prefix: "NOC Coffee Co.", mall: "休閒街區", dist: 280 }
-                ],
-                "火鍋/燒肉": [
-                    { prefix: "牛角日本燒肉專門店", mall: "大型商場", dist: 250 },
-                    { prefix: "山見台式火鍋", mall: "站前商場", dist: 380 }
-                ],
-                "中菜/點心": [
-                    { prefix: "一點心 / 添好運點心", mall: "地道食街", dist: 220 },
-                    { prefix: "美心皇宮 / 潮江春", mall: "站前商場", dist: 350 }
-                ],
-                "東南亞菜": [
-                    { prefix: "米泰 / 亞參雞飯", mall: "站前商場", dist: 240 },
-                    { prefix: "金爸爸 PappaRich", mall: "核心商圈", dist: 360 }
-                ]
-            };
-
-            allStationsSet.forEach(station => {
-                Object.keys(cuisineTemplates).forEach(cuisine => {
-                    const existing = restaurantsDB.filter(r => r.station === station && r.cuisine === cuisine);
-                    if (existing.length === 0) {
-                        cuisineTemplates[cuisine].forEach((tpl, idx) => {
-                            const restName = `${tpl.prefix} (${station}店)`;
-                            restaurantsDB.push({
-                                name: restName,
-                                station: station,
-                                mall: `${station}${tpl.mall}`,
-                                cuisine: cuisine,
-                                address: `${station}港鐵站出口步行約 ${Math.round(tpl.dist / 75)} 分鐘 (${tpl.mall})`,
-                                phone: "2388 " + String(1000 + ((station.charCodeAt(0) * 13 + idx * 7) % 8999)),
-                                dist: tpl.dist,
-                                _isTemplateFallback: true
-                            });
-                        });
-                    }
-                });
-            });
-        })();
+        // 已移除 16 間重複連鎖店保底填充機制（只顯示真實餐廳，未收錄車站支援一鍵從地圖即時抓取真實食肆）
+        const CUISINE_VISUAL_MAP = {
+            "港式茶記/冰室": { icon: "☕", bg: "bg-amber-500/20 border-amber-500/40 text-amber-400" },
+            "米線/粉麵":     { icon: "🍜", bg: "bg-rose-500/20 border-rose-500/40 text-rose-400" },
+            "日本料理":     { icon: "🍣", bg: "bg-pink-500/20 border-pink-500/40 text-pink-400" },
+            "台灣菜/小食":   { icon: "🧋", bg: "bg-orange-500/20 border-orange-500/40 text-orange-400" },
+            "西餐/Cafe":    { icon: "🍔", bg: "bg-cyan-500/20 border-cyan-500/40 text-cyan-400" },
+            "火鍋/燒肉":     { icon: "🥩", bg: "bg-red-500/20 border-red-500/40 text-red-400" },
+            "中菜/點心":     { icon: "🥟", bg: "bg-yellow-500/20 border-yellow-500/40 text-yellow-400" },
+            "東南亞菜":     { icon: "🍲", bg: "bg-emerald-500/20 border-emerald-500/40 text-emerald-400" }
+        };
+        function getCuisineVisual(cuisine) {
+            return CUISINE_VISUAL_MAP[cuisine] || { icon: "🍴", bg: "bg-pink-500/20 border-pink-500/40 text-pink-400" };
+        }
 
         // ==================== 3. 高清宣傳圖 SVG 與預設美食快訊資料庫 ====================
         const TAMJAI_CRAB_SVG = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
@@ -2444,16 +2440,19 @@
             const drawBtn = document.getElementById('btn-home-quick-draw');
             const mealsBtn = document.getElementById('btn-home-3meals-draw');
 
+            const cuisineSel = document.getElementById('home-quick-cuisine-select');
             if (mode === 'cuisine') {
                 if (btnCuisine) btnCuisine.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-black bg-pink-600 text-white transition shadow-xs';
                 if (btnRest) btnRest.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold text-gray-300 hover:text-white transition';
                 if (stationSel) stationSel.classList.add('hidden');
+                if (cuisineSel) cuisineSel.classList.add('hidden');
                 if (drawBtn) drawBtn.innerHTML = '<span>🎲 立即一鍵抽菜色！</span>';
                 if (mealsBtn) mealsBtn.innerHTML = '<span>🍳 抽齊早午晚三餐</span>';
             } else {
                 if (btnRest) btnRest.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-black bg-pink-600 text-white transition shadow-xs';
                 if (btnCuisine) btnCuisine.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold text-gray-300 hover:text-white transition';
                 if (stationSel) stationSel.classList.remove('hidden');
+                if (cuisineSel) cuisineSel.classList.remove('hidden');
                 if (drawBtn) drawBtn.innerHTML = '<span>🎲 立即一鍵抽餐廳！</span>';
                 if (mealsBtn) mealsBtn.innerHTML = '<span>🍳 抽齊三餐餐廳</span>';
             }
@@ -2652,13 +2651,15 @@
                         showToast(`🎲 骰子爆出菜式：【${winC.name}】！`);
                     } else {
                         const stationSel = document.getElementById('home-quick-station-select');
+                        const cuisineSel = document.getElementById('home-quick-cuisine-select');
                         const targetStation = stationSel ? stationSel.value : '全港隨機';
+                        const selectedHomeCuisine = forcedCuisine || (cuisineSel ? cuisineSel.value : '全部菜式');
                         let pool = restaurantsDB;
                         if (targetStation !== '全港隨機') {
                             pool = pool.filter(r => r.station === targetStation);
                         }
-                        if (forcedCuisine) {
-                            const byCuisine = pool.filter(r => r.cuisine === forcedCuisine);
+                        if (selectedHomeCuisine && selectedHomeCuisine !== '全部菜式') {
+                            const byCuisine = pool.filter(r => r.cuisine === selectedHomeCuisine);
                             if (byCuisine.length > 0) pool = byCuisine;
                         }
                         if (pool.length === 0) pool = restaurantsDB;
@@ -2682,6 +2683,9 @@
                                     </button>
                                     <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(winR.name + ' ' + winR.address)}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black">
                                         🗺️ 導航
+                                    </a>
+                                    <a href="https://www.openrice.com/zh/hongkong/restaurants?what=${encodeURIComponent(winR.name + ' ' + winR.station)}" target="_blank" class="px-3 py-2 rounded-xl bg-amber-400 hover:brightness-105 text-black text-xs font-black">
+                                        🥣 OpenRice 睇相
                                     </a>
                                     <button onclick="shareResultToWhatsApp('${winR.name.replace(/'/g, "\'")}', '${winR.station}', '${winR.mall.replace(/'/g, "\'")}', '${winR.cuisine}', '${winR.address.replace(/'/g, "\'")}', '${winR.phone}')" class="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black flex items-center space-x-1 shadow transition">
                                         <span>🟢 WhatsApp 拍板分享</span>
@@ -3915,28 +3919,57 @@
                     : `🚇 ${dirStation}站 • ${dirCuisine}${adminCountTag}`;
             }
 
-            if (container) {
-                container.innerHTML = list.map(r => `
-                    <div class="p-4 rounded-xl bg-gray-900/90 border border-gray-800 hover:border-pink-500/60 flex flex-col justify-between space-y-2.5 transition">
-                        <div class="space-y-1">
-                            <div class="flex items-center justify-between">
-                                <span class="px-2 py-0.5 rounded bg-gray-800 text-amber-300 text-[10px] font-bold">🚇 ${r.station} • ${r.mall}</span>
-                                <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-bold">${r.cuisine}</span>
+            if (!container) return;
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full p-6 rounded-2xl bg-gray-900 border border-dashed border-gray-700 text-center space-y-3">
+                        <div class="text-3xl">🗺️</div>
+                        <div class="text-sm font-black text-white">「${dirStation}站」(${dirCuisine}) 暫未有手動收錄食肆</div>
+                        <p class="text-xs text-gray-400">點擊下方按鈕即可免費從地圖即時抓取「${dirStation}站」周邊真實餐廳並加入候選池！</p>
+                        <button onclick="scanMapRestaurantsIntoPool('${dirStation}')" class="neon-button px-5 py-2.5 rounded-xl text-xs font-black">
+                            🗺️ 一秒掃描「${dirStation}站」周邊真實食肆
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = list.map(r => {
+                const vis = getCuisineVisual(r.cuisine);
+                const walkMins = Math.max(1, Math.round((r.dist || 300) / 75));
+                const isFav = favoritesList.some(f => f.name === r.name);
+                return `
+                    <div class="p-4 rounded-2xl bg-gray-900/90 border border-gray-800 hover:border-pink-500 flex flex-col justify-between space-y-3 transition group">
+                        <div class="flex items-start space-x-3.5">
+                            <div class="w-12 h-12 rounded-2xl border ${vis.bg} flex items-center justify-center text-2xl shrink-0 shadow-xs group-hover:scale-105 transition">
+                                ${vis.icon}
                             </div>
-                            <h3 class="text-base font-black text-white">${r.name}</h3>
-                            <p class="text-xs text-gray-400">📍 ${r.address}</p>
-                            <p class="text-xs text-emerald-400 font-mono-tag">📞 ${r.phone}</p>
+                            <div class="space-y-1 min-w-0 flex-1">
+                                <div class="flex flex-wrap items-center justify-between gap-1">
+                                    <span class="px-2 py-0.5 rounded-md bg-gray-800 text-amber-300 text-[10px] font-bold">🚇 ${r.station} • ${r.mall}</span>
+                                    <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono-tag font-bold">🚶 步行約 ${walkMins} 分鐘 (${r.dist || 300}m)</span>
+                                </div>
+                                <h3 class="text-base font-black text-white truncate">${r.name}</h3>
+                                <p class="text-xs text-gray-400 line-clamp-1">📍 ${r.address}</p>
+                                <div class="flex items-center justify-between pt-0.5">
+                                    <span class="text-xs text-emerald-400 font-mono-tag font-bold">📞 ${r.phone}</span>
+                                    <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-bold">${r.cuisine}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex items-center justify-between pt-2 border-t border-gray-800/80 text-xs">
-                            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name + ' ' + r.address)}" target="_blank" class="px-2.5 py-1 rounded bg-emerald-600/20 text-emerald-300 font-bold hover:bg-emerald-600 hover:text-white transition">🗺️ Google Map</a>
-                            <div class="flex space-x-1.5">
-                                <button onclick="openCommunityForRestaurant('${r.name}')" class="px-2.5 py-1 rounded bg-pink-600/20 text-pink-300 font-bold hover:bg-pink-600 hover:text-white transition">📸 食評</button>
-                                <button onclick="toggleFavorite('${r.name}', '${r.station}', '${r.address}')" class="px-2.5 py-1 rounded bg-gray-800 text-gray-300 hover:text-pink-400">❤️</button>
+                        <div class="flex items-center justify-between pt-2.5 border-t border-gray-800/80 text-xs gap-1.5">
+                            <div class="flex flex-wrap gap-1.5">
+                                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name + ' ' + r.address)}" target="_blank" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-black hover:brightness-110 transition">🗺️ 導航</a>
+                                <a href="https://www.openrice.com/zh/hongkong/restaurants?what=${encodeURIComponent(r.name + ' ' + r.station)}" target="_blank" class="px-2.5 py-1 rounded-lg bg-amber-400 text-black font-black hover:brightness-105 transition">🥣 OpenRice 睇相</a>
+                            </div>
+                            <div class="flex space-x-1.5 shrink-0">
+                                <button onclick="openCommunityForRestaurant('${r.name.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-lg bg-pink-600/20 text-pink-300 font-bold hover:bg-pink-600 hover:text-white transition">📸 食評</button>
+                                <button onclick="toggleFavorite('${r.name.replace(/'/g, "\\'")}', '${r.station}', '${r.address.replace(/'/g, "\\'")}'); renderDirectoryListOnly();" class="px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 font-bold">${isFav ? '❤️ 已收藏' : '🤍 收藏'}</button>
                             </div>
                         </div>
                     </div>
-                `).join('');
-            }
+                `;
+            }).join('');
         }
 
         function jumpToDirectoryRestaurant(restName, station) {
@@ -4378,6 +4411,29 @@
             if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
         }
 
+        function spinFromFavorites() {
+            const winBox = document.getElementById('fav-random-winner-box');
+            if (!favoritesList || favoritesList.length === 0) {
+                showToast('⚠️ 你嘅口袋名單暫時未有餐廳，快啲去撳「🤍 收藏」加入心水食店先啦！');
+                return;
+            }
+            const pick = favoritesList[Math.floor(Math.random() * favoritesList.length)];
+            if (winBox) {
+                winBox.classList.remove('hidden');
+                winBox.innerHTML = `
+                    <div class="text-[10px] font-mono-tag font-black text-amber-400">🎉 口袋名單命運拍板結果：</div>
+                    <div class="text-base font-black text-white">🏠 ${pick.name} (${pick.station}站)</div>
+                    <div class="text-xs text-gray-300">📍 ${pick.address}</div>
+                    <div class="flex flex-wrap gap-2 pt-1.5">
+                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pick.name + ' ' + pick.address)}" target="_blank" class="px-2.5 py-1 rounded bg-emerald-600 text-white text-[11px] font-black">🗺️ 導航</a>
+                        <a href="https://www.openrice.com/zh/hongkong/restaurants?what=${encodeURIComponent(pick.name + ' ' + pick.station)}" target="_blank" class="px-2.5 py-1 rounded bg-amber-400 text-black text-[11px] font-black">🥣 OpenRice 睇相</a>
+                        <button onclick="closeFavModal(); jumpToDirectoryRestaurant('${pick.name.replace(/'/g, "\\'")}', '${pick.station}')" class="px-2.5 py-1 rounded bg-pink-600 text-white text-[11px] font-black">📖 查看詳情</button>
+                    </div>
+                `;
+            }
+            showToast(`🎲 已從口袋名單抽出：【${pick.name}】！`);
+        }
+
         function openPrivacyModal() {
             const modal = document.getElementById('privacy-modal');
             if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
@@ -4420,6 +4476,14 @@
                 if (mod === 'home') backBar.classList.add('hidden');
                 else backBar.classList.remove('hidden');
             }
+            ['home', 1, 'nearby', 'community'].forEach(bm => {
+                const bBtn = document.getElementById(`bnav-${bm}`);
+                if (bBtn) {
+                    bBtn.className = (String(bm) === String(mod))
+                        ? 'flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-pink-400 font-black transition scale-105'
+                        : 'flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-gray-400 font-bold transition';
+                }
+            });
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -6371,24 +6435,22 @@ function doPost(e) {
         modalTitle.innerHTML = '🔑 會員 / 管理員登入 <span class="text-[10px] text-emerald-400 font-mono-tag">(🟢 雲端已連線)</span>';
     }
 
-    // 輔助函數：即時讀取訪客今日剩餘額度 (0 或 1)
-    window.getGuestRemainingQuota = function(featureKey = 'gacha_85') {
+    // 輔助函數：即時讀取訪客今日剩餘額度 (預設每日免費 3 抽)
+    window.getGuestRemainingQuota = function() {
         const todayStr = new Date().toISOString().slice(0, 10);
-        const guestKeys = ['home_gacha', 'gacha_85', 'home_3meals', 'nearby_radar', 'meals_planner', 'destiny_coin', 'custom_wheel'];
-        const usedSpecific = localStorage.getItem(`pfy_guest_used_${featureKey}_${todayStr}`) === 'true';
-        const usedAny = guestKeys.some(k => localStorage.getItem(`pfy_guest_used_${k}_${todayStr}`) === 'true');
-        return (usedSpecific || usedAny) ? 0 : 1;
+        const usedCount = parseInt(localStorage.getItem(`pfy_guest_count_${todayStr}`) || '0', 10);
+        return Math.max(0, 3 - (isNaN(usedCount) ? 0 : usedCount));
     };
 
-    // 0. 方案 A 獨立額度與全站共用額度檢查函數
+    // 0. 全站額度檢查函數（訪客每日免費 3 抽，會員每日 10 抽，Admin 無限抽）
     window.checkAndConsumeQuota = function(featureKey) {
         if (isAdminLoggedIn) return true;
         const todayStr = new Date().toISOString().slice(0, 10);
         
         if (isMemberLoggedIn) {
-            if (typeof dailyRemainingQuota !== 'number') dailyRemainingQuota = 5;
+            if (typeof dailyRemainingQuota !== 'number') dailyRemainingQuota = 10;
             if (dailyRemainingQuota <= 0) {
-                showToast('🔒 今日會員 5 次抽籤額度已用完！明日請早');
+                showToast('🔒 今日會員 10 次抽籤額度已用完！明日請早');
                 window.updateQuotaUI();
                 return false;
             }
@@ -6402,18 +6464,18 @@ function doPost(e) {
             }
             return true;
         } else {
-            const guestKey = `pfy_guest_used_${featureKey}_${todayStr}`;
-            const alreadyUsed = localStorage.getItem(guestKey) === 'true' || window.getGuestRemainingQuota(featureKey) === 0;
-            if (alreadyUsed) {
+            const rem = window.getGuestRemainingQuota();
+            if (rem <= 0) {
                 dailyRemainingQuota = 0;
                 window.updateQuotaUI();
-                showToast('🔒 訪客每日免費體驗 1 次已用完，請登入會員享每日 5 抽！');
+                showToast('🔒 訪客每日免費 3 抽體驗已用完！立即免費登入會員升級每日 10 抽');
                 handleAuthClick();
                 return false;
             }
-            localStorage.setItem(guestKey, 'true');
-            localStorage.setItem(`pfy_guest_used_gacha_85_${todayStr}`, 'true');
-            dailyRemainingQuota = 0;
+            const usedCount = parseInt(localStorage.getItem(`pfy_guest_count_${todayStr}`) || '0', 10);
+            const nextCount = (isNaN(usedCount) ? 0 : usedCount) + 1;
+            localStorage.setItem(`pfy_guest_count_${todayStr}`, String(nextCount));
+            dailyRemainingQuota = Math.max(0, 3 - nextCount);
             window.updateQuotaUI();
             return true;
         }
@@ -6483,12 +6545,23 @@ function doPost(e) {
     const origUpdateQuotaUI = window.updateQuotaUI;
     window.updateQuotaUI = function() {
         if (!isAdminLoggedIn && !isMemberLoggedIn && typeof window.getGuestRemainingQuota === 'function') {
-            dailyMaxQuota = 1;
-            dailyRemainingQuota = window.getGuestRemainingQuota('gacha_85');
+            dailyMaxQuota = 3;
+            dailyRemainingQuota = window.getGuestRemainingQuota();
         }
         if (typeof origUpdateQuotaUI === 'function') origUpdateQuotaUI();
         const headerBtn = document.getElementById('header-auth-btn');
         const authorInput = document.getElementById('post-author-input');
+        const nearbyAdminExport = document.getElementById('nearby-admin-export-btns');
+        const dirAdminExport = document.getElementById('dir-admin-export-btns');
+
+        if (nearbyAdminExport) {
+            if (isAdminLoggedIn) { nearbyAdminExport.classList.remove('hidden'); nearbyAdminExport.classList.add('flex'); }
+            else { nearbyAdminExport.classList.add('hidden'); nearbyAdminExport.classList.remove('flex'); }
+        }
+        if (dirAdminExport) {
+            if (isAdminLoggedIn) { dirAdminExport.classList.remove('hidden'); dirAdminExport.classList.add('inline-flex'); }
+            else { dirAdminExport.classList.add('hidden'); dirAdminExport.classList.remove('inline-flex'); }
+        }
 
         if (isAdminLoggedIn) {
             if (headerBtn) headerBtn.innerHTML = `<span class="sm:hidden">🛡️ Admin • 登出</span><span class="hidden sm:inline">🛡️ 管理員 (Admin) • 🚪 登出</span>`;
@@ -6498,7 +6571,9 @@ function doPost(e) {
             if (headerBtn) headerBtn.innerHTML = `<span class="sm:hidden">👑 ${shortName} • 登出</span><span class="hidden sm:inline">👑 ${currentMemberName} (${dailyRemainingQuota}抽) • 🚪 登出</span>`;
             if (authorInput) { authorInput.value = currentMemberName; authorInput.readOnly = true; }
         } else {
-            if (headerBtn) headerBtn.innerHTML = `<span class="sm:hidden">🔑 登入</span><span class="hidden sm:inline">🔑 登入 (每日5抽)</span>`;
+            if (headerBtn) headerBtn.innerHTML = `<span class="sm:hidden">🔑 登入</span><span class="hidden sm:inline">🔑 登入 (升級10抽)</span>`;
+            const drawerStatus = document.getElementById('drawer-member-status');
+            if (drawerStatus) drawerStatus.textContent = '👤 訪客模式 (每日免費3抽)';
             if (authorInput) {
                 authorInput.value = '';
                 authorInput.placeholder = '🔒 請先登入會員以發表食評';
