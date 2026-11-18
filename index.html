@@ -770,11 +770,14 @@
                             <!-- STEP 2: 觸發抽籤按鈕組 (預設一鍵抽餐廳) -->
                             <div class="space-y-2">
                                 <label class="block text-xs font-black text-gray-300">2️⃣ 撳掣即刻拍板：</label>
-                                <div class="flex flex-col sm:flex-row gap-3">
-                                    <button onclick="triggerHomeQuickDraw()" id="btn-home-quick-draw" class="neon-button flex-1 py-4 px-6 rounded-2xl text-base sm:text-lg font-black tracking-wide flex items-center justify-center space-x-2">
+                                <div class="flex flex-col sm:flex-row gap-2.5">
+                                    <button onclick="triggerHomeQuickDraw()" id="btn-home-quick-draw" class="neon-button flex-1 py-3.5 px-5 rounded-2xl text-base sm:text-lg font-black tracking-wide flex items-center justify-center space-x-2">
                                         <span>🎲 立即一鍵抽餐廳！</span>
                                     </button>
-                                    <button onclick="triggerHomeThreeMealsDraw()" id="btn-home-3meals-draw" class="py-3.5 px-5 rounded-2xl bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs sm:text-sm font-black text-white transition flex items-center justify-center space-x-1.5">
+                                    <button onclick="triggerHomeGroupPollDraw()" id="btn-home-group-poll" class="py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-xs sm:text-sm font-black text-white shadow transition flex items-center justify-center space-x-1.5">
+                                        <span>🗳️ 抽 3 間群組投票</span>
+                                    </button>
+                                    <button onclick="triggerHomeThreeMealsDraw()" id="btn-home-3meals-draw" class="py-3.5 px-4 rounded-2xl bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs sm:text-sm font-black text-white transition flex items-center justify-center space-x-1.5">
                                         <span>🍳 抽齊三餐餐廳</span>
                                     </button>
                                 </div>
@@ -1085,9 +1088,14 @@
                         <div id="gacha-rolling-display" class="py-2 px-4 rounded-xl bg-gray-950/90 border border-gray-800 text-lg sm:text-xl font-black text-white min-h-[2.75rem] flex items-center justify-center">
                             準備好未？點擊下方開始擲骰抽籤！
                         </div>
-                        <button onclick="spinRestaurantGacha()" id="btn-spin-gacha" class="neon-button px-7 py-3 rounded-full text-sm sm:text-base font-black tracking-wide">
-                            🎲 立即擲骰抽餐廳盲盒！
-                        </button>
+                        <div class="flex flex-wrap items-center justify-center gap-2.5">
+                            <button onclick="spinRestaurantGacha()" id="btn-spin-gacha" class="neon-button px-7 py-3 rounded-full text-sm sm:text-base font-black tracking-wide">
+                                🎲 立即擲骰抽餐廳盲盒！
+                            </button>
+                            <button onclick="spinGachaGroupPoll()" id="btn-spin-gacha-poll" class="px-5 py-3 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-black shadow transition">
+                                🗳️ 抽 3 間候選俾群組投票
+                            </button>
+                        </div>
                         <div id="gacha-result-card" class="hidden mt-3 p-4 rounded-xl bg-gray-900 border-2 border-pink-500 text-left max-w-xl mx-auto space-y-2.5"></div>
                     </div>
                 </div>
@@ -1219,10 +1227,11 @@
                                 <select id="new-rest-station" class="px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-xs text-white font-bold"></select>
                                 <select id="new-rest-cuisine" class="px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-xs text-white font-bold"></select>
                             </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                                 <input id="new-rest-mall" type="text" placeholder="商場 / 街區 (如：路德圍)" class="px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-xs text-white">
                                 <input id="new-rest-address" type="text" placeholder="詳細地址" class="px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-xs text-white">
                                 <input id="new-rest-phone" type="text" placeholder="電話 (如：2388 1234)" class="px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-xs text-white">
+                                <input id="new-rest-promo" type="text" placeholder="🎟️ 獨家著數（選填，如：出示本頁送凍飲）" class="px-3 py-2 rounded-lg bg-gray-800 border border-amber-500/50 text-xs text-white">
                             </div>
                             <div class="flex justify-end">
                                 <button onclick="submitNewRestaurantToSheet()" class="neon-button px-4 py-2 rounded-xl text-xs font-black">🚀 立即新增並寫入 Google Sheet</button>
@@ -1675,6 +1684,13 @@
         };
         function getCuisineVisual(cuisine) {
             return CUISINE_VISUAL_MAP[cuisine] || { icon: "🍴", bg: "bg-pink-500/20 border-pink-500/40 text-pink-400" };
+        }
+
+        // 🎟️ 預留「獨家著數」合作商戶標籤渲染器（有設定 promoBadge 時自動顯示金色 VIP 著數徽章，無設定時完全隱藏）
+        function renderPromoBadgeHTML(r) {
+            if (!r || !r.promoBadge || !String(r.promoBadge).trim()) return '';
+            const text = String(r.promoBadge).trim().replace(/^🎟️\s*/, '');
+            return `<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-400 text-black text-[10px] font-black shadow-2xs">🎟️ ${text}</span>`;
         }
 
         // ==================== 3. 高清宣傳圖 SVG 與預設美食快訊資料庫 ====================
@@ -2686,6 +2702,7 @@
                                     <div class="flex flex-wrap items-center gap-1.5">
                                         <span class="px-2 py-0.5 rounded bg-amber-400 text-black text-[10px] font-black">💥 骰子爆出命運餐廳</span>
                                         <span class="px-2 py-0.5 rounded bg-gray-800 text-pink-300 text-[10px] font-bold">🚇 ${winR.station} • ${winR.cuisine}</span>
+                                        ${renderPromoBadgeHTML(winR)}
                                     </div>
                                     <div onclick="jumpToDirectoryRestaurant('${winR.name}', '${winR.station}')" class="text-lg sm:text-xl font-black text-white hover:text-pink-400 cursor-pointer transition">
                                         🏠 ${winR.name}
@@ -2717,7 +2734,205 @@
             }, 70);
         }
 
-        // ==================== 6. 一日三餐抽抽樂 (早・午・晚三格老虎機滾動) ====================
+                // ==================== 5B. 多人飯局神器：抽出 3 間候選 ➔ 一鍵複製 WhatsApp 投票清單 ====================
+        let lastGroupPollText = '';
+
+        function pickThreeDiverseRestaurants(pool) {
+            const source = (Array.isArray(pool) && pool.length > 0) ? [...pool] : [...restaurantsDB];
+            // Fisher-Yates 洗牌
+            for (let i = source.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [source[i], source[j]] = [source[j], source[i]];
+            }
+            const picked = [];
+            const usedNames = new Set();
+            const usedCuisines = new Set();
+
+            // 第一輪：優先挑選不同菜系與不同店名（令群組投票選擇更多元）
+            for (const r of source) {
+                if (picked.length >= 3) break;
+                if (!usedNames.has(r.name) && !usedCuisines.has(r.cuisine)) {
+                    picked.push(r);
+                    usedNames.add(r.name);
+                    usedCuisines.add(r.cuisine);
+                }
+            }
+            // 第二輪：若同菜系不足 3 種，補足不同店名至 3 間
+            for (const r of source) {
+                if (picked.length >= 3) break;
+                if (!usedNames.has(r.name)) {
+                    picked.push(r);
+                    usedNames.add(r.name);
+                }
+            }
+            // 第三輪：若該篩選池總數少於 3 間，從全港候選池補足至 3 間
+            if (picked.length < 3) {
+                for (const r of restaurantsDB) {
+                    if (picked.length >= 3) break;
+                    if (!usedNames.has(r.name)) {
+                        picked.push(r);
+                        usedNames.add(r.name);
+                    }
+                }
+            }
+            return picked;
+        }
+
+        function buildGroupPollWhatsAppText(candidates, areaLabel) {
+            const numEmojis = ['1️⃣', '2️⃣', '3️⃣'];
+            const lines = candidates.map((r, idx) => {
+                const promoLine = (r.promoBadge && String(r.promoBadge).trim())
+                    ? `   🎟️ 獨家著數：${String(r.promoBadge).trim().replace(/^🎟️\s*/, '')}\n`
+                    : '';
+                return `${numEmojis[idx] || (idx + 1) + '.'} *${r.name}*（${r.station}・${r.cuisine}｜${r.mall}）\n${promoLine}   📍 ${r.address}`;
+            }).join('\n\n');
+
+            return `🗳️ *【唔洗諗 Pick For You】今餐食邊間？大家投票拍板！*\n📌 鎖定範圍：${areaLabel}\n\n${lines}\n\n👉 請直接回覆 *1 / 2 / 3* 投票！\n🎲 我哋一齊抽籤：https://pickforyouhk.github.io/`;
+        }
+
+        function copyGroupPollToClipboard() {
+            if (!lastGroupPollText) return;
+            const ta = document.createElement('textarea');
+            ta.value = lastGroupPollText;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast('📋 已一鍵複製 WhatsApp 投票清單！快啲貼去群組俾大家揀 1 / 2 / 3');
+        }
+
+        function sendGroupPollToWhatsApp() {
+            if (!lastGroupPollText) return;
+            window.open(`https://wa.me/?text=${encodeURIComponent(lastGroupPollText)}`, '_blank');
+        }
+
+        function renderGroupPollCardsHTML(candidates, areaLabel, retryFnCallStr) {
+            const numEmojis = ['1️⃣', '2️⃣', '3️⃣'];
+            lastGroupPollText = buildGroupPollWhatsAppText(candidates, areaLabel);
+            return `
+                <div class="animate-winner-pop space-y-3 text-left">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-800 pb-2.5">
+                        <div class="flex items-center space-x-1.5">
+                            <span class="px-2.5 py-0.5 rounded bg-emerald-600 text-white text-[11px] font-black">🗳️ 群組 3 選 1 投票清單已生成</span>
+                            <span class="text-[11px] font-bold text-gray-400">(${areaLabel})</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <button onclick="copyGroupPollToClipboard()" class="px-3 py-1.5 rounded-xl bg-amber-400 hover:brightness-105 text-black text-xs font-black shadow transition">
+                                📋 一鍵複製投票清單
+                            </button>
+                            <button onclick="sendGroupPollToWhatsApp()" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black shadow transition">
+                                🟢 直接發送 WhatsApp 投票
+                            </button>
+                            <button onclick="${retryFnCallStr}" class="px-2.5 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-bold text-gray-200">
+                                🔄 重抽 3 間
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        ${candidates.map((r, idx) => `
+                            <div onclick="jumpToDirectoryRestaurant('${r.name.replace(/'/g, "\\'")}', '${r.station}')" class="p-3 rounded-xl bg-gray-900 border border-gray-800 hover:border-emerald-500 flex flex-col justify-between space-y-2 cursor-pointer transition">
+                                <div class="space-y-1">
+                                    <div class="flex items-center justify-between gap-1">
+                                        <span class="text-sm font-black text-emerald-400">${numEmojis[idx]} 候選 ${idx + 1}</span>
+                                        <span class="px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-bold">${r.cuisine}</span>
+                                    </div>
+                                    <div class="text-sm font-black text-white hover:text-pink-400 line-clamp-1">${r.name}</div>
+                                    <div class="text-[11px] text-amber-300 font-bold">🚇 ${r.station} • ${r.mall}</div>
+                                    <div class="text-[10px] text-gray-400 line-clamp-1">📍 ${r.address}</div>
+                                    ${renderPromoBadgeHTML(r)}
+                                </div>
+                                <div class="pt-1.5 border-t border-gray-800/80 flex items-center justify-between text-[10px]">
+                                    <a onclick="event.stopPropagation()" href="https://www.openrice.com/zh/hongkong/restaurants?what=${encodeURIComponent(r.name + ' ' + r.station)}" target="_blank" class="font-black text-amber-400 hover:underline">🥣 OpenRice</a>
+                                    <a onclick="event.stopPropagation()" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name + ' ' + r.address)}" target="_blank" class="font-black text-emerald-400 hover:underline">🗺️ 導航</a>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function triggerHomeGroupPollDraw() {
+            if (!checkAndConsumeQuota('group_poll')) return;
+            if (homeQuickDrawRolling) return;
+            const stage = document.getElementById('home-quick-draw-stage');
+            if (!stage) return;
+            stage.classList.remove('hidden');
+            homeQuickDrawRolling = true;
+
+            const stationSel = document.getElementById('home-quick-station-select');
+            const cuisineSel = document.getElementById('home-quick-cuisine-select');
+            const targetStation = stationSel ? stationSel.value : '全港隨機';
+            const targetCuisine = cuisineSel ? cuisineSel.value : '全部菜式';
+
+            stage.innerHTML = getDiceJumpRollStageHTML(
+                `🗳️ 正在抽出 3 間「${targetStation}」群組投票候選餐廳...`,
+                `1️⃣ 候選一 ‧ 2️⃣ 候選二 ‧ 3️⃣ 候選三`
+            );
+
+            let ticks = 0;
+            const timer = setInterval(() => {
+                ticks++;
+                const lbl = document.getElementById('dice-rolling-candidate-label');
+                if (lbl) {
+                    const tempR = restaurantsDB[Math.floor(Math.random() * restaurantsDB.length)];
+                    lbl.textContent = `🗳️ 配對候選：${tempR.name} (${tempR.station})...`;
+                }
+                if (ticks >= 13) {
+                    clearInterval(timer);
+                    homeQuickDrawRolling = false;
+
+                    let pool = restaurantsDB;
+                    if (targetStation !== '全港隨機') {
+                        const bySt = pool.filter(r => r.station === targetStation);
+                        if (bySt.length > 0) pool = bySt;
+                    }
+                    if (targetCuisine && targetCuisine !== '全部菜式') {
+                        const byCui = pool.filter(r => r.cuisine === targetCuisine);
+                        if (byCui.length > 0) pool = byCui;
+                    }
+
+                    const candidates = pickThreeDiverseRestaurants(pool);
+                    const areaLabel = targetCuisine !== '全部菜式' ? `${targetStation}・${targetCuisine}` : targetStation;
+                    stage.innerHTML = renderGroupPollCardsHTML(candidates, areaLabel, 'triggerHomeGroupPollDraw()');
+                    showToast('🗳️ 已抽出 3 間候選餐廳！可一鍵複製 WhatsApp 投票清單');
+                }
+            }, 70);
+        }
+
+        function spinGachaGroupPoll() {
+            if (isGachaRolling) return;
+            if (!checkAndConsumeQuota('group_poll')) return;
+
+            let pool = getFilteredGachaPool();
+            if (pool.length === 0) pool = restaurantsDB;
+
+            isGachaRolling = true;
+            const rollDisplay = document.getElementById('gacha-rolling-display');
+            const resultCard = document.getElementById('gacha-result-card');
+            if (resultCard) resultCard.classList.add('hidden');
+
+            let step = 0;
+            const interval = setInterval(() => {
+                step++;
+                const temp = pool[Math.floor(Math.random() * pool.length)];
+                if (rollDisplay) rollDisplay.textContent = `🗳️ 正在配對群組投票候選：${temp.name}...`;
+                if (step >= 12) {
+                    clearInterval(interval);
+                    isGachaRolling = false;
+                    const candidates = pickThreeDiverseRestaurants(pool);
+                    const areaLabel = `${currentGachaStation} • ${currentGachaMall} • ${currentGachaCuisine}`;
+                    if (rollDisplay) rollDisplay.textContent = `🗳️ 已為你抽出 3 間群組投票候選餐廳！`;
+                    if (resultCard) {
+                        resultCard.classList.remove('hidden');
+                        resultCard.innerHTML = renderGroupPollCardsHTML(candidates, areaLabel, 'spinGachaGroupPoll()');
+                    }
+                    showToast('🗳️ 已抽出 3 間候選餐廳！可一鍵複製 WhatsApp 投票清單');
+                }
+            }, 65);
+        }
+
+// ==================== 6. 一日三餐抽抽樂 (早・午・晚三格老虎機滾動) ====================
         const mealSlotPool = {
             breakfast: [
                 { icon: "🥪", name: "沙嗲牛肉公仔麵配炒蛋多士", tag: "港式茶記/冰室", searchKey: "冰室" },
@@ -3532,8 +3747,11 @@
             if (listEl) {
                 listEl.innerHTML = candidates.map(r => `
                     <div onclick="jumpToDirectoryRestaurant('${r.name}', '${r.station}')" class="p-3 rounded-xl bg-gray-900/90 border border-gray-800 hover:border-emerald-500 flex items-center justify-between cursor-pointer transition">
-                        <div class="pr-2">
-                            <div class="font-black text-xs sm:text-sm text-white hover:text-pink-400">${r.name}</div>
+                        <div class="pr-2 space-y-0.5">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="font-black text-xs sm:text-sm text-white hover:text-pink-400">${r.name}</span>
+                                ${renderPromoBadgeHTML(r)}
+                            </div>
                             <div class="text-[11px] text-gray-400">📍 ${r.address}</div>
                         </div>
                         <div class="text-right shrink-0 space-y-1">
@@ -3795,8 +4013,11 @@
                         resultCard.classList.remove('hidden');
                         resultCard.innerHTML = `
                             <div class="animate-winner-pop space-y-2.5">
-                                <div class="flex items-center justify-between">
-                                    <span class="px-2.5 py-0.5 rounded-full bg-pink-600 text-white text-[10px] font-black">💥 骰子爆出餐廳資訊</span>
+                                <div class="flex flex-wrap items-center justify-between gap-1.5">
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        <span class="px-2.5 py-0.5 rounded-full bg-pink-600 text-white text-[10px] font-black">💥 骰子爆出餐廳資訊</span>
+                                        ${renderPromoBadgeHTML(winner)}
+                                    </div>
                                     <span class="text-xs font-mono-tag text-amber-300 font-bold">🚇 ${winner.station} • ${winner.cuisine}</span>
                                 </div>
                                 <h3 onclick="jumpToDirectoryRestaurant('${winner.name}', '${winner.station}')" class="text-xl font-black text-white hover:text-pink-400 cursor-pointer">${winner.name}</h3>
@@ -3966,9 +4187,12 @@
                                 </div>
                                 <h3 class="text-base font-black text-white truncate">${r.name}</h3>
                                 <p class="text-xs text-gray-400 line-clamp-1">📍 ${r.address}</p>
-                                <div class="flex items-center justify-between pt-0.5">
+                                <div class="flex flex-wrap items-center justify-between gap-1 pt-0.5">
                                     <span class="text-xs text-emerald-400 font-mono-tag font-bold">📞 ${r.phone}</span>
-                                    <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-bold">${r.cuisine}</span>
+                                    <div class="flex flex-wrap items-center gap-1">
+                                        ${renderPromoBadgeHTML(r)}
+                                        <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-bold">${r.cuisine}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -5253,6 +5477,8 @@ function doPost(e) {
             const mall = document.getElementById('new-rest-mall').value.trim() || `${station}核心商圈`;
             const address = document.getElementById('new-rest-address').value.trim() || `${station}港鐵站附近`;
             const phone = document.getElementById('new-rest-phone').value.trim() || '2388 8888';
+            const promoEl = document.getElementById('new-rest-promo');
+            const promoBadge = promoEl ? promoEl.value.trim() : '';
 
             if (!name) {
                 showToast('⚠️ 請輸入餐廳名稱');
@@ -5266,7 +5492,8 @@ function doPost(e) {
                 cuisine,
                 address,
                 phone,
-                dist: 220
+                dist: 220,
+                promoBadge
             };
 
             restaurantsDB.unshift(newRest);
@@ -5279,6 +5506,7 @@ function doPost(e) {
             document.getElementById('new-rest-mall').value = '';
             document.getElementById('new-rest-address').value = '';
             document.getElementById('new-rest-phone').value = '';
+            if (document.getElementById('new-rest-promo')) document.getElementById('new-rest-promo').value = '';
             document.getElementById('dir-add-rest-form').classList.add('hidden');
 
             // 永久保存自訂餐廳至本地 LocalStorage，雙重保障改 Code 絕不消失
@@ -5289,7 +5517,7 @@ function doPost(e) {
             writeLSv3(LS_V3.RESTS, savedCustomRests);
 
             showToast(`⏳ 正在將「${name}」同步寫入 Google Sheet...`);
-            const combinedInfo = `${address} ｜ ${cuisine} ｜ ${mall} ｜ ${phone} ｜ 220m`;
+            const combinedInfo = `${address} ｜ ${cuisine} ｜ ${mall} ｜ ${phone} ｜ 220m${promoBadge ? ' ｜ 🎟️ ' + promoBadge.replace(/^🎟️\s*/, '') : ''}`;
             const ok = await postToSheetV4('restaurants', [
                 station,
                 name,
@@ -5297,7 +5525,8 @@ function doPost(e) {
                 cuisine,
                 mall,
                 phone,
-                220
+                220,
+                promoBadge
             ], newRest);
 
             if (ok) {
@@ -5740,6 +5969,7 @@ function doPost(e) {
             if (invalidPrefixes.some(pre => pre.endsWith('_') && (rawStation.startsWith(pre) || rawName.startsWith(pre)))) return null;
             if (rawStation.length > 15 || rawName.length > 80) return null;
 
+            let rawPromo = Array.isArray(r) ? String(r[7] || '').trim() : String(r.promoBadge || r['獨家著數'] || (Array.isArray(r._cells) ? (r._cells[7] || '') : '') || '').trim();
             const combinedCell = [rawAddr, rawMall].find(s => s.includes('｜') || s.includes('|'));
             if (combinedCell) {
                 const parts = combinedCell.split(/[｜|]/).map(s => s.trim());
@@ -5748,6 +5978,7 @@ function doPost(e) {
                 rawMall = parts[2] || `${rawStation}核心商圈`;
                 if (parts[3]) rawPhone = parts[3].replace(/^電話[:：]?/, '').trim();
                 if (parts[4]) rawDist = parseInt(parts[4].replace(/[^\d]/g, ''), 10) || 250;
+                if (parts[5] && !rawPromo) rawPromo = parts[5].replace(/^🎟️\s*/, '').trim();
             }
 
             if (!rawMall || rawMall.length > 22 || (rawMall.includes('號') && rawMall.length > 12)) {
@@ -5761,7 +5992,8 @@ function doPost(e) {
                 cuisine: inferCuisineV4(rawName, rawCuisine),
                 address: rawAddr || `${rawStation}港鐵站附近`,
                 phone: rawPhone || '2388 8888',
-                dist: rawDist || 250
+                dist: rawDist || 250,
+                promoBadge: rawPromo.replace(/^🎟️\s*/, '').trim()
             };
         }
 
