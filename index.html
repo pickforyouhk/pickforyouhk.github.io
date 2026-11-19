@@ -1108,7 +1108,7 @@
                                 🗳️ 抽 3 間候選俾群組投票
                             </button>
                         </div>
-                        <div id="gacha-result-card" class="hidden mt-3 p-4 rounded-xl bg-gray-900 border-2 border-pink-500 text-left max-w-xl mx-auto space-y-2.5"></div>
+                        <div id="gacha-result-card" class="hidden mt-3 p-4 sm:p-5 rounded-xl bg-gray-900 border-2 border-pink-500 text-left max-w-2xl mx-auto space-y-3"></div>
                     </div>
                 </div>
             </section>
@@ -2876,6 +2876,8 @@
                         }
                         if (pool.length === 0) pool = restaurantsDB;
                         const winR = pool[Math.floor(Math.random() * pool.length)];
+                        _lastHomeWinnerForRoute = winR;
+                        autoRefreshGrantedGPS();
 
                         stage.innerHTML = `
                             <div class="animate-winner-pop flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
@@ -2889,13 +2891,14 @@
                                         🏠 ${winR.name}
                                     </div>
                                     <div class="text-xs text-gray-300">📍 ${winR.address} | 📞 ${winR.phone}</div>
+                                    <div id="home-live-route-box">${renderLiveRouteBoxHTML(winR, true)}</div>
                                 </div>
                                 <div class="flex flex-wrap gap-1.5 shrink-0">
                                     <button onclick="jumpToDirectoryRestaurant('${winR.name.replace(/'/g, "\'")}', '${winR.station}')" class="px-3 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-black">
                                         📖 餐廳名單
                                     </button>
-                                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(winR.name + ' ' + winR.address)}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black">
-                                        🗺️ 導航
+                                    <a id="home-transit-nav-btn" href="${buildTransitMapsUrl(winR)}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black">
+                                        🚌 公共交通導航
                                     </a>
                                     <a href="https://www.openrice.com/zh/hongkong/restaurants?what=${encodeURIComponent(winR.name + ' ' + winR.station)}" target="_blank" class="px-3 py-2 rounded-xl bg-amber-400 hover:brightness-105 text-black text-xs font-black">
                                         🥣 OpenRice 睇相
@@ -3978,7 +3981,7 @@
                                 <div class="text-xs text-gray-300">📍 ${winner.address} | 📞 ${winner.phone}</div>
                                 <div class="flex flex-wrap gap-2 pt-1">
                                     <button onclick="jumpToDirectoryRestaurant('${winner.name.replace(/'/g, "\'")}', '${winner.station}')" class="px-3 py-1.5 rounded-lg bg-pink-600 text-white text-xs font-black">📖 打開餐廳名單</button>
-                                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(winner.name + ' ' + winner.address)}" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-black">🗺️ Google Map 導航</a>
+                                    <a href="${buildTransitMapsUrl(winner)}" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-black">🚌 Google Map 公共交通導航</a>
                                     <button onclick="shareResultToWhatsApp('${winner.name.replace(/'/g, "\'")}', '${winner.station}', '${winner.mall.replace(/'/g, "\'")}', '${winner.cuisine}', '${winner.address.replace(/'/g, "\'")}', '${winner.phone}')" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black flex items-center space-x-1 shadow transition"><span>🟢 WhatsApp 拍板分享</span></button>
                                 </div>
                             </div>
@@ -4015,6 +4018,14 @@
                     const d = Math.hypot(latitude - c.lat, longitude - c.lng);
                     if (d < minD) { minD = d; nearest = st; }
                 });
+                saveUserLiveLocation({
+                    lat: latitude,
+                    lng: longitude,
+                    nearestStation: nearest,
+                    source: 'gps',
+                    updatedAt: Date.now()
+                });
+                refreshAllActiveRouteBoxes();
                 if (statusEl) statusEl.textContent = `🟢 已鎖定：${nearest}站附近`;
                 const sel = document.getElementById('nearby-station-select');
                 if (sel) sel.value = nearest;
@@ -4025,6 +4036,402 @@
                 showToast('⚠️ 無法取得 GPS，可手動選擇車站');
             }, { timeout: 8000 });
         }
+
+
+        // ==================== 9B. 香港實時位置距離與公共交通 / 港鐵建議路線引擎 ====================
+        const MTR_ROUTING_LINES = {
+            "荃灣線": ["荃灣", "大窩口", "葵興", "葵芳", "荔景", "美孚", "荔枝角", "長沙灣", "深水埗", "太子", "旺角", "油麻地", "佐敦", "尖沙咀", "金鐘", "中環"],
+            "觀塘線": ["黃埔", "何文田", "油麻地", "旺角", "太子", "石硤尾", "九龍塘", "樂富", "黃大仙", "鑽石山", "彩虹", "九龍灣", "牛頭角", "觀塘", "藍田", "油塘", "調景嶺"],
+            "港島線": ["堅尼地城", "香港大學", "西營盤", "上環", "中環", "金鐘", "灣仔", "銅鑼灣", "天后", "炮台山", "北角", "鰂魚涌", "太古", "西灣河", "筲箕灣", "杏花邨", "柴灣"],
+            "屯馬線": ["屯門", "兆康", "天水圍", "朗屏", "元朗", "錦上路", "荃灣西", "美孚", "南昌", "柯士甸", "尖東", "紅磡", "何文田", "土瓜灣", "宋皇臺", "啟德", "鑽石山", "顯徑", "大圍", "車公廟", "沙田圍", "第一城", "石門", "大水坑", "恆安", "馬鞍山", "烏溪沙"],
+            "東鐵線": ["金鐘", "會展", "紅磡", "旺角東", "九龍塘", "大圍", "沙田", "火炭", "大學", "大埔墟", "太和", "粉嶺", "上水"],
+            "東涌線": ["香港", "九龍", "奧運", "南昌", "荔景", "青衣", "東涌"],
+            "將軍澳線": ["北角", "鰂魚涌", "油塘", "調景嶺", "將軍澳", "坑口", "寶琳"],
+            "將軍澳線(康城)": ["將軍澳", "康城"],
+            "南港島線": ["金鐘", "海洋公園", "黃竹坑", "利東", "海怡半島"]
+        };
+
+        const MTR_LINE_COLORS = {
+            "荃灣線": "#E60012",
+            "觀塘線": "#009944",
+            "港島線": "#0075C2",
+            "屯馬線": "#9A3B26",
+            "東鐵線": "#53B7E8",
+            "東涌線": "#F7941D",
+            "將軍澳線": "#7D499D",
+            "南港島線": "#9EA600"
+        };
+
+        window.userLiveLocation = (function() {
+            try {
+                const saved = sessionStorage.getItem('pfy_live_user_loc');
+                if (saved) return JSON.parse(saved);
+            } catch (e) {}
+            return null;
+        })();
+
+        let _lastGachaWinnerForRoute = null;
+        let _lastHomeWinnerForRoute = null;
+        let _mtrGraphCache = null;
+
+        function calcHaversineKm(lat1, lng1, lat2, lng2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            return 2 * R * Math.asin(Math.sqrt(a));
+        }
+
+        function findNearestStationFromCoords(lat, lng) {
+            let nearest = '荃灣';
+            let minKm = Infinity;
+            Object.entries(stationCoords).forEach(([st, c]) => {
+                const km = calcHaversineKm(lat, lng, c.lat, c.lng);
+                if (km < minKm) { minKm = km; nearest = st; }
+            });
+            return { station: nearest, distKm: minKm };
+        }
+
+        function saveUserLiveLocation(locObj) {
+            window.userLiveLocation = locObj;
+            try { sessionStorage.setItem('pfy_live_user_loc', JSON.stringify(locObj)); } catch (e) {}
+        }
+
+        function getMtrRoutingGraph() {
+            if (_mtrGraphCache) return _mtrGraphCache;
+            const adj = {};
+            const stLines = {};
+            const addEdge = (u, v, cost, realMin, isTransfer) => {
+                if (!adj[u]) adj[u] = [];
+                adj[u].push({ to: v, cost, realMin, isTransfer });
+            };
+
+            Object.entries(MTR_ROUTING_LINES).forEach(([rawLine, stations]) => {
+                const line = rawLine === '將軍澳線(康城)' ? '將軍澳線' : rawLine;
+                stations.forEach(s => {
+                    if (!stLines[s]) stLines[s] = new Set();
+                    stLines[s].add(line);
+                });
+                for (let i = 0; i < stations.length - 1; i++) {
+                    const a = stations[i], b = stations[i + 1];
+                    const ca = stationCoords[a], cb = stationCoords[b];
+                    const d = (ca && cb) ? calcHaversineKm(ca.lat, ca.lng, cb.lat, cb.lng) : 1.2;
+                    const t = Math.max(1.8, Math.round((d * 0.92 + 1.15) * 10) / 10);
+                    addEdge(`${a}|${line}`, `${b}|${line}`, t, t, false);
+                    addEdge(`${b}|${line}`, `${a}|${line}`, t, t, false);
+                }
+            });
+
+            Object.entries(stLines).forEach(([st, set]) => {
+                const arr = Array.from(set);
+                for (let i = 0; i < arr.length; i++) {
+                    for (let j = 0; j < arr.length; j++) {
+                        if (i !== j) addEdge(`${st}|${arr[i]}`, `${st}|${arr[j]}`, 6.5, 3.0, true);
+                    }
+                }
+            });
+
+            [["中環", "香港"], ["尖沙咀", "尖東"]].forEach(([a, b]) => {
+                const la = Array.from(stLines[a] || []), lb = Array.from(stLines[b] || []);
+                la.forEach(lineA => lb.forEach(lineB => {
+                    addEdge(`${a}|${lineA}`, `${b}|${lineB}`, 10.0, 5.0, true);
+                    addEdge(`${b}|${lineB}`, `${a}|${lineA}`, 10.0, 5.0, true);
+                }));
+            });
+
+            _mtrGraphCache = { adj, stLines };
+            return _mtrGraphCache;
+        }
+
+        function findBestMtrRoute(startStation, endStation) {
+            if (!startStation || !endStation) return null;
+            if (startStation === endStation) return { same: true, mins: 0, stops: 0, legs: [] };
+            const { adj, stLines } = getMtrRoutingGraph();
+            if (!stLines[startStation] || !stLines[endStation]) return null;
+
+            const dist = {};
+            const prev = {};
+            const queue = [];
+            Array.from(stLines[startStation]).forEach(line => {
+                const key = `${startStation}|${line}`;
+                dist[key] = 0;
+                queue.push({ key, cost: 0 });
+            });
+
+            let bestEnd = null;
+            while (queue.length > 0) {
+                queue.sort((x, y) => x.cost - y.cost);
+                const cur = queue.shift();
+                if (cur.cost > (dist[cur.key] ?? Infinity)) continue;
+                const [curSt] = cur.key.split('|');
+                if (curSt === endStation) {
+                    bestEnd = cur.key;
+                    break;
+                }
+                const edges = adj[cur.key] || [];
+                for (let i = 0; i < edges.length; i++) {
+                    const e = edges[i];
+                    const nextCost = cur.cost + e.cost;
+                    if (nextCost < (dist[e.to] ?? Infinity)) {
+                        dist[e.to] = nextCost;
+                        prev[e.to] = { from: cur.key, realMin: e.realMin, isTransfer: e.isTransfer };
+                        queue.push({ key: e.to, cost: nextCost });
+                    }
+                }
+            }
+            if (!bestEnd) return null;
+
+            const steps = [];
+            let trace = bestEnd;
+            while (prev[trace]) {
+                steps.push({ from: prev[trace].from, to: trace, realMin: prev[trace].realMin, isTransfer: prev[trace].isTransfer });
+                trace = prev[trace].from;
+            }
+            steps.reverse();
+
+            const legs = [];
+            let stops = 0;
+            let totalMins = 0;
+            steps.forEach(s => {
+                totalMins += s.realMin;
+                if (s.isTransfer) return;
+                const [st1, line1] = s.from.split('|');
+                const [st2] = s.to.split('|');
+                stops++;
+                if (legs.length > 0 && legs[legs.length - 1].line === line1) {
+                    legs[legs.length - 1].to = st2;
+                    legs[legs.length - 1].stops++;
+                } else {
+                    legs.push({ line: line1, from: st1, to: st2, stops: 1 });
+                }
+            });
+            return { same: false, mins: Math.max(3, Math.round(totalMins)), stops, legs };
+        }
+
+        function buildTransitMapsUrl(rest) {
+            const dest = encodeURIComponent(`${rest.name || ''} ${rest.address || rest.station || ''}`.trim());
+            const loc = window.userLiveLocation;
+            if (loc && typeof loc.lat === 'number' && typeof loc.lng === 'number' && loc.source === 'gps') {
+                return `https://www.google.com/maps/dir/?api=1&origin=${loc.lat},${loc.lng}&destination=${dest}&travelmode=transit`;
+            }
+            return `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=transit`;
+        }
+
+        function getManualOriginSelectOptionsHTML(selectedVal) {
+            const allSt = [];
+            Object.values(mtrLines).forEach(arr => arr.forEach(s => { if (!allSt.includes(s)) allSt.push(s); }));
+            return `<option value="">或手動揀你而家喺邊區出發...</option>` +
+                allSt.map(s => `<option value="${s}" ${s === selectedVal ? 'selected' : ''}>📍 由 ${s}站 出發</option>`).join('');
+        }
+
+        function renderLiveRouteBoxHTML(winner, compact = false) {
+            const destStation = winner.station || '荃灣';
+            const destCoord = stationCoords[destStation];
+            const endWalkMeters = parseInt(String(winner.dist || '').replace(/[^0-9]/g, ''), 10) || 320;
+            const endWalkMins = Math.max(2, Math.round(endWalkMeters / 75));
+            const transitUrl = buildTransitMapsUrl(winner);
+            const loc = window.userLiveLocation;
+
+            if (!loc) {
+                if (compact) {
+                    return `
+                        <div class="mt-2 p-2.5 rounded-xl bg-gray-900/90 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                            <span class="text-gray-300 font-bold">🚇 鄰近 <strong class="text-emerald-400">${destStation}站</strong>（出站行約 ${endWalkMins} 分鐘）</span>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <button onclick="requestLiveGPSForRoute('home')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black transition">📍 讀取位置計路線</button>
+                                <a href="${transitUrl}" target="_blank" class="px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-amber-300 font-bold transition">🚌 查巴士/小巴路線 ➔</a>
+                            </div>
+                        </div>
+                    `;
+                }
+                return `
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between gap-1">
+                            <span class="font-black text-emerald-400 text-xs">🚌 建議公共交通路線</span>
+                            <span class="text-[10px] font-mono-tag text-gray-400">GPS / 港鐵</span>
+                        </div>
+                        <div class="text-[11px] text-gray-300 leading-relaxed">
+                            目的地鄰近 <strong class="text-white">${destStation}站</strong>（出站步行約 ${endWalkMins} 分鐘）。開啟定位即自動計算你目前位置前往的步行／港鐵轉乘路線！
+                        </div>
+                        <button onclick="requestLiveGPSForRoute('gacha')" class="w-full py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow transition flex items-center justify-center space-x-1.5">
+                            <span>📍 讀取我的位置・即計路線</span>
+                        </button>
+                        <select onchange="if(this.value) setManualOriginForRoute(this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-[11px] font-bold text-white">
+                            ${getManualOriginSelectOptionsHTML('')}
+                        </select>
+                    </div>
+                `;
+            }
+
+            const originStation = loc.nearestStation || '荃灣';
+            let directKm = null;
+            if (typeof loc.lat === 'number' && typeof loc.lng === 'number' && destCoord) {
+                directKm = calcHaversineKm(loc.lat, loc.lng, destCoord.lat, destCoord.lng);
+            } else if (stationCoords[originStation] && destCoord) {
+                directKm = calcHaversineKm(stationCoords[originStation].lat, stationCoords[originStation].lng, destCoord.lat, destCoord.lng);
+            }
+
+            const isSameOrVeryClose = (originStation === destStation) || (directKm !== null && directKm <= 1.1);
+            const originLabel = loc.source === 'gps' ? `你目前位置（${originStation}附近）` : `${originStation}站`;
+
+            let routeBodyHTML = '';
+            if (isSameOrVeryClose) {
+                const estMeters = originStation === destStation
+                    ? endWalkMeters
+                    : Math.max(150, Math.round((directKm || 0.4) * 1000));
+                const walkMins = Math.max(2, Math.round(estMeters / 75));
+                routeBodyHTML = `
+                    <div class="p-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 space-y-0.5">
+                        <div class="font-black text-emerald-400 text-xs sm:text-sm">🚶 步行直達 ‧ 約 ${estMeters} 米（約 ${walkMins} 分鐘）</div>
+                        <div class="text-[11px] text-gray-300">就喺你附近（${destStation}站區），直接行過去最快！</div>
+                    </div>
+                `;
+            } else {
+                const mtrRoute = findBestMtrRoute(originStation, destStation);
+                if (mtrRoute && mtrRoute.legs && mtrRoute.legs.length > 0) {
+                    const transfers = mtrRoute.legs.length - 1;
+                    const legsBadgesHTML = mtrRoute.legs.map((lg, idx) => {
+                        const bg = MTR_LINE_COLORS[lg.line] || '#FF5A36';
+                        return `
+                            <span class="inline-flex items-center flex-wrap gap-1">
+                                <span style="background-color:${bg};color:#FFFFFF;" class="px-1.5 py-0.5 rounded text-[10px] font-black">${lg.line}</span>
+                                <span class="font-bold text-white text-[11px]">${lg.from}→${lg.to}</span>
+                                ${idx < mtrRoute.legs.length - 1 ? '<span class="text-amber-400 font-black">➔ 轉</span>' : ''}
+                            </span>
+                        `;
+                    }).join(' ');
+                    const distTag = directKm !== null ? `直線約 ${directKm.toFixed(1)} km ‧ ` : '';
+                    routeBodyHTML = `
+                        <div class="space-y-1.5">
+                            <div class="flex flex-wrap items-center gap-1 leading-snug">${legsBadgesHTML}</div>
+                            <div class="text-[11px] text-gray-300">
+                                ⏱️ ${distTag}港鐵約 <strong class="text-amber-300">${mtrRoute.mins} 分鐘</strong>（${mtrRoute.stops}站・${transfers === 0 ? '直達免轉線' : '轉線 ' + transfers + ' 次'}）＋ 出站行約 ${endWalkMins} 分鐘
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    routeBodyHTML = `
+                        <div class="text-[11px] text-gray-300">
+                            🚌 建議由 <strong class="text-white">${originStation}</strong> 乘公共交通前往 <strong class="text-white">${destStation}</strong>（點擊下方查看實時巴士／小巴路線）
+                        </div>
+                    `;
+                }
+            }
+
+            if (compact) {
+                return `
+                    <div class="mt-2 p-2.5 rounded-xl bg-gray-900/90 border border-emerald-500/40 space-y-1.5 text-left">
+                        <div class="flex flex-wrap items-center justify-between gap-1 text-[10px]">
+                            <span class="font-black text-emerald-400">🚇 建議路線（由 ${originLabel} 出發）</span>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="requestLiveGPSForRoute('home')" class="text-gray-400 hover:text-emerald-400 font-bold underline">🔄 重新定位</button>
+                                <a href="${transitUrl}" target="_blank" class="text-amber-300 hover:underline font-black">🚌 巴士/小巴實時路線 ➔</a>
+                            </div>
+                        </div>
+                        ${routeBodyHTML}
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between gap-1">
+                        <span class="font-black text-emerald-400 text-xs">🚇 建議交通路線</span>
+                        <button onclick="requestLiveGPSForRoute('gacha')" class="text-[10px] font-bold text-gray-400 hover:text-emerald-400 underline">📍 更新定位</button>
+                    </div>
+                    <div class="text-[10px] text-gray-400">出發：${originLabel} ➔ 目的：${destStation}站</div>
+                    ${routeBodyHTML}
+                    <div class="pt-1.5 border-t border-gray-800/80 flex flex-wrap items-center justify-between gap-1.5">
+                        <a href="${transitUrl}" target="_blank" class="text-[11px] font-black text-amber-300 hover:underline">
+                            🚌 Google Maps 睇巴士 / 小巴實時班次 ➔
+                        </a>
+                        <select onchange="if(this.value) setManualOriginForRoute(this.value)" class="px-1.5 py-0.5 rounded bg-gray-800 border border-gray-700 text-[10px] font-bold text-gray-300 max-w-[125px]">
+                            ${getManualOriginSelectOptionsHTML(originStation)}
+                        </select>
+                    </div>
+                </div>
+            `;
+        }
+
+        function refreshAllActiveRouteBoxes() {
+            const gachaBox = document.getElementById('gacha-live-route-box');
+            if (gachaBox && _lastGachaWinnerForRoute) {
+                gachaBox.innerHTML = renderLiveRouteBoxHTML(_lastGachaWinnerForRoute, false);
+                const navLink = document.getElementById('gacha-transit-nav-btn');
+                if (navLink) navLink.href = buildTransitMapsUrl(_lastGachaWinnerForRoute);
+            }
+            const homeBox = document.getElementById('home-live-route-box');
+            if (homeBox && _lastHomeWinnerForRoute) {
+                homeBox.innerHTML = renderLiveRouteBoxHTML(_lastHomeWinnerForRoute, true);
+                const homeNav = document.getElementById('home-transit-nav-btn');
+                if (homeNav) homeNav.href = buildTransitMapsUrl(_lastHomeWinnerForRoute);
+            }
+        }
+
+        function requestLiveGPSForRoute(contextTag) {
+            if (!navigator.geolocation) {
+                showToast('⚠️ 你的瀏覽器不支援 GPS，可使用下方選單手動揀出發站');
+                return;
+            }
+            showToast('📡 正在讀取你目前位置以計算建議路線...');
+            navigator.geolocation.getCurrentPosition(pos => {
+                const { latitude, longitude } = pos.coords;
+                const nearestInfo = findNearestStationFromCoords(latitude, longitude);
+                saveUserLiveLocation({
+                    lat: latitude,
+                    lng: longitude,
+                    nearestStation: nearestInfo.station,
+                    distToStationKm: nearestInfo.distKm,
+                    source: 'gps',
+                    updatedAt: Date.now()
+                });
+                refreshAllActiveRouteBoxes();
+                showToast(`📍 已定位（${nearestInfo.station}附近），路線已即時更新！`);
+            }, () => {
+                showToast('⚠️ 無法取得 GPS 定位（請允許位置權限，或手動揀出發站）');
+            }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 120000 });
+        }
+
+        function setManualOriginForRoute(stationName) {
+            const c = stationCoords[stationName];
+            if (!c) return;
+            saveUserLiveLocation({
+                lat: c.lat,
+                lng: c.lng,
+                nearestStation: stationName,
+                distToStationKm: 0,
+                source: 'manual',
+                updatedAt: Date.now()
+            });
+            refreshAllActiveRouteBoxes();
+            showToast(`🚇 已切換出發地為【${stationName}站】，即時顯示建議路線！`);
+        }
+
+        function autoRefreshGrantedGPS() {
+            if (!navigator.geolocation) return;
+            if (navigator.permissions && navigator.permissions.query) {
+                navigator.permissions.query({ name: 'geolocation' }).then(res => {
+                    if (res.state === 'granted') {
+                        navigator.geolocation.getCurrentPosition(pos => {
+                            const { latitude, longitude } = pos.coords;
+                            const nearestInfo = findNearestStationFromCoords(latitude, longitude);
+                            saveUserLiveLocation({
+                                lat: latitude,
+                                lng: longitude,
+                                nearestStation: nearestInfo.station,
+                                distToStationKm: nearestInfo.distKm,
+                                source: 'gps',
+                                updatedAt: Date.now()
+                            });
+                            refreshAllActiveRouteBoxes();
+                        }, () => {}, { enableHighAccuracy: false, timeout: 6000, maximumAge: 180000 });
+                    }
+                }).catch(() => {});
+            }
+        }
+
 
         // ==================== 10. 全港 85 站餐廳盲盒抽籤動畫 ====================
         let currentGachaLine = '荃灣線';
@@ -4174,13 +4581,19 @@
                     isGachaRolling = false;
 
                     const winner = pool[Math.floor(Math.random() * pool.length)];
+                    _lastGachaWinnerForRoute = winner;
                     if (rollDisplay) {
                         rollDisplay.textContent = `💥 骰子爆出：${winner.name}！`;
                     }
                     if (resultCard) {
+                        const escG = (v) => String(v || '').split('\\').join('\\\\').split("'").join("\\'");
+                        const wNameJs = escG(winner.name);
+                        const wMallJs = escG(winner.mall);
+                        const wAddrJs = escG(winner.address);
+                        const transitNavUrl = buildTransitMapsUrl(winner);
                         resultCard.classList.remove('hidden');
                         resultCard.innerHTML = `
-                            <div class="animate-winner-pop space-y-2.5">
+                            <div class="animate-winner-pop space-y-3">
                                 <div class="flex flex-wrap items-center justify-between gap-1.5">
                                     <div class="flex flex-wrap items-center gap-1.5">
                                         <span class="px-2.5 py-0.5 rounded-full bg-pink-600 text-white text-[10px] font-black">💥 骰子爆出餐廳資訊</span>
@@ -4188,20 +4601,31 @@
                                     </div>
                                     <span class="text-xs font-mono-tag text-amber-300 font-bold">🚇 ${winner.station} • ${winner.cuisine}</span>
                                 </div>
-                                <h3 onclick="jumpToDirectoryRestaurant('${winner.name}', '${winner.station}')" class="text-xl font-black text-white hover:text-pink-400 cursor-pointer">${winner.name}</h3>
-                                <div class="text-xs text-gray-300 space-y-1">
-                                    <div>🏬 商場/街區：${winner.mall}</div>
-                                    <div>📍 地址：${winner.address}</div>
-                                    <div>📞 電話：${winner.phone}</div>
+
+                                <!-- 雙欄主區：左邊餐廳詳情，右邊（紅圈位置）直接顯示實時建議交通路線 -->
+                                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-stretch">
+                                    <div class="sm:col-span-6 space-y-1.5 flex flex-col justify-center">
+                                        <h3 onclick="jumpToDirectoryRestaurant('${wNameJs}', '${winner.station}')" class="text-xl font-black text-white hover:text-pink-400 cursor-pointer leading-tight">${winner.name}</h3>
+                                        <div class="text-xs text-gray-300 space-y-1">
+                                            <div>🏬 商場/街區：${winner.mall}</div>
+                                            <div>📍 地址：${winner.address}</div>
+                                            <div>📞 電話：${winner.phone}</div>
+                                        </div>
+                                    </div>
+                                    <div id="gacha-live-route-box" class="sm:col-span-6 p-3 rounded-xl bg-gray-950 border border-emerald-500/40 flex flex-col justify-center">
+                                        ${renderLiveRouteBoxHTML(winner, false)}
+                                    </div>
                                 </div>
+
                                 <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-800">
-                                    <button onclick="jumpToDirectoryRestaurant('${winner.name}', '${winner.station}')" class="px-3.5 py-1.5 rounded-xl bg-pink-600 text-white text-xs font-black">📖 餐廳名單詳情</button>
-                                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(winner.name + ' ' + winner.address)}" target="_blank" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-black">🗺️ Google Map 導航</a>
-                                    <button onclick="shareResultToWhatsApp('${winner.name.replace(/'/g, "\'")}', '${winner.station}', '${winner.mall.replace(/'/g, "\'")}', '${winner.cuisine}', '${winner.address.replace(/'/g, "\'")}', '${winner.phone}')" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black flex items-center space-x-1 shadow transition"><span>🟢 WhatsApp 拍板分享</span></button>
-                                    <button onclick="toggleFavorite('${winner.name}', '${winner.station}', '${winner.address}')" class="px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-pink-400 text-xs font-bold">❤️ 收藏</button>
+                                    <button onclick="jumpToDirectoryRestaurant('${wNameJs}', '${winner.station}')" class="px-3.5 py-1.5 rounded-xl bg-pink-600 text-white text-xs font-black">📖 餐廳名單詳情</button>
+                                    <a id="gacha-transit-nav-btn" href="${transitNavUrl}" target="_blank" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-black">🚌 Google Map 公共交通導航</a>
+                                    <button onclick="shareResultToWhatsApp('${wNameJs}', '${winner.station}', '${wMallJs}', '${winner.cuisine}', '${wAddrJs}', '${winner.phone}')" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black flex items-center space-x-1 shadow transition"><span>🟢 WhatsApp 拍板分享</span></button>
+                                    <button onclick="toggleFavorite('${wNameJs}', '${winner.station}', '${wAddrJs}')" class="px-3.5 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-pink-400 text-xs font-bold">❤️ 收藏</button>
                                 </div>
                             </div>
                         `;
+                        autoRefreshGrantedGPS();
                     }
                 }
             }, 70);
@@ -6796,6 +7220,7 @@ function doPost(e) {
             renderCommunityPosts();
             updateQuotaUI();
             setHomeQuickDrawMode('restaurant');
+            autoRefreshGrantedGPS();
             // 先載入本地 IndexedDB 與 window.name 快訊及自訂圖片，再執行 Google Sheet 同步，防止雲端舊資料覆蓋本地修改
             await loadNewsFromIndependentDB();
             await syncAllDataFromGoogleSheetV4(false);
@@ -7572,8 +7997,8 @@ function doPost(e) {
                     <div class="text-[10px] text-amber-300 font-bold">🙋‍♂️ 提名飯腳：${escapePartyHTML(w.nominatedBy || '系統精選')}</div>
                 </div>
                 <div class="flex flex-wrap gap-1.5 shrink-0">
-                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((w.name || '') + ' ' + (w.address || w.station || ''))}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black">
-                        🗺️ 導航
+                    <a href="${typeof buildTransitMapsUrl === 'function' ? buildTransitMapsUrl(w) : ('https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent((w.name || '') + ' ' + (w.address || w.station || '')) + '&travelmode=transit')}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black">
+                        🚌 公共交通導航
                     </a>
                     <a href="https://www.openrice.com/zh/hongkong/restaurants?what=${encodeURIComponent((w.name || '') + ' ' + (w.station || ''))}" target="_blank" class="px-3 py-2 rounded-xl bg-amber-400 hover:brightness-105 text-black text-xs font-black">
                         🥣 OpenRice 睇相
