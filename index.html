@@ -537,6 +537,10 @@
                         <span>📍 附近餐廳 (100M-1KM)</span>
                         <span class="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono-tag">GPS</span>
                     </button>
+                    <button onclick="switchModule('party'); toggleSideMenu();" id="nav-btn-party" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-bold text-gray-300 hover:bg-gray-800 transition">
+                        <span>👯 多人連線抽籤房</span>
+                        <span class="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-mono-tag">LIVE</span>
+                    </button>
                     <button onclick="switchModule(8); toggleSideMenu();" id="nav-btn-8" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-bold text-gray-300 hover:bg-gray-800 transition">
                         <span>📖 全港餐廳名單</span>
                     </button>
@@ -625,6 +629,14 @@
                                             <span class="font-bold text-xs text-white truncate">全港餐廳名單</span>
                                         </div>
                                         <span class="text-[10px] font-mono-tag text-gray-400 group-hover:text-pink-400 shrink-0">名單 ➔</span>
+                                    </button>
+
+                                    <button onclick="switchModule('party')" class="col-span-2 px-3 py-2.5 rounded-xl bg-gray-900 hover:border-amber-400 border border-amber-500/50 flex items-center justify-between text-left transition group">
+                                        <div class="flex items-center space-x-2 min-w-0">
+                                            <span class="text-base shrink-0">👯</span>
+                                            <span class="font-black text-xs text-white truncate">多人連線抽籤房（開房一齊提名／Ban ‧ 朋友免登入）</span>
+                                        </div>
+                                        <span class="px-1.5 py-0.5 rounded bg-amber-400 text-black text-[10px] font-mono-tag font-black shrink-0">LIVE ➔</span>
                                     </button>
                                 </div>
                             </div>
@@ -1389,6 +1401,173 @@
                     <button onclick="spinCustomWheel()" class="neon-button px-6 py-2.5 rounded-full text-xs font-black">🎡 立即轉動！</button>
                     <div id="custom-wheel-result" class="p-4 rounded-xl bg-gray-900/80 border border-gray-800 text-base font-black text-pink-400">
                         等待轉動...
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== MODULE PARTY: 👯 多人連線抽籤房 (方案 A) ==================== -->
+            <section id="module-party" class="hidden space-y-4">
+                <div class="glass-card rounded-2xl p-4 sm:p-6 space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-gray-800 pb-3.5">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-mono-tag font-black">LIVE PARTY ROOM // 方案 A</span>
+                                <span class="text-[10px] font-mono-tag text-amber-400 font-bold">朋友免登入 ‧ 實時同步抽籤</span>
+                            </div>
+                            <h2 class="text-xl sm:text-2xl font-black text-white mt-1">👯 多人連線抽籤房</h2>
+                        </div>
+                        <button onclick="switchModule('home')" class="self-start px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs font-bold text-gray-300 transition">← 返回首頁</button>
+                    </div>
+
+                    <!-- 大廳畫面：開房或輸入 4 位數房號加入 -->
+                    <div id="party-lobby-view" class="space-y-4">
+                        <!-- 邀請連結提示橫幅（由 ?room=XXXX 自動觸發） -->
+                        <div id="party-invite-banner" class="hidden p-3.5 rounded-2xl bg-emerald-500/20 border-2 border-emerald-500 text-emerald-300 text-xs sm:text-sm font-black flex flex-wrap items-center justify-between gap-2">
+                            <span id="party-invite-banner-text">🎉 朋友邀請你加入多人抽籤房！輸入暱稱後即可免費入房</span>
+                        </div>
+
+                        <!-- 步驟 0：設定房內顯示暱稱 -->
+                        <div class="p-4 rounded-2xl bg-gray-900 border border-gray-800 space-y-2">
+                            <div class="flex flex-wrap items-center justify-between gap-1">
+                                <label class="text-xs font-black text-amber-300">👤 你喺房內嘅顯示暱稱（免登入直接填）：</label>
+                                <span class="text-[10px] text-gray-400 font-mono-tag">最多 12 人同房 ‧ 房間 24 小時後自動過期</span>
+                            </div>
+                            <input id="party-nickname-input" type="text" maxlength="16" placeholder="輸入你嘅花名（例：荃灣阿明、米線專員）" class="w-full sm:max-w-md px-3.5 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-xs sm:text-sm text-white font-bold">
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- 左卡：做房主開新房 -->
+                            <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-pink-950/50 via-gray-900 to-gray-950 border-2 border-pink-500/50 flex flex-col justify-between space-y-4">
+                                <div class="space-y-3">
+                                    <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-pink-600 text-white text-[10px] font-black">
+                                        <span>👑 房主開房</span>
+                                    </div>
+                                    <h3 class="text-base sm:text-lg font-black text-white">開新抽籤房，叫齊人一齊揀！</h3>
+                                    <p class="text-xs text-gray-300 leading-relaxed">
+                                        只有<strong>房主</strong>按「全員同步抽籤」時會扣除 1 次抽籤額度（每房上限重抽 5 次）；朋友入房提名、淘汰（Ban）<strong>完全免費免登入</strong>！
+                                    </p>
+                                    <div class="space-y-2 pt-1">
+                                        <label class="block text-xs font-bold text-gray-300">🚇 鎖定飯局地區：</label>
+                                        <select id="party-create-station-select" class="w-full px-3 py-2 rounded-xl bg-gray-800 border border-gray-700 text-xs sm:text-sm font-bold text-white"></select>
+                                        <label class="flex items-center space-x-2 text-xs text-gray-300 pt-1 cursor-pointer">
+                                            <input id="party-preload-checkbox" type="checkbox" checked class="accent-pink-500">
+                                            <span>開房時自動先加入 3 間此區精選餐廳</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <button onclick="createPartyRoom()" id="btn-party-create" class="w-full neon-button py-3 rounded-xl text-sm font-black tracking-wide">
+                                    🚀 立即開房（產生 4 位數房號）
+                                </button>
+                            </div>
+
+                            <!-- 右卡：朋友輸入房號加入 -->
+                            <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-950/60 via-gray-900 to-gray-950 border-2 border-emerald-500/50 flex flex-col justify-between space-y-4">
+                                <div class="space-y-3">
+                                    <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black">
+                                        <span>🙋‍♂️ 朋友加入</span>
+                                    </div>
+                                    <h3 class="text-base sm:text-lg font-black text-white">已經有房號？一秒免費入房！</h3>
+                                    <p class="text-xs text-gray-300 leading-relaxed">
+                                        輸入朋友俾你嘅 4 位數房號（毋須註冊或登入），即時同步睇到候選餐廳、提名你心水食店或者 Ban 走唔想食嘅選項！
+                                    </p>
+                                    <div class="space-y-2 pt-1">
+                                        <label class="block text-xs font-bold text-gray-300">🔢 輸入 4 位數房號：</label>
+                                        <input id="party-join-code-input" type="text" inputmode="numeric" maxlength="4" onkeydown="if(event.key==='Enter') joinPartyRoom()" placeholder="例如：3821" class="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-center text-lg font-mono-tag font-black tracking-[0.35em] text-white">
+                                    </div>
+                                </div>
+                                <button onclick="joinPartyRoom()" id="btn-party-join" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-black shadow-lg transition">
+                                    🚪 免費免登入入房
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 房內實時連線畫面 -->
+                    <div id="party-room-view" class="hidden space-y-4">
+                        <!-- 房間資訊與分享列 -->
+                        <div class="p-4 rounded-2xl bg-gray-900 border-2 border-amber-500/50 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                            <div class="space-y-1.5">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="px-3 py-1 rounded-xl bg-amber-400 text-black text-sm sm:text-base font-mono-tag font-black tracking-widest">🏠 房號：<span id="party-room-code-badge">----</span></span>
+                                    <span id="party-room-station-badge" class="px-2.5 py-1 rounded-lg bg-pink-500/20 text-pink-300 text-xs font-black">🚇 全港隨機</span>
+                                    <span id="party-room-spins-badge" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-xs font-mono-tag font-bold">🎲 剩餘 5/5 抽</span>
+                                </div>
+                                <div id="party-room-meta-text" class="text-[11px] text-gray-400">
+                                    👑 房主：載入中 ‧ ⏱️ 房間 24 小時內有效 ‧ 按鈕設有冷卻保護防連點
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                                <button onclick="copyPartyInviteLink()" class="px-3 py-2 rounded-xl bg-amber-400 hover:brightness-105 text-black text-xs font-black shadow transition">
+                                    📋 複製邀請連結
+                                </button>
+                                <button onclick="sharePartyInviteWhatsApp()" class="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black shadow transition">
+                                    🟢 WhatsApp 叫人入房
+                                </button>
+                                <button onclick="leavePartyRoom()" class="px-3 py-2 rounded-xl bg-gray-800 hover:bg-rose-600 text-gray-200 hover:text-white text-xs font-bold border border-gray-700 transition">
+                                    🚪 離開房間
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 房內在線成員名單 (上限 12 人) -->
+                        <div class="p-3.5 rounded-xl bg-gray-900/80 border border-gray-800 space-y-2">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-black text-white">👥 房內飯腳（<span id="party-member-count">1</span> / 12 人）</span>
+                                <span id="party-my-role-badge" class="text-[11px] font-mono-tag font-bold text-amber-300">連線同步中...</span>
+                            </div>
+                            <div id="party-members-bar" class="flex flex-wrap gap-1.5"></div>
+                        </div>
+
+                        <!-- 同步擲骰舞台（所有房內手機即時同步滾動與爆出結果） -->
+                        <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-gray-900/90 to-gray-950 border-2 border-pink-500/40 text-center space-y-3.5 overflow-hidden">
+                            <div id="party-draw-stage" class="p-3.5 rounded-xl bg-gray-950 border border-gray-800 text-center">
+                                <div class="py-2 space-y-1">
+                                    <div class="text-2xl">🎲</div>
+                                    <div class="text-xs sm:text-sm font-black text-white">等齊朋友提名同 Ban 走唔想食嘅選項後，由房主撳掣全員同步開估！</div>
+                                </div>
+                            </div>
+
+                            <div id="party-host-spin-wrap" class="hidden space-y-1.5">
+                                <button onclick="triggerPartyRoomSpin()" id="btn-party-spin" class="neon-button px-7 py-3.5 rounded-full text-sm sm:text-base font-black tracking-wide shadow-xl">
+                                    🎲 全員同步擲骰拍板！（房主扣 1 抽）
+                                </button>
+                                <div id="party-spin-hint" class="text-[11px] text-gray-400">
+                                    💡 只會從未被 Ban 嘅候選餐廳中公平隨機抽出 ‧ 每次抽籤冷卻 5 秒
+                                </div>
+                            </div>
+
+                            <div id="party-guest-wait-wrap" class="hidden py-1.5 px-4 rounded-xl bg-gray-900 border border-gray-800 inline-flex items-center space-x-2 text-xs font-bold text-amber-300">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                <span id="party-guest-wait-text">⏳ 等待房主按掣全員同步抽籤（你可以喺下方自由提名或 Ban 走唔想食嘅餐廳）</span>
+                            </div>
+                        </div>
+
+                        <!-- 提名新餐廳列（房主＋朋友均可操作，上限 15 間，3 秒冷卻） -->
+                        <div class="p-4 rounded-2xl bg-gray-900/90 border border-gray-800 space-y-3">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="text-xs sm:text-sm font-black text-white">➕ 提名餐廳入候選池（<span id="party-cand-count">0</span> / 15 間 ‧ <span id="party-active-cand-count" class="text-emerald-400">0</span> 間有效）</span>
+                                <button onclick="nominatePartyRestaurant('random')" class="px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-amber-400 hover:text-black text-amber-300 text-xs font-black border border-amber-500/40 transition">
+                                    🎲 隨機加 1 間此區餐廳
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                                <div class="flex gap-1.5">
+                                    <select id="party-nominate-db-select" class="flex-1 px-3 py-2 rounded-xl bg-gray-800 border border-gray-700 text-xs text-white font-bold min-w-0"></select>
+                                    <button onclick="nominatePartyRestaurant('db')" class="shrink-0 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition">
+                                        ➕ 加入
+                                    </button>
+                                </div>
+                                <div class="flex gap-1.5">
+                                    <input id="party-nominate-custom-input" type="text" maxlength="32" onkeydown="if(event.key==='Enter') nominatePartyRestaurant('custom')" placeholder="或自訂輸入心水餐廳名（例：樓下茶記）" class="flex-1 px-3 py-2 rounded-xl bg-gray-800 border border-gray-700 text-xs text-white min-w-0">
+                                    <button onclick="nominatePartyRestaurant('custom')" class="shrink-0 px-3 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-black transition">
+                                        ✍️ 提名
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 候選池列表（支援 Ban / 復活） -->
+                            <div id="party-candidates-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-1"></div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -2455,6 +2634,8 @@
                 stations.map(s => `<option value="${s}">📍 ${s}站</option>`).join('');
             if (sel) sel.innerHTML = optionsHtml;
             if (mealSel) mealSel.innerHTML = optionsHtml;
+            const partyStSel = document.getElementById('party-create-station-select');
+            if (partyStSel) partyStSel.innerHTML = optionsHtml;
             if (newRestStSel) {
                 newRestStSel.innerHTML = stations.map(s => `<option value="${s}" ${s === '荃灣' ? 'selected' : ''}>🚇 ${s}站</option>`).join('');
             }
@@ -4669,7 +4850,7 @@
         }
 
         function switchModule(mod) {
-            const allMods = ['home', 'news', 'nearby', 'community', 1, 2, 3, 4, 8];
+            const allMods = ['home', 'news', 'nearby', 'community', 'party', 1, 2, 3, 4, 8];
             allMods.forEach(m => {
                 const sec = document.getElementById(`module-${m}`);
                 if (sec) sec.classList.add('hidden');
@@ -7272,9 +7453,686 @@ function doPost(e) {
         showToast('🗑️ 已從雲端即時刪除該篇食評討論帖');
     };
 
+    // ==================== 👯 多人連線抽籤房 (Live Party Room — 方案 A + 3 道保護鎖) ====================
+    const PARTY_MAX_MEMBERS = 12;
+    const PARTY_MAX_CANDIDATES = 15;
+    const PARTY_MAX_SPINS = 5;
+    const PARTY_SPIN_COOLDOWN_MS = 5000;
+    const PARTY_ACTION_COOLDOWN_MS = 3000;
+    const PARTY_EXPIRE_MS = 24 * 60 * 60 * 1000;
+
+    let activePartyRoomCode = null;
+    let activePartyUnsub = null;
+    let activePartyRoomData = null;
+    let lastPartyAnimatedSpinId = 0;
+    let lastPartySpinClickTs = 0;
+    let lastPartyActionClickTs = 0;
+    let partySpinAnimTimer = null;
+
+    function getOrCreatePartyClientId() {
+        let cid = localStorage.getItem('pfy_party_client_id');
+        if (!cid) {
+            cid = 'u_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+            localStorage.setItem('pfy_party_client_id', cid);
+        }
+        return cid;
+    }
+
+    function escapePartyHTML(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function getPartyUserNickname() {
+        const input = document.getElementById('party-nickname-input');
+        let nick = input ? input.value.trim() : '';
+        if (!nick) {
+            if (isAdminLoggedIn) nick = 'Admin';
+            else if (isMemberLoggedIn && currentMemberName && currentMemberName !== '訪客') nick = currentMemberName;
+            else nick = localStorage.getItem('pfy_party_nick') || `食家_${Math.floor(10 + Math.random() * 89)}`;
+        }
+        nick = nick.slice(0, 16);
+        if (input) input.value = nick;
+        localStorage.setItem('pfy_party_nick', nick);
+        return nick;
+    }
+
+    function initPartyNicknamePrefill() {
+        const input = document.getElementById('party-nickname-input');
+        if (!input || input.value.trim()) return;
+        const saved = localStorage.getItem('pfy_party_nick');
+        if (saved) input.value = saved;
+        else if (isMemberLoggedIn && currentMemberName && currentMemberName !== '訪客') input.value = currentMemberName;
+    }
+
+    function populatePartyDbNominateDropdown(station) {
+        const sel = document.getElementById('party-nominate-db-select');
+        if (!sel) return;
+        let pool = restaurantsDB;
+        if (station && station !== '全港隨機') {
+            const bySt = restaurantsDB.filter(r => r.station === station);
+            if (bySt.length > 0) pool = bySt;
+        }
+        sel.innerHTML = pool.slice(0, 80).map((r, idx) =>
+            `<option value="${idx}">${escapePartyHTML(r.name)} (${escapePartyHTML(r.station)}・${escapePartyHTML(r.cuisine)})</option>`
+        ).join('');
+        sel._poolRef = pool.slice(0, 80);
+    }
+
+    function buildPartyCandidateObj(r, nominatorName) {
+        return {
+            id: 'c_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6),
+            name: String(r.name || '').trim().slice(0, 40),
+            station: r.station || '香港',
+            mall: r.mall || `${r.station || '香港'}區`,
+            cuisine: r.cuisine || '精選美食',
+            address: r.address || `${r.station || '香港'}附近`,
+            phone: r.phone || '',
+            promoBadge: r.promoBadge || '',
+            nominatedBy: nominatorName,
+            banned: false,
+            bannedBy: ''
+        };
+    }
+
+    function renderPartyWinnerCardHTML(w, spinNum) {
+        const safeName = escapePartyHTML(w.name);
+        const safeSt = escapePartyHTML(w.station || '香港');
+        const safeCui = escapePartyHTML(w.cuisine || '美食');
+        const safeMall = escapePartyHTML(w.mall || '');
+        const safeAddr = escapePartyHTML(w.address || '');
+        const safePhone = escapePartyHTML(w.phone || '');
+        const jsName = String(w.name || '').replace(/\/g, '\\').replace(/'/g, "\'");
+        const jsSt = String(w.station || '').replace(/\/g, '\\').replace(/'/g, "\'");
+        const jsMall = String(w.mall || '').replace(/\/g, '\\').replace(/'/g, "\'");
+        const jsAddr = String(w.address || '').replace(/\/g, '\\').replace(/'/g, "\'");
+        return `
+            <div class="animate-winner-pop flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+                <div class="space-y-1">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <span class="px-2.5 py-0.5 rounded bg-amber-400 text-black text-[10px] font-black">💥 第 ${spinNum} 輪全員同步拍板結果！</span>
+                        <span class="px-2 py-0.5 rounded bg-gray-800 text-pink-300 text-[10px] font-bold">🚇 ${safeSt} • ${safeCui}</span>
+                        ${renderPromoBadgeHTML(w)}
+                    </div>
+                    <div class="text-lg sm:text-2xl font-black text-white">🏠 ${safeName}</div>
+                    <div class="text-xs text-gray-300">📍 ${safeAddr}${safePhone ? ' | 📞 ' + safePhone : ''}</div>
+                    <div class="text-[10px] text-amber-300 font-bold">🙋‍♂️ 提名飯腳：${escapePartyHTML(w.nominatedBy || '系統精選')}</div>
+                </div>
+                <div class="flex flex-wrap gap-1.5 shrink-0">
+                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((w.name || '') + ' ' + (w.address || w.station || ''))}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black">
+                        🗺️ 導航
+                    </a>
+                    <a href="https://www.openrice.com/zh/hongkong/restaurants?what=${encodeURIComponent((w.name || '') + ' ' + (w.station || ''))}" target="_blank" class="px-3 py-2 rounded-xl bg-amber-400 hover:brightness-105 text-black text-xs font-black">
+                        🥣 OpenRice 睇相
+                    </a>
+                    <button onclick="shareResultToWhatsApp('${jsName}', '${jsSt}', '${jsMall}', '${safeCui}', '${jsAddr}', '${safePhone}')" class="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black shadow transition">
+                        🟢 WhatsApp 拍板
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderPartyRoomState(data) {
+        activePartyRoomData = data;
+        const myClientId = getOrCreatePartyClientId();
+        const isHost = (data.hostClientId === myClientId) || isAdminLoggedIn;
+
+        document.getElementById('party-lobby-view')?.classList.add('hidden');
+        document.getElementById('party-room-view')?.classList.remove('hidden');
+
+        const codeBadge = document.getElementById('party-room-code-badge');
+        const stBadge = document.getElementById('party-room-station-badge');
+        const spinsBadge = document.getElementById('party-room-spins-badge');
+        const metaText = document.getElementById('party-room-meta-text');
+        const memCount = document.getElementById('party-member-count');
+        const myRole = document.getElementById('party-my-role-badge');
+        const memBar = document.getElementById('party-members-bar');
+        const hostWrap = document.getElementById('party-host-spin-wrap');
+        const guestWrap = document.getElementById('party-guest-wait-wrap');
+        const guestWaitText = document.getElementById('party-guest-wait-text');
+        const spinBtn = document.getElementById('btn-party-spin');
+
+        const members = Array.isArray(data.members) ? data.members : [];
+        const candidates = Array.isArray(data.candidates) ? data.candidates : [];
+        const activeCands = candidates.filter(c => !c.banned);
+        const maxSpins = data.maxSpins || PARTY_MAX_SPINS;
+        const usedSpins = data.spinCount || 0;
+        const remSpins = Math.max(0, maxSpins - usedSpins);
+
+        if (codeBadge) codeBadge.textContent = data.roomCode || activePartyRoomCode;
+        if (stBadge) stBadge.textContent = `🚇 ${data.station || '全港隨機'}`;
+        if (spinsBadge) {
+            spinsBadge.textContent = isAdminLoggedIn ? `🎲 Admin 無限抽 (已抽 ${usedSpins} 次)` : `🎲 剩餘 ${remSpins}/${maxSpins} 抽`;
+        }
+        if (metaText) {
+            const hrsLeft = Math.max(1, Math.ceil(((data.expiresAt || (Date.now() + PARTY_EXPIRE_MS)) - Date.now()) / 3600000));
+            metaText.textContent = `👑 房主：${data.hostName || '房主'} ‧ ⏱️ 房間約 ${hrsLeft} 小時後自動過期 ‧ 朋友入房免費免登入`;
+        }
+        if (memCount) memCount.textContent = members.length;
+        if (myRole) myRole.textContent = isHost ? '👑 你係房主（負責按掣同步抽籤）' : '🙋‍♂️ 飯腳身份（可免費提名／Ban）';
+
+        if (memBar) {
+            memBar.innerHTML = members.map(m => `
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold ${m.id === data.hostClientId ? 'bg-amber-400 text-black font-black' : 'bg-gray-800 text-gray-200 border border-gray-700'}">
+                    ${m.id === data.hostClientId ? '👑 ' : '👤 '}${escapePartyHTML(m.name)}${m.id === myClientId ? ' (你)' : ''}
+                </span>
+            `).join('');
+        }
+
+        if (isHost) {
+            hostWrap?.classList.remove('hidden');
+            guestWrap?.classList.add('hidden');
+            if (spinBtn) {
+                if (!isAdminLoggedIn && remSpins <= 0) {
+                    spinBtn.disabled = true;
+                    spinBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    spinBtn.textContent = '🔒 此房 5 次抽籤上限已用完（請開新房）';
+                } else {
+                    spinBtn.disabled = false;
+                    spinBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    spinBtn.textContent = isAdminLoggedIn
+                        ? '🎲 全員同步擲骰拍板！（Admin 免扣）'
+                        : `🎲 全員同步擲骰拍板！（房主扣 1 抽・餘 ${remSpins} 次）`;
+                }
+            }
+        } else {
+            hostWrap?.classList.add('hidden');
+            guestWrap?.classList.remove('hidden');
+            if (guestWaitText) {
+                guestWaitText.textContent = `⏳ 等待房主【${data.hostName || '房主'}】撳掣全員同步抽籤（你可以喺下方自由提名或 Ban）`;
+            }
+        }
+
+        // 候選清單渲染
+        const candCountEl = document.getElementById('party-cand-count');
+        const activeCountEl = document.getElementById('party-active-cand-count');
+        const listEl = document.getElementById('party-candidates-list');
+        if (candCountEl) candCountEl.textContent = candidates.length;
+        if (activeCountEl) activeCountEl.textContent = activeCands.length;
+
+        if (listEl) {
+            if (candidates.length === 0) {
+                listEl.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-gray-400">候選池暫時空白，快啲喺上面提名幾間餐廳或者按「🎲 隨機加 1 間」！</div>`;
+            } else {
+                listEl.innerHTML = candidates.map(c => `
+                    <div class="p-3 rounded-xl border flex flex-col justify-between space-y-2 transition ${c.banned ? 'bg-gray-950/60 border-gray-800 opacity-60' : 'bg-gray-950 border-gray-700 hover:border-pink-500'}">
+                        <div class="space-y-1">
+                            <div class="flex items-start justify-between gap-1.5">
+                                <div class="font-black text-xs sm:text-sm ${c.banned ? 'line-through text-gray-400' : 'text-white'}">${escapePartyHTML(c.name)}</div>
+                                ${isHost ? `<button onclick="removePartyCandidate('${c.id}')" class="text-[10px] text-gray-500 hover:text-rose-400 font-black px-1" title="移除此餐廳">✕</button>` : ''}
+                            </div>
+                            <div class="flex flex-wrap items-center gap-1 text-[10px]">
+                                <span class="px-1.5 py-0.5 rounded bg-gray-800 text-amber-300 font-bold">🚇 ${escapePartyHTML(c.station)}</span>
+                                <span class="px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300 font-bold">${escapePartyHTML(c.cuisine)}</span>
+                                ${renderPromoBadgeHTML(c)}
+                            </div>
+                            <div class="text-[10px] text-gray-400">
+                                🙋‍♂️ ${escapePartyHTML(c.nominatedBy || '房主')} 提名
+                                ${c.banned ? `<span class="text-rose-400 font-bold"> ‧ 🚫 已被 ${escapePartyHTML(c.bannedBy || '成員')} Ban</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="pt-1.5 border-t border-gray-800/80 flex items-center justify-between gap-2">
+                            <button onclick="toggleBanPartyCandidate('${c.id}')" class="flex-1 py-1.5 rounded-lg text-[11px] font-black transition ${c.banned ? 'bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white' : 'bg-gray-800 hover:bg-rose-600 text-gray-300 hover:text-white'}">
+                                ${c.banned ? '♻️ 取消 Ban（復活）' : '🙅‍♂️ 唔想食 (Ban)'}
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 處理全員同步擲骰動畫與爆出結果
+        const stage = document.getElementById('party-draw-stage');
+        if (stage && data.winner && data.spinId) {
+            if (data.spinId > lastPartyAnimatedSpinId) {
+                lastPartyAnimatedSpinId = data.spinId;
+                if (partySpinAnimTimer) clearInterval(partySpinAnimTimer);
+                stage.innerHTML = getDiceJumpRollStageHTML(
+                    '🎲 全員同步擲骰中...',
+                    '正在鎖定今餐命運餐廳...'
+                );
+                let ticks = 0;
+                const animPool = activeCands.length > 0 ? activeCands : candidates;
+                partySpinAnimTimer = setInterval(() => {
+                    ticks++;
+                    const lbl = document.getElementById('dice-rolling-candidate-label');
+                    if (lbl && animPool.length > 0) {
+                        const tmp = animPool[Math.floor(Math.random() * animPool.length)];
+                        lbl.textContent = `🏠 ${tmp.name} (${tmp.station})`;
+                    }
+                    if (ticks >= 13) {
+                        clearInterval(partySpinAnimTimer);
+                        partySpinAnimTimer = null;
+                        stage.innerHTML = renderPartyWinnerCardHTML(data.winner, usedSpins);
+                        showToast(`🎉 全員同步拍板：【${data.winner.name}】！`);
+                    }
+                }, 72);
+            } else if (!partySpinAnimTimer) {
+                stage.innerHTML = renderPartyWinnerCardHTML(data.winner, usedSpins);
+            }
+        } else if (stage && !partySpinAnimTimer) {
+            stage.innerHTML = `
+                <div class="py-2 space-y-1">
+                    <div class="text-2xl">🎲</div>
+                    <div class="text-xs sm:text-sm font-black text-white">目前已準備 ${activeCands.length} 間有效候選餐廳！等齊朋友提名同 Ban 完就由房主開估！</div>
+                </div>
+            `;
+        }
+    }
+
+    function subscribeToPartyRoom(roomCode) {
+        if (activePartyUnsub) {
+            try { activePartyUnsub(); } catch (e) {}
+            activePartyUnsub = null;
+        }
+        activePartyRoomCode = roomCode;
+        lastPartyAnimatedSpinId = 0;
+
+        const roomRef = doc(db, "party_rooms", roomCode);
+        activePartyUnsub = onSnapshot(roomRef, (snap) => {
+            if (!snap.exists()) {
+                showToast('⚠️ 找不到此抽籤房或房間已被移除');
+                window.leavePartyRoom(true);
+                return;
+            }
+            const data = snap.data();
+            // 保護鎖 3：24 小時自動過期並切斷背景監聽
+            if (data.expiresAt && Date.now() > data.expiresAt) {
+                showToast('⏱️ 此抽籤房已超過 24 小時自動過期並鎖定，請重新開房');
+                window.leavePartyRoom(true);
+                return;
+            }
+            if (!activePartyRoomData || activePartyRoomData.station !== data.station) {
+                populatePartyDbNominateDropdown(data.station || '全港隨機');
+            }
+            renderPartyRoomState(data);
+        }, (err) => {
+            console.warn('Party room snapshot error:', err);
+            showToast('⚠️ 雲端連線受限：請確認 Firebase Firestore 規則已允許 party_rooms 讀寫');
+        });
+
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.set('room', roomCode);
+            window.history.replaceState({}, '', url.toString());
+        } catch (e) {}
+    }
+
+    window.createPartyRoom = async function() {
+        const myClientId = getOrCreatePartyClientId();
+        const myName = getPartyUserNickname();
+        const stSel = document.getElementById('party-create-station-select');
+        const preloadCb = document.getElementById('party-preload-checkbox');
+        const station = stSel ? stSel.value : '全港隨機';
+        const shouldPreload = preloadCb ? preloadCb.checked : true;
+
+        const btn = document.getElementById('btn-party-create');
+        if (btn) { btn.disabled = true; btn.textContent = '⏳ 正在建立實時抽籤房...'; }
+
+        try {
+            let roomCode = '';
+            for (let attempt = 0; attempt < 6; attempt++) {
+                const candidateCode = String(Math.floor(1000 + Math.random() * 9000));
+                const checkSnap = await getDoc(doc(db, "party_rooms", candidateCode));
+                if (!checkSnap.exists() || (checkSnap.data().expiresAt && Date.now() > checkSnap.data().expiresAt)) {
+                    roomCode = candidateCode;
+                    break;
+                }
+            }
+            if (!roomCode) roomCode = String(Math.floor(1000 + Math.random() * 9000));
+
+            let initialCandidates = [];
+            if (shouldPreload) {
+                let pool = restaurantsDB;
+                if (station !== '全港隨機') {
+                    const bySt = restaurantsDB.filter(r => r.station === station);
+                    if (bySt.length > 0) pool = bySt;
+                }
+                const picked3 = pickThreeDiverseRestaurants(pool);
+                initialCandidates = picked3.map(r => buildPartyCandidateObj(r, '系統精選'));
+            }
+
+            const now = Date.now();
+            const newRoom = {
+                roomCode,
+                station,
+                hostClientId: myClientId,
+                hostName: myName,
+                members: [{ id: myClientId, name: myName, joinedAt: now }],
+                candidates: initialCandidates,
+                spinCount: 0,
+                maxSpins: PARTY_MAX_SPINS,
+                spinId: 0,
+                winner: null,
+                status: 'waiting',
+                createdAt: now,
+                updatedAt: now,
+                expiresAt: now + PARTY_EXPIRE_MS
+            };
+
+            await setDoc(doc(db, "party_rooms", roomCode), newRoom);
+            document.getElementById('party-invite-banner')?.classList.add('hidden');
+            populatePartyDbNominateDropdown(station);
+            subscribeToPartyRoom(roomCode);
+            showToast(`🎉 已開房！房號【${roomCode}】，快啲分享去 WhatsApp 叫朋友免登入入房！`);
+        } catch (err) {
+            console.error(err);
+            showToast('⚠️ 開房失敗：請先確認已在 Firebase Firestore 規則加入 party_rooms 權限');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = '🚀 立即開房（產生 4 位數房號）'; }
+        }
+    };
+
+    window.joinPartyRoom = async function(codeOverride) {
+        const inputEl = document.getElementById('party-join-code-input');
+        const roomCode = String(codeOverride || (inputEl ? inputEl.value : '')).trim();
+        if (!/^\d{4}$/.test(roomCode)) {
+            showToast('⚠️ 請輸入正確的 4 位數房號（例如 3821）');
+            return;
+        }
+        const myClientId = getOrCreatePartyClientId();
+        const myName = getPartyUserNickname();
+        const btn = document.getElementById('btn-party-join');
+        if (btn) { btn.disabled = true; btn.textContent = '⏳ 正在連線入房...'; }
+
+        try {
+            const roomRef = doc(db, "party_rooms", roomCode);
+            const snap = await getDoc(roomRef);
+            if (!snap.exists()) {
+                showToast(`⚠️ 找不到【${roomCode}】號抽籤房，請核對房號`);
+                return;
+            }
+            const data = snap.data();
+            // 保護鎖 3：檢查 24 小時過期
+            if (data.expiresAt && Date.now() > data.expiresAt) {
+                showToast(`⏱️ 【${roomCode}】號房已超過 24 小時自動過期，請房主重開新房`);
+                return;
+            }
+            const members = Array.isArray(data.members) ? [...data.members] : [];
+            const existIdx = members.findIndex(m => m.id === myClientId);
+            if (existIdx !== -1) {
+                members[existIdx] = { ...members[existIdx], name: myName };
+            } else {
+                // 保護鎖 2：上限 12 人
+                if (members.length >= PARTY_MAX_MEMBERS) {
+                    showToast(`🚫 房間已達上限（${PARTY_MAX_MEMBERS} 人），無法再加入`);
+                    return;
+                }
+                members.push({ id: myClientId, name: myName, joinedAt: Date.now() });
+            }
+
+            const patch = { members, updatedAt: Date.now() };
+            if (data.hostClientId === myClientId) patch.hostName = myName;
+            await updateDoc(roomRef, patch);
+
+            document.getElementById('party-invite-banner')?.classList.add('hidden');
+            populatePartyDbNominateDropdown(data.station || '全港隨機');
+            subscribeToPartyRoom(roomCode);
+            showToast(`🎉 已免費加入【${roomCode}】號抽籤房！`);
+        } catch (err) {
+            console.error(err);
+            showToast('⚠️ 入房失敗：請確認網路連線或 Firestore 規則設定');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = '🚪 免費免登入入房'; }
+        }
+    };
+
+    window.leavePartyRoom = function(silent = false) {
+        if (activePartyUnsub) {
+            try { activePartyUnsub(); } catch (e) {}
+            activePartyUnsub = null;
+        }
+        if (partySpinAnimTimer) {
+            clearInterval(partySpinAnimTimer);
+            partySpinAnimTimer = null;
+        }
+        activePartyRoomCode = null;
+        activePartyRoomData = null;
+        lastPartyAnimatedSpinId = 0;
+
+        document.getElementById('party-room-view')?.classList.add('hidden');
+        document.getElementById('party-lobby-view')?.classList.remove('hidden');
+
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('room');
+            window.history.replaceState({}, '', url.toString());
+        } catch (e) {}
+
+        if (!silent) showToast('👋 已離開多人抽籤房');
+    };
+
+    window.nominatePartyRestaurant = async function(mode) {
+        if (!activePartyRoomCode || !activePartyRoomData) return;
+        // 保護鎖 1：3 秒操作冷卻
+        const now = Date.now();
+        if (now - lastPartyActionClickTs < PARTY_ACTION_COOLDOWN_MS) {
+            const waitSec = Math.ceil((PARTY_ACTION_COOLDOWN_MS - (now - lastPartyActionClickTs)) / 1000);
+            showToast(`⏳ 操作太快啦，請等 ${waitSec} 秒後再提名`);
+            return;
+        }
+
+        const candidates = Array.isArray(activePartyRoomData.candidates) ? [...activePartyRoomData.candidates] : [];
+        // 保護鎖 2：上限 15 間餐廳
+        if (candidates.length >= PARTY_MAX_CANDIDATES) {
+            showToast(`🚫 候選池已達上限（${PARTY_MAX_CANDIDATES} 間），請先移除或直接抽籤！`);
+            return;
+        }
+
+        const myName = getPartyUserNickname();
+        let chosenObj = null;
+
+        if (mode === 'db') {
+            const sel = document.getElementById('party-nominate-db-select');
+            const pool = (sel && sel._poolRef) ? sel._poolRef : restaurantsDB;
+            const picked = pool[parseInt(sel ? sel.value : '0', 10)];
+            if (!picked) return;
+            chosenObj = buildPartyCandidateObj(picked, myName);
+        } else if (mode === 'random') {
+            const st = activePartyRoomData.station || '全港隨機';
+            let pool = restaurantsDB;
+            if (st !== '全港隨機') {
+                const bySt = restaurantsDB.filter(r => r.station === st);
+                if (bySt.length > 0) pool = bySt;
+            }
+            const existingNames = new Set(candidates.map(c => c.name));
+            const fresh = pool.filter(r => !existingNames.has(r.name));
+            const src = fresh.length > 0 ? fresh : pool;
+            const picked = src[Math.floor(Math.random() * src.length)];
+            chosenObj = buildPartyCandidateObj(picked, myName);
+        } else if (mode === 'custom') {
+            const customInput = document.getElementById('party-nominate-custom-input');
+            const customName = customInput ? customInput.value.trim() : '';
+            if (!customName) {
+                showToast('⚠️ 請輸入想提名嘅餐廳名稱');
+                return;
+            }
+            const st = activePartyRoomData.station && activePartyRoomData.station !== '全港隨機'
+                ? activePartyRoomData.station : '自訂地區';
+            chosenObj = buildPartyCandidateObj({
+                name: customName,
+                station: st,
+                mall: st,
+                cuisine: '飯腳私房提名',
+                address: `${st}附近`
+            }, myName);
+            if (customInput) customInput.value = '';
+        }
+
+        if (!chosenObj) return;
+        if (candidates.some(c => c.name.toLowerCase() === chosenObj.name.toLowerCase())) {
+            showToast(`⚠️「${chosenObj.name}」已經喺候選池入面啦！`);
+            return;
+        }
+
+        lastPartyActionClickTs = now;
+        candidates.push(chosenObj);
+        try {
+            await updateDoc(doc(db, "party_rooms", activePartyRoomCode), {
+                candidates,
+                updatedAt: Date.now()
+            });
+            showToast(`✅ 已提名「${chosenObj.name}」加入候選池！`);
+        } catch (err) {
+            showToast('⚠️ 同步提名失敗，請稍後再試');
+        }
+    };
+
+    window.toggleBanPartyCandidate = async function(candId) {
+        if (!activePartyRoomCode || !activePartyRoomData) return;
+        const now = Date.now();
+        if (now - lastPartyActionClickTs < PARTY_ACTION_COOLDOWN_MS) {
+            const waitSec = Math.ceil((PARTY_ACTION_COOLDOWN_MS - (now - lastPartyActionClickTs)) / 1000);
+            showToast(`⏳ 操作太快啦，請等 ${waitSec} 秒再按`);
+            return;
+        }
+        const myName = getPartyUserNickname();
+        const candidates = (activePartyRoomData.candidates || []).map(c => {
+            if (c.id !== candId) return c;
+            const nextBanned = !c.banned;
+            return { ...c, banned: nextBanned, bannedBy: nextBanned ? myName : '' };
+        });
+        lastPartyActionClickTs = now;
+        try {
+            await updateDoc(doc(db, "party_rooms", activePartyRoomCode), {
+                candidates,
+                updatedAt: Date.now()
+            });
+        } catch (err) {
+            showToast('⚠️ 同步狀態失敗，請重試');
+        }
+    };
+
+    window.removePartyCandidate = async function(candId) {
+        if (!activePartyRoomCode || !activePartyRoomData) return;
+        const myClientId = getOrCreatePartyClientId();
+        if (activePartyRoomData.hostClientId !== myClientId && !isAdminLoggedIn) {
+            showToast('🔒 只有房主可以移除候選項目');
+            return;
+        }
+        const candidates = (activePartyRoomData.candidates || []).filter(c => c.id !== candId);
+        try {
+            await updateDoc(doc(db, "party_rooms", activePartyRoomCode), {
+                candidates,
+                updatedAt: Date.now()
+            });
+        } catch (err) {
+            showToast('⚠️ 移除失敗，請重試');
+        }
+    };
+
+    window.triggerPartyRoomSpin = async function() {
+        if (!activePartyRoomCode || !activePartyRoomData) return;
+        const myClientId = getOrCreatePartyClientId();
+        if (activePartyRoomData.hostClientId !== myClientId && !isAdminLoggedIn) {
+            showToast('🔒 請由房主按掣啟動全員同步抽籤！');
+            return;
+        }
+        if (activePartyRoomData.expiresAt && Date.now() > activePartyRoomData.expiresAt) {
+            showToast('⏱️ 房間已過期，請重新開房');
+            window.leavePartyRoom(true);
+            return;
+        }
+
+        // 保護鎖 1：5 秒抽籤冷卻
+        const now = Date.now();
+        if (now - lastPartySpinClickTs < PARTY_SPIN_COOLDOWN_MS) {
+            const waitSec = Math.ceil((PARTY_SPIN_COOLDOWN_MS - (now - lastPartySpinClickTs)) / 1000);
+            showToast(`⏳ 防連點冷卻中，請等 ${waitSec} 秒後再重抽！`);
+            return;
+        }
+
+        const usedSpins = activePartyRoomData.spinCount || 0;
+        const maxSpins = activePartyRoomData.maxSpins || PARTY_MAX_SPINS;
+        if (!isAdminLoggedIn && usedSpins >= maxSpins) {
+            showToast(`🔒 此房間最多抽 ${maxSpins} 次已用完！如需再抽請開新房`);
+            return;
+        }
+
+        const activeCands = (activePartyRoomData.candidates || []).filter(c => !c.banned);
+        if (activeCands.length === 0) {
+            showToast('⚠️ 所有候選餐廳都被 Ban 晒啦！請先「復活」至少 1 間或者提名新餐廳');
+            return;
+        }
+
+        // 方案 A：只有房主按掣時扣除 1 次個人額度
+        if (!window.checkAndConsumeQuota('party_room')) return;
+
+        lastPartySpinClickTs = now;
+        const winner = activeCands[Math.floor(Math.random() * activeCands.length)];
+
+        try {
+            await updateDoc(doc(db, "party_rooms", activePartyRoomCode), {
+                status: 'rolling',
+                spinId: now,
+                spinCount: usedSpins + 1,
+                winner,
+                updatedAt: now
+            });
+        } catch (err) {
+            showToast('⚠️ 同步抽籤失敗，請稍後再試');
+        }
+    };
+
+    function getPartyInviteUrl() {
+        const base = window.location.origin && window.location.origin.startsWith('http')
+            ? `${window.location.origin}${window.location.pathname}`
+            : 'https://pickforyouhk.github.io/';
+        return `${base}?room=${activePartyRoomCode}`;
+    }
+
+    window.copyPartyInviteLink = function() {
+        if (!activePartyRoomCode) return;
+        const link = getPartyInviteUrl();
+        const ta = document.createElement('textarea');
+        ta.value = link;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast(`📋 已複製【${activePartyRoomCode}】號房邀請連結！朋友免登入即入房`);
+    };
+
+    window.sharePartyInviteWhatsApp = function() {
+        if (!activePartyRoomCode) return;
+        const link = getPartyInviteUrl();
+        const st = (activePartyRoomData && activePartyRoomData.station) ? activePartyRoomData.station : '香港';
+        const msg = `👯 *【唔洗諗 Pick For You】多人連線抽籤房開咗啦！*
+🚇 今餐地點：${st}
+🏠 房號：*${activePartyRoomCode}*
+
+免登入直接入房提名你心水餐廳，或者 Ban 走唔想食嘅選項，齊人同步擲骰拍板！
+👉 一鍵入房：${link}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    };
+
+    // 檢查網址 ?room=XXXX 邀請連結直達多人房
+    function checkPartyDeepLinkOnLoad() {
+        initPartyNicknamePrefill();
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const roomParam = (params.get('room') || '').trim();
+            if (/^\d{4}$/.test(roomParam)) {
+                switchModule('party');
+                const joinInput = document.getElementById('party-join-code-input');
+                const banner = document.getElementById('party-invite-banner');
+                const bannerText = document.getElementById('party-invite-banner-text');
+                if (joinInput) joinInput.value = roomParam;
+                if (banner) banner.classList.remove('hidden');
+                if (bannerText) bannerText.textContent = `🎉 朋友邀請你加入【${roomParam}】號抽籤房！確認花名後按下方「🚪 免費免登入入房」即可同步參與`;
+            }
+        } catch (e) {}
+    }
+
     // 初始化首頁熱門食評與會員狀態
     window.updateQuotaUI();
     window.renderCommunityPosts();
+    checkPartyDeepLinkOnLoad();
 </script>
 </body>
 </html>
