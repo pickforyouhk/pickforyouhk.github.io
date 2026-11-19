@@ -1400,7 +1400,7 @@
     <div id="auth-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
         <div class="glass-card rounded-2xl max-w-sm w-full p-5 space-y-3.5 border-2 border-pink-500/50 shadow-2xl">
             <div class="flex justify-between items-center border-b border-gray-800 pb-2.5">
-                <h3 class="text-base font-black text-white">🔑 會員 / 管理員登入</h3>
+                <h3 class="text-base font-black text-white">🔑 會員登入</h3>
                 <button onclick="closeAuthModal()" class="w-7 h-7 rounded-full bg-gray-800 text-white text-xs font-black">✕</button>
             </div>
             <div class="grid grid-cols-2 gap-1.5 p-1 rounded-lg bg-gray-900 border border-gray-800">
@@ -1424,7 +1424,7 @@
             <div class="space-y-2.5">
                 <div>
                     <label class="block text-[11px] font-bold text-gray-300 mb-1">帳號 / 電郵地址：</label>
-                    <input id="auth-email" type="text" placeholder="輸入電郵或管理員帳號" class="w-full px-3 py-2 rounded-lg bg-gray-800 text-xs text-white font-bold">
+                    <input id="auth-email" type="email" placeholder="輸入電郵地址（例如 name@gmail.com）" class="w-full px-3 py-2 rounded-lg bg-gray-800 text-xs text-white font-bold">
                 </div>
                 <div>
                     <label class="block text-[11px] font-bold text-gray-300 mb-1">登入密碼：</label>
@@ -3230,6 +3230,7 @@
             if (isMemberLoggedIn || isAdminLoggedIn) {
                 isMemberLoggedIn = false;
                 isAdminLoggedIn = false;
+                window._verifiedFirebaseAdminSession = false;
                 currentMemberName = '訪客';
                 dailyMaxQuota = 1;
                 dailyRemainingQuota = 1;
@@ -3263,39 +3264,20 @@
             }
         }
 
-        function submitAuthForm() {
-            const email = document.getElementById('auth-email').value.trim();
-            const pwd = document.getElementById('auth-password').value.trim();
-            const nick = document.getElementById('auth-nickname').value.trim();
-
-            if (email.toLowerCase() === 'admin' && pwd === '8888') {
-                isAdminLoggedIn = true;
-                isMemberLoggedIn = true;
-                currentMemberName = 'Admin';
-                dailyMaxQuota = 999;
-                dailyRemainingQuota = 999;
-                writeLSv3('pfy_v6_auth_state', { isAdmin: true, isMember: true, name: 'Admin' });
-                writeWindowNameCache({ authState: { isAdmin: true, isMember: true, name: 'Admin' } });
-                closeAuthModal();
-                updateQuotaUI();
-                showToast('🛡️ 管理員登入成功！已解鎖美食快訊後台');
-                return;
+        // 全域管理員安全驗證守衛（嚴禁透過 localStorage 偽造，必須經由 Firebase Google OAuth 白名單即時驗證）
+        window._verifiedFirebaseAdminSession = false;
+        window.requireVerifiedAdmin = function(actionName = '管理員後台操作') {
+            if (isAdminLoggedIn === true && window._verifiedFirebaseAdminSession === true) {
+                return true;
             }
-
-            if (!email || pwd.length < 4) {
-                showToast('⚠️ 請輸入有效帳號及至少 4 位密碼');
-                return;
-            }
-            isMemberLoggedIn = true;
             isAdminLoggedIn = false;
-            currentMemberName = nick || email.split('@')[0];
-            dailyMaxQuota = 5;
-            dailyRemainingQuota = 5;
-            writeLSv3('pfy_v6_auth_state', { isAdmin: false, isMember: true, name: currentMemberName });
-            writeWindowNameCache({ authState: { isAdmin: false, isMember: true, name: currentMemberName } });
-            closeAuthModal();
-            updateQuotaUI();
-            showToast(`🎉 歡迎回來，${currentMemberName}！已升級每日 5 抽`);
+            window._verifiedFirebaseAdminSession = false;
+            showToast(`🔒 權限不足：${actionName}僅限已驗證之管理員 Google 帳號使用`);
+            return false;
+        };
+
+        function submitAuthForm() {
+            showToast('⏳ 雲端安全驗證模組載入中，請稍候 1 秒後重試...');
         }
 
         // ==================== 8. 管理員快訊發佈、匯出、匯入與雲端同步 ====================
@@ -3451,6 +3433,7 @@
         }
 
         async function saveAdminDailyUpdate() {
+            if (!window.requireVerifiedAdmin('發佈或編輯美食快訊')) return;
             const editId = document.getElementById('edit-news-id').value;
             const type = document.getElementById('submit-news-type').value;
             const brand = document.getElementById('submit-news-brand').value.trim() || '精選食店';
@@ -3561,6 +3544,7 @@
         }
 
         function deleteAdminNewsItem(id) {
+            if (!window.requireVerifiedAdmin('刪除美食快訊')) return;
             const deletedIds = new Set(readLSv3('pfy_v6_deleted_news_ids', []));
             deletedIds.add(id);
             writeLSv3('pfy_v6_deleted_news_ids', Array.from(deletedIds));
@@ -4440,6 +4424,7 @@
         }
 
         function deleteCommunityPost(postId) {
+            if (!window.requireVerifiedAdmin('刪除食評')) return;
             communityPostsDB = communityPostsDB.filter(p => p.id !== postId);
             writeLSv3(LS_V3.POSTS, communityPostsDB);
             renderCommunityPosts();
@@ -5169,6 +5154,7 @@ function doPost(e) {
 
         // ⚡ 將目前所有每日美食快訊批次寫入 Google Sheet `reviews` 分頁
         async function pushDailyNewsToGoogleSheet(silentMode = false) {
+            if (!window.requireVerifiedAdmin('同步美食快訊至 Google Sheet')) return;
             if (!silentMode) {
                 showToast(`☁️ 正在將 ${dailyUpdatesDB.length} 篇每日美食快訊同步寫入 Google Sheet reviews 分頁...`);
             }
@@ -5209,6 +5195,7 @@ function doPost(e) {
 
         // 🏠 將現有精選餐廳寫入 Google Sheet `restaurants` 分頁
         async function pushRestaurantsToGoogleSheet(scope = 'curated') {
+            if (!window.requireVerifiedAdmin('同步餐廳至 Google Sheet')) return;
             if (isPushingRestaurantsToSheet) {
                 showToast('⏳ 正在寫入餐廳資料中，請稍候...');
                 return;
@@ -5471,6 +5458,7 @@ function doPost(e) {
 
         // 在網頁直接新增餐廳並即時寫入 Google Sheet
         async function submitNewRestaurantToSheet() {
+            if (!window.requireVerifiedAdmin('新增餐廳至資料庫')) return;
             const name = document.getElementById('new-rest-name').value.trim();
             const station = document.getElementById('new-rest-station').value || '荃灣';
             const cuisine = document.getElementById('new-rest-cuisine').value || '港式茶記/冰室';
@@ -6535,29 +6523,21 @@ function doPost(e) {
             writeWindowNameCache({ masterSheetUrl: getActiveGoogleSheetAPI() });
             syncAllUrlInputsUI(getActiveGoogleSheetAPI());
 
-            // 自動恢復管理員 / 會員登入狀態（避免每次更新程式碼都要重新輸入 admin / 8888）
+            // 安全性強化：嚴禁從 localStorage 或 window.name 恢復管理員權限（防止開發者工具偽造 isAdmin）
+            // 管理員身分完全交由 Firebase Authentication 真實 Google OAuth 連線即時核實
             const todayStr = new Date().toISOString().slice(0, 10);
             const wnCache = readWindowNameCache();
-            const savedAuth = readLSv3('pfy_v6_auth_state', (wnCache && wnCache.authState) || null);
-            if (savedAuth && savedAuth.isAdmin) {
-                isAdminLoggedIn = true;
-                isMemberLoggedIn = true;
-                currentMemberName = 'Admin';
-                dailyMaxQuota = 999;
-                dailyRemainingQuota = 999;
-            } else if (savedAuth && savedAuth.isMember) {
-                isAdminLoggedIn = false;
-                isMemberLoggedIn = true;
-                currentMemberName = savedAuth.name || '食家會員';
-                dailyMaxQuota = 5;
-                const savedMemberQuota = readLSv3('pfy_member_quota_' + todayStr, 5);
-                dailyRemainingQuota = typeof savedMemberQuota === 'number' ? savedMemberQuota : 5;
-            } else {
-                const guestKeys = ['home_gacha', 'gacha_85', 'home_3meals', 'nearby_radar', 'meals_planner', 'destiny_coin', 'custom_wheel'];
-                const alreadyUsedToday = guestKeys.some(k => localStorage.getItem(`pfy_guest_used_${k}_${todayStr}`) === 'true');
-                dailyMaxQuota = 1;
-                dailyRemainingQuota = alreadyUsedToday ? 0 : 1;
-            }
+            isAdminLoggedIn = false;
+            window._verifiedFirebaseAdminSession = false;
+            try {
+                const legacyAuth = readLSv3('pfy_v6_auth_state', null);
+                if (legacyAuth && legacyAuth.isAdmin) {
+                    writeLSv3('pfy_v6_auth_state', { isAdmin: false, isMember: false, name: '訪客' });
+                }
+            } catch (e) {}
+            const guestUsedCount = parseInt(localStorage.getItem(`pfy_guest_count_${todayStr}`) || '0', 10);
+            dailyMaxQuota = 3;
+            dailyRemainingQuota = Math.max(0, 3 - (isNaN(guestUsedCount) ? 0 : guestUsedCount));
 
             // 1. 恢復已快取的雲端餐廳名單 (同時檢查 window.name 與 LocalStorage)
             if (wnCache && wnCache.cachedImageOverrides && typeof wnCache.cachedImageOverrides === 'object') {
@@ -6679,7 +6659,7 @@ function doPost(e) {
 
     const modalTitle = document.querySelector('#auth-modal h3');
     if (modalTitle) {
-        modalTitle.innerHTML = '🔑 會員 / 管理員登入 <span class="text-[10px] text-emerald-400 font-mono-tag">(🟢 雲端已連線)</span>';
+        modalTitle.innerHTML = '🔑 會員登入 <span class="text-[10px] text-emerald-400 font-mono-tag">(🟢 雲端已連線)</span>';
     }
 
     // 輔助函數：即時讀取訪客今日剩餘額度 (預設每日免費 3 抽)
@@ -6875,6 +6855,93 @@ function doPost(e) {
         }
     };
 
+    // ==================== 管理員 SHA-256 單向加密白名單驗證（不暴露真實電郵於公開原始碼） ====================
+    const ADMIN_GOOGLE_EMAIL_HASHES = Object.freeze([
+        "ba70608e45af226ca2d884524e761aca2f71d7646b10e247751b3cac968c15a3"
+    ]);
+
+    function sha256FallbackHex(ascii) {
+        function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }
+        const maxWord = Math.pow(2, 32);
+        let result = '';
+        const words = [];
+        const asciiBitLength = ascii.length * 8;
+        let hash = sha256FallbackHex.h || [];
+        let k = sha256FallbackHex.k || [];
+        let primeCounter = k.length;
+        const isComposite = {};
+        for (let candidate = 2; primeCounter < 64; candidate++) {
+            if (!isComposite[candidate]) {
+                for (let i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+                hash[primeCounter] = (Math.pow(candidate, 0.5) * maxWord) | 0;
+                k[primeCounter++] = (Math.pow(candidate, 1 / 3) * maxWord) | 0;
+            }
+        }
+        sha256FallbackHex.h = hash;
+        sha256FallbackHex.k = k;
+        hash = hash.slice(0);
+        ascii += '\x80';
+        while (ascii.length % 64 - 56) ascii += '\x00';
+        for (let i = 0; i < ascii.length; i++) {
+            const j = ascii.charCodeAt(i);
+            words[i >> 2] |= j << ((3 - i) % 4) * 8;
+        }
+        words[words.length] = ((asciiBitLength / maxWord) | 0);
+        words[words.length] = (asciiBitLength);
+        for (let j = 0; j < words.length;) {
+            const w = words.slice(j, j += 16);
+            const oldHash = hash.slice(0);
+            for (let i = 0; i < 64; i++) {
+                const w15 = w[i - 15], w2 = w[i - 2];
+                const a = hash[0], e = hash[4];
+                const temp1 = hash[7]
+                    + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+                    + ((e & hash[5]) ^ ((~e) & hash[6]))
+                    + k[i]
+                    + (w[i] = (i < 16) ? w[i] : (
+                        w[i - 16]
+                        + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+                        + w[i - 7]
+                        + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+                    ) | 0);
+                const temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+                    + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+                hash = [(temp1 + temp2) | 0].concat(hash);
+                hash[4] = (hash[4] + temp1) | 0;
+                hash.pop();
+            }
+            for (let i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
+        }
+        for (let i = 0; i < 8; i++) {
+            for (let j = 3; j + 1; j--) {
+                const b = (hash[i] >> (j * 8)) & 255;
+                result += ((b < 16) ? '0' : '') + b.toString(16);
+            }
+        }
+        return result;
+    }
+
+    async function computeEmailSha256(emailStr) {
+        const normalized = String(emailStr || '').trim().toLowerCase();
+        if (!normalized) return '';
+        try {
+            if (window.crypto && window.crypto.subtle) {
+                const data = new TextEncoder().encode(normalized);
+                const buf = await window.crypto.subtle.digest('SHA-256', data);
+                return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+        } catch (e) {}
+        return sha256FallbackHex(normalized);
+    }
+
+    async function verifyIsWhitelistedGoogleAdmin(user) {
+        if (!user || !user.email || user.emailVerified !== true) return false;
+        const isGoogleProvider = Array.isArray(user.providerData) && user.providerData.some(p => p && p.providerId === 'google.com');
+        if (!isGoogleProvider) return false;
+        const hashHex = await computeEmailSha256(user.email);
+        return ADMIN_GOOGLE_EMAIL_HASHES.includes(hashHex);
+    }
+
     async function syncMemberToFirestore(user, customNickname = null) {
         if (!user) return;
         const userRef = doc(db, "users", user.uid);
@@ -6883,7 +6950,7 @@ function doPost(e) {
 
         try {
             const snap = await getDoc(userRef);
-            let quotaToSet = 5;
+            let quotaToSet = 10;
             if (snap.exists()) {
                 const data = snap.data();
                 if (data.lastQuotaDate === todayStr && typeof data.remainingQuota === "number") {
@@ -6896,13 +6963,15 @@ function doPost(e) {
                 displayName: displayName,
                 photoURL: user.photoURL || "",
                 provider: (user.providerData && user.providerData[0]) ? user.providerData[0].providerId : "password",
-                dailyMaxQuota: 5,
+                dailyMaxQuota: 10,
                 remainingQuota: quotaToSet,
                 lastQuotaDate: todayStr,
                 lastLoginAt: new Date().toISOString()
             }, { merge: true });
 
-            dailyRemainingQuota = quotaToSet;
+            if (!isAdminLoggedIn) {
+                dailyRemainingQuota = quotaToSet;
+            }
         } catch (err) {
             console.warn("Firestore 會員資料同步提示:", err);
         }
@@ -6910,19 +6979,37 @@ function doPost(e) {
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            isAdminLoggedIn = false;
-            isMemberLoggedIn = true;
-            currentMemberName = user.displayName || (user.email ? user.email.split('@')[0] : "食家會員");
-            dailyMaxQuota = 5;
-            await syncMemberToFirestore(user);
-            writeLSv3('pfy_v6_auth_state', { isAdmin: false, isMember: true, name: currentMemberName, uid: user.uid });
-            writeWindowNameCache({ authState: { isAdmin: false, isMember: true, name: currentMemberName, uid: user.uid } });
+            const verifiedAdmin = await verifyIsWhitelistedGoogleAdmin(user);
+            if (verifiedAdmin) {
+                isAdminLoggedIn = true;
+                window._verifiedFirebaseAdminSession = true;
+                isMemberLoggedIn = true;
+                currentMemberName = 'Admin';
+                dailyMaxQuota = 999;
+                dailyRemainingQuota = 999;
+                // 嚴禁把 isAdmin: true 寫入 localStorage，防止本機儲存偽造
+                writeLSv3('pfy_v6_auth_state', { isAdmin: false, isMember: true, name: 'Admin', uid: user.uid });
+                writeWindowNameCache({ authState: { isAdmin: false, isMember: true, name: 'Admin', uid: user.uid } });
+            } else {
+                isAdminLoggedIn = false;
+                window._verifiedFirebaseAdminSession = false;
+                isMemberLoggedIn = true;
+                currentMemberName = user.displayName || (user.email ? user.email.split('@')[0] : "食家會員");
+                dailyMaxQuota = 10;
+                await syncMemberToFirestore(user);
+                writeLSv3('pfy_v6_auth_state', { isAdmin: false, isMember: true, name: currentMemberName, uid: user.uid });
+                writeWindowNameCache({ authState: { isAdmin: false, isMember: true, name: currentMemberName, uid: user.uid } });
+            }
             window.updateQuotaUI();
-        } else if (!isAdminLoggedIn) {
+        } else {
+            isAdminLoggedIn = false;
+            window._verifiedFirebaseAdminSession = false;
             isMemberLoggedIn = false;
             currentMemberName = '訪客';
-            dailyMaxQuota = 1;
-            dailyRemainingQuota = typeof window.getGuestRemainingQuota === 'function' ? window.getGuestRemainingQuota('gacha_85') : 1;
+            dailyMaxQuota = 3;
+            dailyRemainingQuota = typeof window.getGuestRemainingQuota === 'function' ? window.getGuestRemainingQuota() : 3;
+            writeLSv3('pfy_v6_auth_state', { isAdmin: false, isMember: false, name: '訪客' });
+            writeWindowNameCache({ authState: { isAdmin: false, isMember: false, name: '訪客' } });
             window.updateQuotaUI();
         }
     });
@@ -6933,11 +7020,28 @@ function doPost(e) {
         try {
             const result = await signInWithPopup(auth, googleProvider);
             const user = result.user;
-            currentMemberName = user.displayName || (user.email ? user.email.split('@')[0] : "Google食家");
-            await syncMemberToFirestore(user);
-            closeAuthModal();
-            window.updateQuotaUI();
-            showToast(`🎉 歡迎 ${currentMemberName}！已透過 Google 真實帳號登入`);
+            const verifiedAdmin = await verifyIsWhitelistedGoogleAdmin(user);
+            if (verifiedAdmin) {
+                isAdminLoggedIn = true;
+                window._verifiedFirebaseAdminSession = true;
+                isMemberLoggedIn = true;
+                currentMemberName = 'Admin';
+                dailyMaxQuota = 999;
+                dailyRemainingQuota = 999;
+                closeAuthModal();
+                window.updateQuotaUI();
+                showToast('🛡️ 管理員 Google 帳號安全驗證成功！已解鎖後台管理權限');
+            } else {
+                isAdminLoggedIn = false;
+                window._verifiedFirebaseAdminSession = false;
+                isMemberLoggedIn = true;
+                currentMemberName = user.displayName || (user.email ? user.email.split('@')[0] : "Google食家");
+                dailyMaxQuota = 10;
+                await syncMemberToFirestore(user);
+                closeAuthModal();
+                window.updateQuotaUI();
+                showToast(`🎉 歡迎 ${currentMemberName}！已透過 Google 帳號登入（每日 10 抽）`);
+            }
         } catch (err) {
             let errMsg = `⚠️ Google 登入失敗 (${err.code || '未知錯誤'})`;
             if (err.code === 'auth/unauthorized-domain') {
@@ -6958,20 +7062,6 @@ function doPost(e) {
         const errEl = document.getElementById('auth-error-msg');
         if (errEl) errEl.classList.add('hidden');
 
-        if (email.toLowerCase() === 'admin' && pwd === '8888') {
-            isAdminLoggedIn = true;
-            isMemberLoggedIn = true;
-            currentMemberName = 'Admin';
-            dailyMaxQuota = 999;
-            dailyRemainingQuota = 999;
-            writeLSv3('pfy_v6_auth_state', { isAdmin: true, isMember: true, name: 'Admin' });
-            writeWindowNameCache({ authState: { isAdmin: true, isMember: true, name: 'Admin' } });
-            closeAuthModal();
-            window.updateQuotaUI();
-            showToast('🛡️ 管理員登入成功！已解鎖美食快訊後台');
-            return;
-        }
-
         if (!email || !email.includes('@')) {
             if (errEl) { errEl.textContent = "⚠️ 請輸入有效的電郵地址（例如 name@gmail.com）"; errEl.classList.remove('hidden'); }
             return;
@@ -6986,13 +7076,19 @@ function doPost(e) {
                 const cred = await createUserWithEmailAndPassword(auth, email, pwd);
                 const finalNick = nick || email.split('@')[0];
                 await updateProfile(cred.user, { displayName: finalNick });
+                isAdminLoggedIn = false;
+                window._verifiedFirebaseAdminSession = false;
                 currentMemberName = finalNick;
+                dailyMaxQuota = 10;
                 await syncMemberToFirestore(cred.user, finalNick);
                 closeAuthModal();
                 window.updateQuotaUI();
                 showToast(`🎉 註冊成功！歡迎加入 Pick For You，${finalNick}！`);
             } else {
                 const cred = await signInWithEmailAndPassword(auth, email, pwd);
+                isAdminLoggedIn = false;
+                window._verifiedFirebaseAdminSession = false;
+                dailyMaxQuota = 10;
                 await syncMemberToFirestore(cred.user);
                 closeAuthModal();
                 window.updateQuotaUI();
@@ -7013,9 +7109,10 @@ function doPost(e) {
             try { await signOut(auth); } catch (e) {}
             isMemberLoggedIn = false;
             isAdminLoggedIn = false;
+            window._verifiedFirebaseAdminSession = false;
             currentMemberName = '訪客';
-            dailyMaxQuota = 1;
-            dailyRemainingQuota = typeof window.getGuestRemainingQuota === 'function' ? window.getGuestRemainingQuota('gacha_85') : 0;
+            dailyMaxQuota = 3;
+            dailyRemainingQuota = typeof window.getGuestRemainingQuota === 'function' ? window.getGuestRemainingQuota() : 3;
             writeLSv3('pfy_v6_auth_state', { isAdmin: false, isMember: false, name: '訪客' });
             writeWindowNameCache({ authState: { isAdmin: false, isMember: false, name: '訪客' } });
             window.updateQuotaUI();
@@ -7163,6 +7260,14 @@ function doPost(e) {
     };
 
     window.deleteCommunityPost = async function(postId) {
+        const verified = await verifyIsWhitelistedGoogleAdmin(auth.currentUser);
+        if (!verified) {
+            isAdminLoggedIn = false;
+            window._verifiedFirebaseAdminSession = false;
+            window.updateQuotaUI();
+            showToast('🔒 拒絕刪除：必須使用已驗證之管理員 Google 帳號');
+            return;
+        }
         await deleteDoc(doc(db, "community_posts", postId));
         showToast('🗑️ 已從雲端即時刪除該篇食評討論帖');
     };
