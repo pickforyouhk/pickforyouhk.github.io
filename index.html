@@ -3460,6 +3460,9 @@
         function submitAuthForm() {
             showToast('⏳ 雲端安全驗證模組載入中，請稍候 1 秒後重試...');
         }
+        function loginWithGoogle() {
+            showToast('⏳ 正在載入 Google 登入模組，請稍候 1 秒再按一次...');
+        }
 
         // ==================== 8. 管理員快訊發佈、匯出、匯入與雲端同步 ====================
         let quickUploadTargetNewsId = '';
@@ -7229,6 +7232,10 @@ function doPost(e) {
                 errMsg = "⚠️ 網域未授權：請到 Firebase Authentication -> 設定 -> 已授權網域 新增 pickforyouhk.github.io";
             } else if (err.code === 'auth/popup-closed-by-user') {
                 errMsg = "⚠️ 你關閉了 Google 登入彈出視窗，請重新點擊登入";
+            } else if (err.code === 'auth/popup-blocked') {
+                errMsg = "⚠️ 瀏覽器攔截了 Google 登入彈出視窗，請允許本網站顯示彈出視窗後再試";
+            } else if (err.code === 'auth/operation-not-allowed') {
+                errMsg = "⚠️ 尚未於 Firebase Authentication 啟用 Google 登入方式";
             }
             if (errEl) { errEl.textContent = errMsg; errEl.classList.remove('hidden'); }
             showToast(errMsg);
@@ -7547,10 +7554,11 @@ function doPost(e) {
         const safeMall = escapePartyHTML(w.mall || '');
         const safeAddr = escapePartyHTML(w.address || '');
         const safePhone = escapePartyHTML(w.phone || '');
-        const jsName = String(w.name || '').replace(/\/g, '\\').replace(/'/g, "\'");
-        const jsSt = String(w.station || '').replace(/\/g, '\\').replace(/'/g, "\'");
-        const jsMall = String(w.mall || '').replace(/\/g, '\\').replace(/'/g, "\'");
-        const jsAddr = String(w.address || '').replace(/\/g, '\\').replace(/'/g, "\'");
+        const escJsArg = (v) => String(v || '').split('\\').join('\\\\').split("'").join("\\'");
+        const jsName = escJsArg(w.name);
+        const jsSt = escJsArg(w.station);
+        const jsMall = escJsArg(w.mall);
+        const jsAddr = escJsArg(w.address);
         return `
             <div class="animate-winner-pop flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
                 <div class="space-y-1">
