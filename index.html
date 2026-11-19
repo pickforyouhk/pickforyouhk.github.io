@@ -1405,13 +1405,13 @@
                 </div>
             </section>
 
-            <!-- ==================== MODULE PARTY: 👯 多人連線抽籤房 (方案 A) ==================== -->
+            <!-- ==================== MODULE PARTY: 👯 多人連線抽籤房 ==================== -->
             <section id="module-party" class="hidden space-y-4">
                 <div class="glass-card rounded-2xl p-4 sm:p-6 space-y-5">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-gray-800 pb-3.5">
                         <div>
                             <div class="flex items-center space-x-2">
-                                <span class="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-mono-tag font-black">LIVE PARTY ROOM // 方案 A</span>
+                                <span class="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-mono-tag font-black">LIVE PARTY ROOM</span>
                                 <span class="text-[10px] font-mono-tag text-amber-400 font-bold">朋友免登入 ‧ 實時同步抽籤</span>
                             </div>
                             <h2 class="text-xl sm:text-2xl font-black text-white mt-1">👯 多人連線抽籤房</h2>
@@ -1430,7 +1430,7 @@
                         <div class="p-4 rounded-2xl bg-gray-900 border border-gray-800 space-y-2">
                             <div class="flex flex-wrap items-center justify-between gap-1">
                                 <label class="text-xs font-black text-amber-300">👤 你喺房內嘅顯示暱稱（免登入直接填）：</label>
-                                <span class="text-[10px] text-gray-400 font-mono-tag">最多 12 人同房 ‧ 房間 24 小時後自動過期</span>
+                                <span class="text-[10px] text-gray-400 font-mono-tag">最多 12 人同房 ‧ 房間 30 分鐘後自動過期</span>
                             </div>
                             <input id="party-nickname-input" type="text" maxlength="16" placeholder="輸入你嘅花名（例：荃灣阿明、米線專員）" class="w-full sm:max-w-md px-3.5 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-xs sm:text-sm text-white font-bold">
                         </div>
@@ -1493,7 +1493,7 @@
                                     <span id="party-room-spins-badge" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-xs font-mono-tag font-bold">🎲 剩餘 5/5 抽</span>
                                 </div>
                                 <div id="party-room-meta-text" class="text-[11px] text-gray-400">
-                                    👑 房主：載入中 ‧ ⏱️ 房間 24 小時內有效 ‧ 按鈕設有冷卻保護防連點
+                                    👑 房主：載入中 ‧ ⏱️ 房間 30 分鐘內有效 ‧ 按鈕設有冷卻保護防連點
                                 </div>
                             </div>
                             <div class="flex flex-wrap items-center gap-2 shrink-0">
@@ -7453,13 +7453,13 @@ function doPost(e) {
         showToast('🗑️ 已從雲端即時刪除該篇食評討論帖');
     };
 
-    // ==================== 👯 多人連線抽籤房 (Live Party Room — 方案 A + 3 道保護鎖) ====================
+    // ==================== 👯 多人連線抽籤房 (Live Party Room + 3 道保護鎖) ====================
     const PARTY_MAX_MEMBERS = 12;
     const PARTY_MAX_CANDIDATES = 15;
     const PARTY_MAX_SPINS = 5;
     const PARTY_SPIN_COOLDOWN_MS = 5000;
     const PARTY_ACTION_COOLDOWN_MS = 3000;
-    const PARTY_EXPIRE_MS = 24 * 60 * 60 * 1000;
+    const PARTY_EXPIRE_MS = 30 * 60 * 1000;
 
     let activePartyRoomCode = null;
     let activePartyUnsub = null;
@@ -7468,6 +7468,7 @@ function doPost(e) {
     let lastPartySpinClickTs = 0;
     let lastPartyActionClickTs = 0;
     let partySpinAnimTimer = null;
+    let partyExpiryCheckTimer = null;
 
     function getOrCreatePartyClientId() {
         let cid = localStorage.getItem('pfy_party_client_id');
@@ -7610,8 +7611,8 @@ function doPost(e) {
             spinsBadge.textContent = isAdminLoggedIn ? `🎲 Admin 無限抽 (已抽 ${usedSpins} 次)` : `🎲 剩餘 ${remSpins}/${maxSpins} 抽`;
         }
         if (metaText) {
-            const hrsLeft = Math.max(1, Math.ceil(((data.expiresAt || (Date.now() + PARTY_EXPIRE_MS)) - Date.now()) / 3600000));
-            metaText.textContent = `👑 房主：${data.hostName || '房主'} ‧ ⏱️ 房間約 ${hrsLeft} 小時後自動過期 ‧ 朋友入房免費免登入`;
+            const minsLeft = Math.max(1, Math.ceil(((data.expiresAt || (Date.now() + PARTY_EXPIRE_MS)) - Date.now()) / 60000));
+            metaText.textContent = `👑 房主：${data.hostName || '房主'} ‧ ⏱️ 房間約 ${minsLeft} 分鐘後自動過期 ‧ 朋友入房免費免登入`;
         }
         if (memCount) memCount.textContent = members.length;
         if (myRole) myRole.textContent = isHost ? '👑 你係房主（負責按掣同步抽籤）' : '🙋‍♂️ 飯腳身份（可免費提名／Ban）';
@@ -7730,6 +7731,10 @@ function doPost(e) {
             try { activePartyUnsub(); } catch (e) {}
             activePartyUnsub = null;
         }
+        if (partyExpiryCheckTimer) {
+            clearInterval(partyExpiryCheckTimer);
+            partyExpiryCheckTimer = null;
+        }
         activePartyRoomCode = roomCode;
         lastPartyAnimatedSpinId = 0;
 
@@ -7741,9 +7746,9 @@ function doPost(e) {
                 return;
             }
             const data = snap.data();
-            // 保護鎖 3：24 小時自動過期並切斷背景監聽
+            // 保護鎖 3：30 分鐘自動過期並切斷背景監聽
             if (data.expiresAt && Date.now() > data.expiresAt) {
-                showToast('⏱️ 此抽籤房已超過 24 小時自動過期並鎖定，請重新開房');
+                showToast('⏱️ 此抽籤房已超過 30 分鐘自動過期並鎖定，請重新開房');
                 window.leavePartyRoom(true);
                 return;
             }
@@ -7755,6 +7760,21 @@ function doPost(e) {
             console.warn('Party room snapshot error:', err);
             showToast('⚠️ 雲端連線受限：請確認 Firebase Firestore 規則已允許 party_rooms 讀寫');
         });
+
+        partyExpiryCheckTimer = setInterval(() => {
+            if (!activePartyRoomData) return;
+            const exp = activePartyRoomData.expiresAt || 0;
+            if (exp && Date.now() > exp) {
+                showToast('⏱️ 此抽籤房已超過 30 分鐘自動過期並鎖定，請重新開房');
+                window.leavePartyRoom(true);
+                return;
+            }
+            const metaText = document.getElementById('party-room-meta-text');
+            if (metaText && exp) {
+                const minsLeft = Math.max(1, Math.ceil((exp - Date.now()) / 60000));
+                metaText.textContent = `👑 房主：${activePartyRoomData.hostName || '房主'} ‧ ⏱️ 房間約 ${minsLeft} 分鐘後自動過期 ‧ 朋友入房免費免登入`;
+            }
+        }, 30000);
 
         try {
             const url = new URL(window.location.href);
@@ -7848,9 +7868,9 @@ function doPost(e) {
                 return;
             }
             const data = snap.data();
-            // 保護鎖 3：檢查 24 小時過期
+            // 保護鎖 3：檢查 30 分鐘過期
             if (data.expiresAt && Date.now() > data.expiresAt) {
-                showToast(`⏱️ 【${roomCode}】號房已超過 24 小時自動過期，請房主重開新房`);
+                showToast(`⏱️ 【${roomCode}】號房已超過 30 分鐘自動過期，請房主重開新房`);
                 return;
             }
             const members = Array.isArray(data.members) ? [...data.members] : [];
@@ -7890,6 +7910,10 @@ function doPost(e) {
         if (partySpinAnimTimer) {
             clearInterval(partySpinAnimTimer);
             partySpinAnimTimer = null;
+        }
+        if (partyExpiryCheckTimer) {
+            clearInterval(partyExpiryCheckTimer);
+            partyExpiryCheckTimer = null;
         }
         activePartyRoomCode = null;
         activePartyRoomData = null;
@@ -8060,7 +8084,7 @@ function doPost(e) {
             return;
         }
 
-        // 方案 A：只有房主按掣時扣除 1 次個人額度
+        // 只有房主按掣時扣除 1 次個人額度
         if (!window.checkAndConsumeQuota('party_room')) return;
 
         lastPartySpinClickTs = now;
