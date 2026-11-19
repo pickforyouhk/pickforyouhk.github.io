@@ -3352,15 +3352,15 @@
                     if (modeToRun === 'cuisine') {
                         const winC = quickCuisineShowcase[Math.floor(Math.random() * quickCuisineShowcase.length)];
                         stage.innerHTML = `
-                            <div class="animate-winner-pop flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
-                                <div class="space-y-1">
+                            <div class="animate-winner-pop space-y-3 text-left w-full">
+                                <div class="space-y-1.5 w-full min-w-0">
                                     <div class="inline-flex items-center space-x-1.5">
                                         <span class="px-2 py-0.5 rounded bg-pink-600 text-white text-[10px] font-black">💥 骰子爆出菜式結果</span>
                                     </div>
                                     <div class="text-xl sm:text-2xl font-black text-white">${winC.icon} ${winC.name}</div>
                                     <div class="text-xs text-gray-300">💡 推薦美食：${winC.desc}</div>
                                 </div>
-                                <div class="flex flex-wrap gap-2 shrink-0">
+                                <div class="flex flex-wrap gap-2 pt-2.5 border-t border-gray-800">
                                     <button onclick="triggerHomeQuickDraw('${winC.name}')" class="neon-button px-3.5 py-2 rounded-xl text-xs font-black">
                                         🎲 擲骰抽埋呢款菜式嘅餐廳！
                                     </button>
@@ -3409,21 +3409,21 @@
                         autoRefreshGrantedGPS();
 
                         stage.innerHTML = `
-                            <div class="animate-winner-pop flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
-                                <div class="space-y-1">
+                            <div class="animate-winner-pop space-y-3 text-left w-full">
+                                <div class="space-y-1.5 w-full min-w-0">
                                     <div class="flex flex-wrap items-center gap-1.5">
                                         <span class="px-2 py-0.5 rounded bg-amber-400 text-black text-[10px] font-black">💥 骰子爆出命運餐廳</span>
                                         <span class="px-2 py-0.5 rounded bg-gray-800 text-pink-300 text-[10px] font-bold">🚇 ${winR.station} • ${winR.cuisine}</span>
                                         ${renderPriceAndOccasionBadgesHTML(winR, true)}
                                         ${renderPromoBadgeHTML(winR)}
                                     </div>
-                                    <div onclick="jumpToDirectoryRestaurant('${winR.name}', '${winR.station}')" class="text-lg sm:text-xl font-black text-white hover:text-pink-400 cursor-pointer transition">
+                                    <div onclick="jumpToDirectoryRestaurant('${winR.name.replace(/'/g, "\\'")}', '${winR.station}')" class="text-lg sm:text-xl font-black text-white hover:text-pink-400 cursor-pointer transition leading-snug">
                                         🏠 ${winR.name}
                                     </div>
-                                    <div class="text-xs text-gray-300">📍 ${winR.address} | 📞 ${winR.phone}</div>
-                                    <div id="home-live-route-box">${renderLiveRouteBoxHTML(winR, true)}</div>
+                                    <div class="text-xs text-gray-300 leading-relaxed">📍 ${winR.address} | 📞 ${winR.phone}</div>
+                                    <div id="home-live-route-box" class="w-full">${renderLiveRouteBoxHTML(winR, true)}</div>
                                 </div>
-                                <div class="flex flex-wrap gap-1.5 shrink-0">
+                                <div class="flex flex-wrap gap-2 pt-2.5 border-t border-gray-800">
                                     <button onclick="jumpToDirectoryRestaurant('${winR.name.replace(/'/g, "\'")}', '${winR.station}')" class="px-3 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-black">
                                         📖 餐廳名單
                                     </button>
@@ -4788,7 +4788,7 @@
             if (!loc) {
                 if (compact) {
                     return `
-                        <div class="mt-2 p-2.5 rounded-xl bg-gray-900/90 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                        <div class="mt-2 p-2.5 rounded-xl bg-gray-900/90 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-2 text-[11px] w-full">
                             <span class="text-gray-300 font-bold">🚇 鄰近 <strong class="text-emerald-400">${destStation}站</strong>（出站行約 ${endWalkMins} 分鐘）</span>
                             <div class="flex flex-wrap items-center gap-1.5">
                                 <button onclick="requestLiveGPSForRoute('home')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black transition">📍 讀取位置計路線</button>
@@ -8590,8 +8590,8 @@ function doPost(e) {
         const jsMall = escJsArg(w.mall);
         const jsAddr = escJsArg(w.address);
         return `
-            <div class="animate-winner-pop flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
-                <div class="space-y-1">
+            <div class="animate-winner-pop space-y-3 text-left w-full">
+                <div class="space-y-1.5 w-full min-w-0">
                     <div class="flex flex-wrap items-center gap-1.5">
                         <span class="px-2.5 py-0.5 rounded bg-amber-400 text-black text-[10px] font-black">💥 第 ${spinNum} 輪全員同步拍板結果！</span>
                         <span class="px-2 py-0.5 rounded bg-gray-800 text-pink-300 text-[10px] font-bold">🚇 ${safeSt} • ${safeCui}</span>
@@ -8601,7 +8601,7 @@ function doPost(e) {
                     <div class="text-xs text-gray-300">📍 ${safeAddr}${safePhone ? ' | 📞 ' + safePhone : ''}</div>
                     <div class="text-[10px] text-amber-300 font-bold">🙋‍♂️ 提名飯腳：${escapePartyHTML(w.nominatedBy || '系統精選')}</div>
                 </div>
-                <div class="flex flex-wrap gap-1.5 shrink-0">
+                <div class="flex flex-wrap gap-2 pt-2.5 border-t border-gray-800">
                     <a href="${typeof buildTransitMapsUrl === 'function' ? buildTransitMapsUrl(w) : ('https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent((w.name || '') + ' ' + (w.address || w.station || '')) + '&travelmode=transit')}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black">
                         🚌 公共交通導航
                     </a>
