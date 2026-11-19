@@ -433,6 +433,86 @@
             background-color: var(--pfy-bg);
             box-shadow: 0 25px 60px rgba(0,0,0,0.25);
         }
+
+        /* ==================== 雙向價位拉條 ($0 - $1000+) 專屬樣式 ==================== */
+        .pfy-dual-slider {
+            position: relative;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            touch-action: pan-y;
+        }
+        .pfy-dual-slider-track {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 6px;
+            border-radius: 9999px;
+            background-color: #334155;
+            pointer-events: none;
+        }
+        body:not(.dark-mode) .pfy-dual-slider-track {
+            background-color: #D6D1C7;
+        }
+        .pfy-dual-slider-fill {
+            position: absolute;
+            height: 6px;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, #FF5A36 0%, #F59E0B 100%);
+            pointer-events: none;
+        }
+        body:not(.dark-mode) input[type="range"].pfy-range-input,
+        body.dark-mode input[type="range"].pfy-range-input,
+        input[type="range"].pfy-range-input {
+            position: absolute !important;
+            left: 0;
+            top: 0;
+            width: 100% !important;
+            height: 28px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            border: none !important;
+            outline: none !important;
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            pointer-events: none;
+        }
+        input[type="range"].pfy-range-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            pointer-events: auto;
+            width: 20px;
+            height: 20px;
+            border-radius: 9999px;
+            background-color: #FFFFFF;
+            border: 3px solid #FF5A36;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+            cursor: grab;
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+        }
+        input[type="range"].pfy-range-input::-webkit-slider-thumb:active {
+            cursor: grabbing;
+            transform: scale(1.18);
+            box-shadow: 0 0 0 5px rgba(255, 90, 54, 0.25);
+        }
+        input[type="range"].pfy-range-input::-moz-range-thumb {
+            pointer-events: auto;
+            width: 18px;
+            height: 18px;
+            border-radius: 9999px;
+            background-color: #FFFFFF;
+            border: 3px solid #FF5A36;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+            cursor: grab;
+            transition: transform 0.12s ease;
+        }
+        input[type="range"].pfy-range-input::-moz-range-thumb:active {
+            cursor: grabbing;
+            transform: scale(1.18);
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -777,6 +857,32 @@
                                         <option value="東南亞菜">🍲 東南亞菜</option>
                                     </select>
                                 </div>
+
+                                <!-- 預算價位雙向拉條 ($0 - $1000+) ＋ 飯腳場景篩選 -->
+                                <div id="home-budget-occasion-wrap" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 pt-2">
+                                    <div class="sm:col-span-6 p-2.5 rounded-xl bg-gray-950/90 border border-gray-800 space-y-1">
+                                        <div class="flex items-center justify-between gap-1 text-[11px]">
+                                            <span class="font-black text-gray-300">💰 預算價位：</span>
+                                            <div class="flex items-center space-x-1.5">
+                                                <span id="home-budget-label" class="font-mono-tag font-black text-amber-300">不限 ($0 – $1000+)</span>
+                                                <button type="button" id="home-budget-reset" onclick="resetDualBudgetSlider('home')" class="hidden text-[10px] text-pink-400 underline font-bold">重設</button>
+                                            </div>
+                                        </div>
+                                        <div class="pfy-dual-slider">
+                                            <div class="pfy-dual-slider-track"></div>
+                                            <div id="home-budget-fill" class="pfy-dual-slider-fill" style="left:0%;width:100%;"></div>
+                                            <input type="range" id="home-budget-min" min="0" max="1000" step="10" value="0" oninput="onDualBudgetSliderInput('home','min')" class="pfy-range-input" style="z-index:3;">
+                                            <input type="range" id="home-budget-max" min="0" max="1000" step="10" value="1000" oninput="onDualBudgetSliderInput('home','max')" class="pfy-range-input" style="z-index:4;">
+                                        </div>
+                                        <div class="flex justify-between text-[9px] font-mono-tag text-gray-400 px-0.5">
+                                            <span>$0</span><span>$250</span><span>$500</span><span>$750</span><span>$1000+</span>
+                                        </div>
+                                    </div>
+                                    <div class="sm:col-span-6 p-2.5 rounded-xl bg-gray-950/90 border border-gray-800 space-y-1.5 flex flex-col justify-center">
+                                        <div class="text-[11px] font-black text-gray-300">👥 飯腳場景：</div>
+                                        <div id="home-occasion-pills" class="flex flex-wrap gap-1"></div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- STEP 2: 觸發抽籤按鈕組 (預設一鍵抽餐廳) -->
@@ -1021,6 +1127,32 @@
                         </div>
                     </div>
 
+                    <!-- 附近餐廳：預算價位 ($0 - $1000+) ＋ 飯腳場景篩選 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="p-3.5 rounded-xl bg-gray-900/80 border border-gray-800 space-y-1.5">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-bold text-gray-300">💰 預算價位（左右拉動）：</span>
+                                <div class="flex items-center space-x-2">
+                                    <span id="nearby-budget-label" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-black font-mono-tag">不限 ($0 – $1000+)</span>
+                                    <button type="button" id="nearby-budget-reset" onclick="resetDualBudgetSlider('nearby')" class="hidden text-[10px] text-pink-400 underline font-bold">重設</button>
+                                </div>
+                            </div>
+                            <div class="pfy-dual-slider">
+                                <div class="pfy-dual-slider-track"></div>
+                                <div id="nearby-budget-fill" class="pfy-dual-slider-fill" style="left:0%;width:100%;"></div>
+                                <input type="range" id="nearby-budget-min" min="0" max="1000" step="10" value="0" oninput="onDualBudgetSliderInput('nearby','min')" class="pfy-range-input" style="z-index:3;">
+                                <input type="range" id="nearby-budget-max" min="0" max="1000" step="10" value="1000" oninput="onDualBudgetSliderInput('nearby','max')" class="pfy-range-input" style="z-index:4;">
+                            </div>
+                            <div class="flex justify-between text-[10px] font-mono-tag text-gray-400 px-0.5">
+                                <span>$0</span><span>$250</span><span>$500</span><span>$750</span><span>$1000+</span>
+                            </div>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-gray-900/80 border border-gray-800 space-y-2 flex flex-col justify-center">
+                            <span class="text-xs font-bold text-gray-300">👥 飯腳場景：</span>
+                            <div id="nearby-occasion-pills" class="flex flex-wrap gap-1.5"></div>
+                        </div>
+                    </div>
+
                     <div class="p-4 rounded-xl bg-gradient-to-br from-emerald-950/60 via-gray-900 to-gray-900 border border-emerald-500/30 text-center space-y-3">
                         <div class="text-xs text-gray-300">
                             目前鎖定：<strong id="nearby-summary-station" class="text-emerald-300">荃灣</strong> 步行距離 <strong id="nearby-summary-dist" class="text-amber-300">500米</strong> 範圍內食肆<span id="nearby-admin-count-wrap" class="hidden">（🛡️ Admin：共 <strong id="nearby-summary-count" class="text-pink-400 font-mono-tag">0</strong> 間）</span>
@@ -1088,6 +1220,32 @@
                     <div class="space-y-1.5">
                         <label class="text-xs font-black text-gray-300">3️⃣ 篩選菜式：</label>
                         <div id="cuisine-buttons-container" class="flex flex-wrap gap-1"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                        <div class="p-3 rounded-xl bg-gray-900/70 border border-gray-800 space-y-1.5">
+                            <div class="flex items-center justify-between text-xs">
+                                <label class="font-black text-gray-300">4️⃣ 預算價位（$0 – $1000+）：</label>
+                                <div class="flex items-center space-x-2">
+                                    <span id="gacha-budget-label" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-black font-mono-tag">不限 ($0 – $1000+)</span>
+                                    <button type="button" id="gacha-budget-reset" onclick="resetDualBudgetSlider('gacha')" class="hidden text-[10px] text-pink-400 underline font-bold">重設</button>
+                                </div>
+                            </div>
+                            <div class="pfy-dual-slider">
+                                <div class="pfy-dual-slider-track"></div>
+                                <div id="gacha-budget-fill" class="pfy-dual-slider-fill" style="left:0%;width:100%;"></div>
+                                <input type="range" id="gacha-budget-min" min="0" max="1000" step="10" value="0" oninput="onDualBudgetSliderInput('gacha','min')" class="pfy-range-input" style="z-index:3;">
+                                <input type="range" id="gacha-budget-max" min="0" max="1000" step="10" value="1000" oninput="onDualBudgetSliderInput('gacha','max')" class="pfy-range-input" style="z-index:4;">
+                            </div>
+                            <div class="flex justify-between text-[10px] font-mono-tag text-gray-400 px-0.5">
+                                <span>$0</span><span>$250</span><span>$500</span><span>$750</span><span>$1000+</span>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-gray-900/70 border border-gray-800 space-y-2 flex flex-col justify-center">
+                            <label class="text-xs font-black text-gray-300">5️⃣ 飯腳場景：</label>
+                            <div id="gacha-occasion-pills" class="flex flex-wrap gap-1.5"></div>
+                        </div>
                     </div>
 
                     <div class="p-4 rounded-2xl bg-gradient-to-b from-gray-900/90 to-gray-950 border border-pink-500/30 text-center space-y-3 overflow-hidden">
@@ -1245,6 +1403,18 @@
                                 <input id="new-rest-phone" type="text" placeholder="電話 (如：2388 1234)" class="px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-xs text-white">
                                 <input id="new-rest-promo" type="text" placeholder="🎟️ 獨家著數（選填，如：出示本頁送凍飲）" class="px-3 py-2 rounded-lg bg-gray-800 border border-amber-500/50 text-xs text-white">
                             </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                                <div class="sm:col-span-4">
+                                    <input id="new-rest-price" type="number" min="0" max="5000" step="10" placeholder="💰 人均消費 HK$（選填，如 120；千蚊以上填 1200）" class="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-xs text-white">
+                                </div>
+                                <div class="sm:col-span-8 flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-gray-800/80 border border-gray-700 text-xs text-gray-200">
+                                    <span class="font-black text-amber-300">👥 飯腳場景：</span>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="new-rest-occ" value="一人快食" class="accent-pink-500"><span>🙋 一人快食</span></label>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="new-rest-occ" value="拍拖約會" class="accent-pink-500"><span>💑 拍拖約會</span></label>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="new-rest-occ" value="朋友吹水" class="accent-pink-500"><span>🍻 朋友吹水</span></label>
+                                    <label class="inline-flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="new-rest-occ" value="家庭聚餐" class="accent-pink-500"><span>👨‍👩‍👧‍👦 家庭聚餐</span></label>
+                                </div>
+                            </div>
                             <div class="flex justify-end">
                                 <button onclick="submitNewRestaurantToSheet()" class="neon-button px-4 py-2 rounded-xl text-xs font-black">🚀 立即新增並寫入 Google Sheet</button>
                             </div>
@@ -1254,6 +1424,30 @@
                     <div id="dir-line-tabs" class="flex space-x-1 overflow-x-auto no-scrollbar pb-1"></div>
                     <div id="dir-station-pills" class="flex flex-wrap gap-1 max-h-28 overflow-y-auto p-2 rounded-xl bg-gray-900/70 border border-gray-800"></div>
                     <div id="dir-cuisine-pills" class="flex flex-wrap gap-1"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                        <div class="p-3 rounded-xl bg-gray-900/70 border border-gray-800 space-y-1">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-black text-gray-300">💰 預算價位（$0 – $1000+）：</span>
+                                <div class="flex items-center space-x-2">
+                                    <span id="dir-budget-label" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-black font-mono-tag">不限 ($0 – $1000+)</span>
+                                    <button type="button" id="dir-budget-reset" onclick="resetDualBudgetSlider('dir')" class="hidden text-[10px] text-pink-400 underline font-bold">重設</button>
+                                </div>
+                            </div>
+                            <div class="pfy-dual-slider">
+                                <div class="pfy-dual-slider-track"></div>
+                                <div id="dir-budget-fill" class="pfy-dual-slider-fill" style="left:0%;width:100%;"></div>
+                                <input type="range" id="dir-budget-min" min="0" max="1000" step="10" value="0" oninput="onDualBudgetSliderInput('dir','min')" class="pfy-range-input" style="z-index:3;">
+                                <input type="range" id="dir-budget-max" min="0" max="1000" step="10" value="1000" oninput="onDualBudgetSliderInput('dir','max')" class="pfy-range-input" style="z-index:4;">
+                            </div>
+                            <div class="flex justify-between text-[10px] font-mono-tag text-gray-400 px-0.5">
+                                <span>$0</span><span>$250</span><span>$500</span><span>$750</span><span>$1000+</span>
+                            </div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-gray-900/70 border border-gray-800 space-y-1.5 flex flex-col justify-center">
+                            <span class="text-xs font-black text-gray-300">👥 飯腳場景：</span>
+                            <div id="dir-occasion-pills" class="flex flex-wrap gap-1.5"></div>
+                        </div>
+                    </div>
                     <div id="dir-count-summary" class="text-xs font-bold text-emerald-400"></div>
                     <div id="directory-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
                 </div>
@@ -1871,6 +2065,321 @@
             const text = String(r.promoBadge).trim().replace(/^🎟️\s*/, '');
             return `<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-400 text-black text-[10px] font-black shadow-2xs">🎟️ ${text}</span>`;
         }
+
+
+        // ==================== 2B. 預算價位雙向拉條 ($0 - $1000+) ＆ 飯腳場景篩選引擎 ====================
+        const ALL_OCCASIONS = [
+            { id: '全部場景', label: '全部場景', icon: '✨' },
+            { id: '一人快食', label: '一人快食', icon: '🙋' },
+            { id: '拍拖約會', label: '拍拖約會', icon: '💑' },
+            { id: '朋友吹水', label: '朋友吹水', icon: '🍻' },
+            { id: '家庭聚餐', label: '家庭聚餐', icon: '👨‍👩‍👧‍👦' }
+        ];
+
+        const OCCASION_ICON_MAP = {
+            '一人快食': '🙋',
+            '拍拖約會': '💑',
+            '朋友吹水': '🍻',
+            '家庭聚餐': '👨‍👩‍👧‍👦'
+        };
+
+        const filterBudgetOccasionState = {
+            home:   { min: 0, max: 1000, occasion: '全部場景' },
+            gacha:  { min: 0, max: 1000, occasion: '全部場景' },
+            nearby: { min: 0, max: 1000, occasion: '全部場景' },
+            dir:    { min: 0, max: 1000, occasion: '全部場景' }
+        };
+
+        function parseRawPriceValue(val) {
+            if (val === null || val === undefined || val === '') return null;
+            if (typeof val === 'number' && !isNaN(val) && val >= 0) return Math.round(val);
+            const str = String(val).trim();
+            if (!str) return null;
+            if (/1000\+|1000以上|千蚊以上/.test(str)) return 1200;
+            const rangeMatch = str.match(/(\d+)\s*[-–~至]\s*(\d+)/);
+            if (rangeMatch) {
+                return Math.round((parseInt(rangeMatch[1], 10) + parseInt(rangeMatch[2], 10)) / 2);
+            }
+            if (/60以下/.test(str)) return 50;
+            if (/150以上/.test(str)) return 240;
+            const numMatch = str.match(/\d+/);
+            if (numMatch) {
+                const n = parseInt(numMatch[0], 10);
+                if (!isNaN(n) && n >= 0) return n;
+            }
+            return null;
+        }
+
+        function getRestaurantAvgPrice(r) {
+            if (!r) return 90;
+            const explicit = parseRawPriceValue(r.avgPrice !== undefined ? r.avgPrice : (r.price !== undefined ? r.price : r.budget));
+            if (explicit !== null) return explicit;
+
+            const n = String(r.name || '');
+            const c = String(r.cuisine || '');
+            const m = String(r.mall || '');
+            const combined = `${n} ${c} ${m}`;
+
+            // $1000+ 奢華/Omakase/懷石/高級 Fine Dining
+            if (/omakase|廚師發辦|懷石|fine\s*dining|米芝蓮三星|高級鐵板燒|和牛懷石/i.test(combined)) return 1180;
+            // $350 - $650 自助餐 / 扒房 / 鐵板燒 / 海鮮酒家
+            if (/自助餐|buffet|鐵板燒|扒房|steakhouse|龍蝦|生蠔吧/i.test(combined)) return 460;
+            // 一人燒肉
+            if (/yakiniku\s*like|焼肉ライク|一人燒肉/i.test(combined)) return 95;
+            // 火鍋 / 燒肉 / 烤魚 / 放題
+            if (/牛角|大滾友|湊湊|牛大人|放題|燒肉|火鍋|鍋|烤魚|秘\s*secret/i.test(combined) || c === '火鍋/燒肉') {
+                if (/川花烤魚|喵喵鍋/.test(n)) return 180;
+                if (/山見/.test(n)) return 220;
+                return 260;
+            }
+            // 快餐 / 麵包店 / 滷肉飯 / 小食
+            if (/麥當勞|kfc|大家樂|大快活|美心mx|薩莉亞|吉野家|松屋|bakehouse|合益泰|滷肉飯/i.test(combined)) return 55;
+            // 米線 / 粉麵 / 車仔麵
+            if (c === '米線/粉麵' || /米線|車仔麵|雲吞麵|麵家|粉麵|牛腩/i.test(combined)) return 60;
+            // 港式茶記 / 冰室
+            if (c === '港式茶記/冰室' || /冰廳|冰室|茶餐廳|茶記|牛奶公司/i.test(combined)) return 65;
+            // 日本料理
+            if (c === '日本料理' || /壽司|拉麵|居酒屋|刺身|日本/i.test(combined)) {
+                if (/壽司郎|元氣|爭鮮/.test(n)) return 120;
+                if (/拉麵|烏冬|丼/.test(n)) return 100;
+                return 180;
+            }
+            // 台灣菜 / 小食
+            if (c === '台灣菜/小食' || /台式|台灣|春水堂|茶木|段純貞|牛肉麵|便當/i.test(combined)) {
+                if (/台灣麵|便當|小巷弄/.test(n)) return 70;
+                return 110;
+            }
+            // 西餐 / Cafe
+            if (c === '西餐/Cafe' || /cafe|coffee|bistro|eatery|西餐|意粉|delice|homeland|peko/i.test(combined)) {
+                if (/delice|homeland|peko|bistro/i.test(n)) return 175;
+                return 125;
+            }
+            // 中菜 / 點心 / 大排檔 / 燒臘
+            if (c === '中菜/點心' || /大排檔|點心|燒鵝|煲仔飯|皇朝|酒樓|中菜/i.test(combined)) {
+                if (/楚撚記|大排檔|酒樓|銷晶館/.test(n)) return 195;
+                if (/樂天皇朝/.test(n)) return 165;
+                return 95;
+            }
+            // 東南亞菜
+            if (c === '東南亞菜' || /泰|越|星洲|海南雞|叻沙|米泰/i.test(combined)) return 120;
+            return 95;
+        }
+
+        function parseRawOccasionsValue(val) {
+            if (!val) return [];
+            const arr = Array.isArray(val) ? val : String(val).split(/[,，、/|｜]+/);
+            const valid = ['一人快食', '拍拖約會', '朋友吹水', '家庭聚餐'];
+            const res = [];
+            arr.forEach(item => {
+                const s = String(item || '').trim();
+                valid.forEach(v => {
+                    if (s.includes(v) && !res.includes(v)) res.push(v);
+                });
+            });
+            return res;
+        }
+
+        function getRestaurantOccasions(r) {
+            if (!r) return ['一人快食', '朋友吹水'];
+            const explicit = parseRawOccasionsValue(r.occasions || r.occasion);
+            if (explicit.length > 0) return explicit;
+
+            const n = String(r.name || '');
+            const c = String(r.cuisine || '');
+            const p = getRestaurantAvgPrice(r);
+            const occ = new Set();
+
+            if (/yakiniku\s*like|焼肉ライク|一人燒肉|麥當勞|bakehouse|合益泰|滷肉飯|便當|拉麵|壽司郎/i.test(n)) {
+                occ.add('一人快食');
+            }
+            if (c === '港式茶記/冰室' || c === '米線/粉麵') {
+                occ.add('一人快食');
+                occ.add('朋友吹水');
+                if (/冰室|冰廳|牛奶公司|添好運|一點心/.test(n)) occ.add('家庭聚餐');
+            } else if (c === '日本料理') {
+                occ.add('拍拖約會');
+                occ.add('朋友吹水');
+                if (/壽司郎|元氣|拉麵/.test(n)) occ.add('一人快食');
+                if (/壽司郎|居酒屋|商場/.test(`${n} ${r.mall || ''}`) || p >= 120) occ.add('家庭聚餐');
+            } else if (c === '台灣菜/小食') {
+                if (p <= 85) occ.add('一人快食');
+                occ.add('朋友吹水');
+                if (p >= 90) { occ.add('拍拖約會'); occ.add('家庭聚餐'); }
+            } else if (c === '西餐/Cafe') {
+                if (/麥當勞|bakehouse|kfc/i.test(n)) {
+                    occ.add('一人快食');
+                    occ.add('朋友吹水');
+                } else {
+                    occ.add('拍拖約會');
+                    occ.add('朋友吹水');
+                    if (p >= 150) occ.add('家庭聚餐');
+                }
+            } else if (c === '火鍋/燒肉') {
+                if (/yakiniku\s*like|焼肉ライク/i.test(n)) {
+                    occ.add('一人快食');
+                    occ.add('朋友吹水');
+                } else {
+                    occ.add('朋友吹水');
+                    occ.add('家庭聚餐');
+                    occ.add('拍拖約會');
+                }
+            } else if (c === '中菜/點心') {
+                occ.add('家庭聚餐');
+                occ.add('朋友吹水');
+                if (/燒鵝|點心|煲仔飯/.test(n)) occ.add('一人快食');
+            } else if (c === '東南亞菜') {
+                occ.add('朋友吹水');
+                occ.add('拍拖約會');
+                occ.add('家庭聚餐');
+                if (p <= 90) occ.add('一人快食');
+            } else {
+                occ.add('一人快食');
+                occ.add('朋友吹水');
+            }
+
+            if (p >= 400) {
+                occ.add('拍拖約會');
+                occ.add('家庭聚餐');
+            }
+            return Array.from(occ);
+        }
+
+        function formatBudgetRangeLabel(minP, maxP) {
+            if (minP <= 0 && maxP >= 1000) return '不限 ($0 – $1000+)';
+            if (minP >= 1000 && maxP >= 1000) return '$1000 以上';
+            if (maxP >= 1000) return `$${minP} – $1000+`;
+            if (minP <= 0) return `$${maxP} 以下`;
+            if (minP === maxP) return `約 $${minP}`;
+            return `$${minP} – $${maxP}`;
+        }
+
+        function isBudgetFilterActive(ctx) {
+            const st = filterBudgetOccasionState[ctx];
+            return !!st && (st.min > 0 || st.max < 1000);
+        }
+
+        function matchesBudgetAndOccasion(r, ctx) {
+            const st = filterBudgetOccasionState[ctx];
+            if (!st) return true;
+            const p = getRestaurantAvgPrice(r);
+            if (p < st.min) return false;
+            if (st.max < 1000 && p > st.max) return false;
+            if (st.occasion && st.occasion !== '全部場景') {
+                const occs = getRestaurantOccasions(r);
+                if (!occs.includes(st.occasion)) return false;
+            }
+            return true;
+        }
+
+        function renderPriceAndOccasionBadgesHTML(r, compact = false) {
+            const p = getRestaurantAvgPrice(r);
+            const priceText = p >= 1000 ? `$${p}+` : `約 $${p}`;
+            const occs = getRestaurantOccasions(r);
+            const shownOccs = compact ? occs.slice(0, 2) : occs.slice(0, 3);
+            const occHtml = shownOccs.map(o =>
+                `<span class="px-1.5 py-0.5 rounded bg-gray-800 border border-gray-700 text-gray-300 text-[10px] font-bold">${OCCASION_ICON_MAP[o] || '👥'} ${o}</span>`
+            ).join('');
+            return `
+                <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-mono-tag font-black">💵 ${priceText}</span>
+                ${occHtml}
+            `;
+        }
+
+        function updateDualBudgetSliderVisual(ctx) {
+            const st = filterBudgetOccasionState[ctx];
+            if (!st) return;
+            const minEl = document.getElementById(`${ctx}-budget-min`);
+            const maxEl = document.getElementById(`${ctx}-budget-max`);
+            const fillEl = document.getElementById(`${ctx}-budget-fill`);
+            const lblEl = document.getElementById(`${ctx}-budget-label`);
+            const resetEl = document.getElementById(`${ctx}-budget-reset`);
+
+            if (minEl) {
+                minEl.value = st.min;
+                // 當左拉桿接近右端時提高 z-index，避免兩個拉桿重疊後拉唔返轉頭
+                minEl.style.zIndex = st.min >= 900 ? '5' : '3';
+            }
+            if (maxEl) {
+                maxEl.value = st.max;
+                maxEl.style.zIndex = st.min >= 900 ? '4' : '4';
+            }
+            if (fillEl) {
+                const leftPct = (st.min / 1000) * 100;
+                const widthPct = Math.max(0, ((st.max - st.min) / 1000) * 100);
+                fillEl.style.left = `${leftPct}%`;
+                fillEl.style.width = `${widthPct}%`;
+            }
+            if (lblEl) lblEl.textContent = formatBudgetRangeLabel(st.min, st.max);
+            if (resetEl) {
+                if (st.min > 0 || st.max < 1000) resetEl.classList.remove('hidden');
+                else resetEl.classList.add('hidden');
+            }
+        }
+
+        function onDualBudgetSliderInput(ctx, changedSide) {
+            const st = filterBudgetOccasionState[ctx];
+            if (!st) return;
+            const minEl = document.getElementById(`${ctx}-budget-min`);
+            const maxEl = document.getElementById(`${ctx}-budget-max`);
+            if (!minEl || !maxEl) return;
+            let minVal = parseInt(minEl.value, 10) || 0;
+            let maxVal = parseInt(maxEl.value, 10) || 0;
+
+            if (changedSide === 'min' && minVal > maxVal) {
+                minVal = maxVal;
+            } else if (changedSide === 'max' && maxVal < minVal) {
+                maxVal = minVal;
+            }
+            st.min = minVal;
+            st.max = maxVal;
+            updateDualBudgetSliderVisual(ctx);
+            triggerBudgetOccasionFilterRefresh(ctx);
+        }
+
+        function resetDualBudgetSlider(ctx) {
+            const st = filterBudgetOccasionState[ctx];
+            if (!st) return;
+            st.min = 0;
+            st.max = 1000;
+            updateDualBudgetSliderVisual(ctx);
+            triggerBudgetOccasionFilterRefresh(ctx);
+        }
+
+        function selectOccasionFilter(ctx, occId) {
+            const st = filterBudgetOccasionState[ctx];
+            if (!st) return;
+            st.occasion = occId;
+            renderOccasionPills(ctx);
+            triggerBudgetOccasionFilterRefresh(ctx);
+        }
+
+        function renderOccasionPills(ctx) {
+            const box = document.getElementById(`${ctx}-occasion-pills`);
+            const st = filterBudgetOccasionState[ctx];
+            if (!box || !st) return;
+            box.innerHTML = ALL_OCCASIONS.map(o => {
+                const active = st.occasion === o.id;
+                return `<button type="button" onclick="selectOccasionFilter('${ctx}', '${o.id}')" class="px-2 py-1 rounded-lg text-[11px] font-bold transition ${active ? 'bg-pink-600 text-white font-black shadow-2xs' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}">${o.icon} ${o.label}</button>`;
+            }).join('');
+        }
+
+        function triggerBudgetOccasionFilterRefresh(ctx) {
+            if (ctx === 'gacha') {
+                updateGachaSummary();
+            } else if (ctx === 'nearby') {
+                renderNearbyCandidates();
+            } else if (ctx === 'dir') {
+                renderDirectoryListOnly();
+            }
+        }
+
+        function initAllBudgetOccasionControls() {
+            ['home', 'gacha', 'nearby', 'dir'].forEach(ctx => {
+                updateDualBudgetSliderVisual(ctx);
+                renderOccasionPills(ctx);
+            });
+        }
+
 
         // ==================== 3. 高清宣傳圖 SVG 與預設美食快訊資料庫 ====================
         const TAMJAI_CRAB_SVG = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
@@ -2658,6 +3167,8 @@
                 if (btnRest) btnRest.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold text-gray-300 hover:text-white transition';
                 if (stationSel) stationSel.classList.add('hidden');
                 if (cuisineSel) cuisineSel.classList.add('hidden');
+                const boWrap1 = document.getElementById('home-budget-occasion-wrap');
+                if (boWrap1) boWrap1.classList.add('hidden');
                 if (drawBtn) drawBtn.innerHTML = '<span>🎲 立即一鍵抽菜色！</span>';
                 if (mealsBtn) mealsBtn.innerHTML = '<span>🍳 抽齊早午晚三餐</span>';
             } else {
@@ -2665,6 +3176,8 @@
                 if (btnCuisine) btnCuisine.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold text-gray-300 hover:text-white transition';
                 if (stationSel) stationSel.classList.remove('hidden');
                 if (cuisineSel) cuisineSel.classList.remove('hidden');
+                const boWrap2 = document.getElementById('home-budget-occasion-wrap');
+                if (boWrap2) boWrap2.classList.remove('hidden');
                 if (drawBtn) drawBtn.innerHTML = '<span>🎲 立即一鍵抽餐廳！</span>';
                 if (mealsBtn) mealsBtn.innerHTML = '<span>🍳 抽齊三餐餐廳</span>';
             }
@@ -2867,12 +3380,28 @@
                         const targetStation = stationSel ? stationSel.value : '全港隨機';
                         const selectedHomeCuisine = forcedCuisine || (cuisineSel ? cuisineSel.value : '全部菜式');
                         let pool = restaurantsDB;
+                        let relaxedMsg = '';
                         if (targetStation !== '全港隨機') {
-                            pool = pool.filter(r => r.station === targetStation);
+                            const bySt = pool.filter(r => r.station === targetStation);
+                            if (bySt.length > 0) pool = bySt;
                         }
                         if (selectedHomeCuisine && selectedHomeCuisine !== '全部菜式') {
                             const byCuisine = pool.filter(r => r.cuisine === selectedHomeCuisine);
                             if (byCuisine.length > 0) pool = byCuisine;
+                        }
+                        const hState = filterBudgetOccasionState.home;
+                        if (hState.min > 0 || hState.max < 1000) {
+                            const byPrice = pool.filter(r => {
+                                const p = getRestaurantAvgPrice(r);
+                                return p >= hState.min && (hState.max >= 1000 || p <= hState.max);
+                            });
+                            if (byPrice.length > 0) pool = byPrice;
+                            else relaxedMsg = '（此價位範圍暫無完全吻合，已自動放寬價位抽選）';
+                        }
+                        if (hState.occasion && hState.occasion !== '全部場景') {
+                            const byOcc = pool.filter(r => getRestaurantOccasions(r).includes(hState.occasion));
+                            if (byOcc.length > 0) pool = byOcc;
+                            else if (!relaxedMsg) relaxedMsg = '（此場景暫無完全吻合，已自動放寬場景抽選）';
                         }
                         if (pool.length === 0) pool = restaurantsDB;
                         const winR = pool[Math.floor(Math.random() * pool.length)];
@@ -2885,6 +3414,7 @@
                                     <div class="flex flex-wrap items-center gap-1.5">
                                         <span class="px-2 py-0.5 rounded bg-amber-400 text-black text-[10px] font-black">💥 骰子爆出命運餐廳</span>
                                         <span class="px-2 py-0.5 rounded bg-gray-800 text-pink-300 text-[10px] font-bold">🚇 ${winR.station} • ${winR.cuisine}</span>
+                                        ${renderPriceAndOccasionBadgesHTML(winR, true)}
                                         ${renderPromoBadgeHTML(winR)}
                                     </div>
                                     <div onclick="jumpToDirectoryRestaurant('${winR.name}', '${winR.station}')" class="text-lg sm:text-xl font-black text-white hover:text-pink-400 cursor-pointer transition">
@@ -2912,7 +3442,7 @@
                                 </div>
                             </div>
                         `;
-                        showToast(`🎲 骰子爆出餐廳：【${winR.name}】！`);
+                        showToast(`🎲 骰子爆出餐廳：【${winR.name}】！${relaxedMsg}`);
                     }
                 }
             }, 70);
@@ -2968,7 +3498,7 @@
                 const promoLine = (r.promoBadge && String(r.promoBadge).trim())
                     ? `   🎟️ 獨家著數：${String(r.promoBadge).trim().replace(/^🎟️\s*/, '')}\n`
                     : '';
-                return `${numEmojis[idx] || (idx + 1) + '.'} *${r.name}*（${r.station}・${r.cuisine}｜${r.mall}）\n${promoLine}   📍 ${r.address}`;
+                const avgP = getRestaurantAvgPrice(r); const pLabel = avgP >= 1000 ? `$${avgP}+` : `約$${avgP}`; return `${numEmojis[idx] || (idx + 1) + '.'} *${r.name}*（${r.station}・${r.cuisine}・${pLabel}｜${r.mall}）\n${promoLine}   📍 ${r.address}`;
             }).join('\n\n');
 
             return `🗳️ *【唔洗諗 Pick For You】今餐食邊間？大家投票拍板！*\n📌 鎖定範圍：${areaLabel}\n\n${lines}\n\n👉 請直接回覆 *1 / 2 / 3* 投票！\n🎲 我哋一齊抽籤：https://pickforyouhk.github.io/`;
@@ -3075,9 +3605,25 @@
                         const byCui = pool.filter(r => r.cuisine === targetCuisine);
                         if (byCui.length > 0) pool = byCui;
                     }
+                    const hSt = filterBudgetOccasionState.home;
+                    if (hSt.min > 0 || hSt.max < 1000) {
+                        const byPrice = pool.filter(r => {
+                            const p = getRestaurantAvgPrice(r);
+                            return p >= hSt.min && (hSt.max >= 1000 || p <= hSt.max);
+                        });
+                        if (byPrice.length > 0) pool = byPrice;
+                    }
+                    if (hSt.occasion && hSt.occasion !== '全部場景') {
+                        const byOcc = pool.filter(r => getRestaurantOccasions(r).includes(hSt.occasion));
+                        if (byOcc.length > 0) pool = byOcc;
+                    }
 
                     const candidates = pickThreeDiverseRestaurants(pool);
-                    const areaLabel = targetCuisine !== '全部菜式' ? `${targetStation}・${targetCuisine}` : targetStation;
+                    const areaParts = [targetStation];
+                    if (targetCuisine !== '全部菜式') areaParts.push(targetCuisine);
+                    if (hSt.min > 0 || hSt.max < 1000) areaParts.push(formatBudgetRangeLabel(hSt.min, hSt.max));
+                    if (hSt.occasion && hSt.occasion !== '全部場景') areaParts.push(hSt.occasion);
+                    const areaLabel = areaParts.join('・');
                     stage.innerHTML = renderGroupPollCardsHTML(candidates, areaLabel, 'triggerHomeGroupPollDraw()');
                     showToast('🗳️ 已抽出 3 間候選餐廳！可一鍵複製 WhatsApp 投票清單');
                 }
@@ -3089,7 +3635,11 @@
             if (!checkAndConsumeQuota('group_poll')) return;
 
             let pool = getFilteredGachaPool();
-            if (pool.length === 0) pool = restaurantsDB;
+            if (pool.length === 0) {
+                const stPool = currentGachaStation === '全港隨機' ? restaurantsDB : restaurantsDB.filter(r => r.station === currentGachaStation);
+                pool = stPool.length > 0 ? stPool : restaurantsDB;
+                showToast('💡 當前價位/場景組合暫無完全吻合餐廳，已自動放寬條件為你抽選！');
+            }
 
             isGachaRolling = true;
             const rollDisplay = document.getElementById('gacha-rolling-display');
@@ -3895,7 +4445,7 @@
             const distEl = document.getElementById('nearby-summary-dist');
             const countEl = document.getElementById('nearby-summary-count');
 
-            const candidates = restaurantsDB.filter(r => r.station === currentNearbyStation && (r.dist || 350) <= currentNearbyDistance);
+            const candidates = restaurantsDB.filter(r => r.station === currentNearbyStation && (r.dist || 350) <= currentNearbyDistance && matchesBudgetAndOccasion(r, 'nearby'));
 
             if (stEl) stEl.textContent = currentNearbyStation;
             if (distEl) distEl.textContent = `${currentNearbyDistance}米`;
@@ -3939,9 +4489,9 @@
 
         function spinNearbyRestaurant() {
             if (!checkAndConsumeQuota('nearby_radar')) return;
-            const candidates = restaurantsDB.filter(r => r.station === currentNearbyStation && (r.dist || 350) <= currentNearbyDistance);
+            const candidates = restaurantsDB.filter(r => r.station === currentNearbyStation && (r.dist || 350) <= currentNearbyDistance && matchesBudgetAndOccasion(r, 'nearby'));
             if (candidates.length === 0) {
-                showToast('⚠️ 此範圍內暫無候選食肆，請調大步行距離');
+                showToast('⚠️ 此範圍／價位／場景內暫無候選食肆，請拉闊步行距離或價位');
                 return;
             }
             const rollBox = document.getElementById('nearby-rolling-display');
@@ -3978,6 +4528,7 @@
                                     <span class="text-xs font-mono-tag text-emerald-300 font-bold">距離約 ${winner.dist}m</span>
                                 </div>
                                 <div onclick="jumpToDirectoryRestaurant('${winner.name}', '${winner.station}')" class="text-lg font-black text-white hover:text-pink-400 cursor-pointer">${winner.name}</div>
+                                <div class="flex flex-wrap items-center gap-1">${renderPriceAndOccasionBadgesHTML(winner, false)}</div>
                                 <div class="text-xs text-gray-300">📍 ${winner.address} | 📞 ${winner.phone}</div>
                                 <div class="flex flex-wrap gap-2 pt-1">
                                     <button onclick="jumpToDirectoryRestaurant('${winner.name.replace(/'/g, "\'")}', '${winner.station}')" class="px-3 py-1.5 rounded-lg bg-pink-600 text-white text-xs font-black">📖 打開餐廳名單</button>
@@ -4525,21 +5076,26 @@
                 const matchSt = currentGachaStation === '全港隨機' || r.station === currentGachaStation;
                 const matchMall = currentGachaMall === '全部商場/街區' || r.mall === currentGachaMall;
                 const matchCui = currentGachaCuisine === '全部菜式' || r.cuisine === currentGachaCuisine;
-                return matchSt && matchMall && matchCui;
+                const matchBO = matchesBudgetAndOccasion(r, 'gacha');
+                return matchSt && matchMall && matchCui && matchBO;
             });
         }
 
         function updateGachaSummary() {
             const el = document.getElementById('gacha-filter-summary');
             const pool = getFilteredGachaPool();
+            const gSt = filterBudgetOccasionState.gacha;
+            const budgetTag = (gSt.min > 0 || gSt.max < 1000) ? ` • <strong class="text-amber-300">💰 ${formatBudgetRangeLabel(gSt.min, gSt.max)}</strong>` : '';
+            const occTag = (gSt.occasion && gSt.occasion !== '全部場景') ? ` • <strong class="text-cyan-300">👥 ${gSt.occasion}</strong>` : '';
+            const emptyWarn = pool.length === 0 ? ` <span class="text-rose-400 font-bold">（此組合暫無完全吻合餐廳，請拉闊價位或切換條件）</span>` : '';
             if (el) {
                 if (isAdminLoggedIn) {
                     const cloudNote = lastCloudSyncReport && lastCloudSyncReport.restRowsCount > 0
                         ? ` <span class="text-emerald-400 font-mono-tag">[🛡️ Admin：資料庫候選 ${pool.length} 間｜雲端已同步 ${lastCloudSyncReport.restRowsCount} 間]</span>`
                         : ` <span class="text-emerald-400 font-mono-tag">[🛡️ Admin：資料庫候選 ${pool.length} 間]</span>`;
-                    el.innerHTML = `目前篩選：<strong class="text-amber-300">${currentGachaStation}</strong> • <strong class="text-emerald-300">${currentGachaMall}</strong> • <strong class="text-pink-400">${currentGachaCuisine}</strong>${cloudNote}`;
+                    el.innerHTML = `目前篩選：<strong class="text-amber-300">${currentGachaStation}</strong> • <strong class="text-emerald-300">${currentGachaMall}</strong> • <strong class="text-pink-400">${currentGachaCuisine}</strong>${budgetTag}${occTag}${cloudNote}${emptyWarn}`;
                 } else {
-                    el.innerHTML = `目前篩選：<strong class="text-amber-300">${currentGachaStation}</strong> • <strong class="text-emerald-300">${currentGachaMall}</strong> • <strong class="text-pink-400">${currentGachaCuisine}</strong>`;
+                    el.innerHTML = `目前篩選：<strong class="text-amber-300">${currentGachaStation}</strong> • <strong class="text-emerald-300">${currentGachaMall}</strong> • <strong class="text-pink-400">${currentGachaCuisine}</strong>${budgetTag}${occTag}${emptyWarn}`;
                 }
             }
         }
@@ -4549,7 +5105,11 @@
             if (!checkAndConsumeQuota('gacha_85')) return;
 
             let pool = getFilteredGachaPool();
-            if (pool.length === 0) pool = restaurantsDB;
+            if (pool.length === 0) {
+                const stPool = currentGachaStation === '全港隨機' ? restaurantsDB : restaurantsDB.filter(r => r.station === currentGachaStation);
+                pool = stPool.length > 0 ? stPool : restaurantsDB;
+                showToast('💡 當前價位/場景組合暫無完全吻合餐廳，已自動放寬條件為你抽選！');
+            }
 
             isGachaRolling = true;
             const boxStage = document.getElementById('gacha-box-stage');
@@ -4606,6 +5166,9 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-stretch">
                                     <div class="sm:col-span-6 space-y-1.5 flex flex-col justify-center">
                                         <h3 onclick="jumpToDirectoryRestaurant('${wNameJs}', '${winner.station}')" class="text-xl font-black text-white hover:text-pink-400 cursor-pointer leading-tight">${winner.name}</h3>
+                                        <div class="flex flex-wrap items-center gap-1 pt-0.5">
+                                            ${renderPriceAndOccasionBadgesHTML(winner, false)}
+                                        </div>
                                         <div class="text-xs text-gray-300 space-y-1">
                                             <div>🏬 商場/街區：${winner.mall}</div>
                                             <div>📍 地址：${winner.address}</div>
@@ -4728,12 +5291,15 @@
             const kw = kwInput ? kwInput.value.trim().toLowerCase() : '';
 
             let list = restaurantsDB.filter(r => {
+                if (!matchesBudgetAndOccasion(r, 'dir')) return false;
                 if (kw) {
+                    const occStr = getRestaurantOccasions(r).join(' ').toLowerCase();
                     return r.name.toLowerCase().includes(kw) ||
                            r.station.toLowerCase().includes(kw) ||
                            r.mall.toLowerCase().includes(kw) ||
                            r.cuisine.toLowerCase().includes(kw) ||
-                           r.address.toLowerCase().includes(kw);
+                           r.address.toLowerCase().includes(kw) ||
+                           occStr.includes(kw);
                 }
                 const matchSt = r.station === dirStation;
                 const matchCui = dirCuisine === '全部菜式' || r.cuisine === dirCuisine;
@@ -4741,10 +5307,15 @@
             });
 
             if (summary) {
+                const dSt = filterBudgetOccasionState.dir;
+                const extraTags = [];
+                if (dSt.min > 0 || dSt.max < 1000) extraTags.push(`💰 ${formatBudgetRangeLabel(dSt.min, dSt.max)}`);
+                if (dSt.occasion && dSt.occasion !== '全部場景') extraTags.push(`👥 ${dSt.occasion}`);
+                const extraStr = extraTags.length > 0 ? ` • ${extraTags.join(' • ')}` : '';
                 const adminCountTag = isAdminLoggedIn ? `（🛡️ Admin：共 ${list.length} 間）` : '';
                 summary.textContent = kw
-                    ? `🔍 搜尋「${kw}」結果${adminCountTag}`
-                    : `🚇 ${dirStation}站 • ${dirCuisine}${adminCountTag}`;
+                    ? `🔍 搜尋「${kw}」結果${extraStr}${adminCountTag}`
+                    : `🚇 ${dirStation}站 • ${dirCuisine}${extraStr}${adminCountTag}`;
             }
 
             if (!container) return;
@@ -4785,6 +5356,9 @@
                                         ${renderPromoBadgeHTML(r)}
                                         <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-bold">${r.cuisine}</span>
                                     </div>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-1 pt-0.5">
+                                    ${renderPriceAndOccasionBadgesHTML(r, false)}
                                 </div>
                             </div>
                         </div>
@@ -5922,7 +6496,7 @@ function doPost(e) {
 
         // 下載餐廳名單 Excel 相容 CSV 檔案 (內置 UTF-8 BOM，Excel 雙擊直接打開不亂碼，亦可在 Google Sheet 匯入)
         function exportRestaurantsCSV(scope = 'curated') {
-            const headers = ['station', 'name', 'address', 'cuisine', 'mall', 'phone', 'dist'];
+            const headers = ['station', 'name', 'address', 'cuisine', 'mall', 'phone', 'dist', 'promoBadge', 'price', 'occasions'];
             const targetList = getTargetRestaurantsForExport(scope);
             const rows = targetList.map(r => {
                 const combinedInfo = `${r.address} ｜ ${r.cuisine} ｜ ${r.mall} ｜ ${r.phone} ｜ ${r.dist || 300}m`;
@@ -5933,7 +6507,10 @@ function doPost(e) {
                     r.cuisine,
                     r.mall,
                     r.phone,
-                    r.dist || 300
+                    r.dist || 300,
+                    r.promoBadge || '',
+                    getRestaurantAvgPrice(r),
+                    getRestaurantOccasions(r).join(',')
                 ].map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',');
             });
 
@@ -5965,7 +6542,10 @@ function doPost(e) {
                     r.cuisine,
                     r.mall,
                     r.phone,
-                    r.dist || 300
+                    r.dist || 300,
+                    r.promoBadge || '',
+                    getRestaurantAvgPrice(r),
+                    getRestaurantOccasions(r).join(',')
                 ].map(cell => String(cell ?? '').replace(/[\t\r\n]+/g, ' ')).join('\t');
             });
             const tsvText = tsvRows.join('\n');
@@ -6075,6 +6655,10 @@ function doPost(e) {
             const phone = document.getElementById('new-rest-phone').value.trim() || '2388 8888';
             const promoEl = document.getElementById('new-rest-promo');
             const promoBadge = promoEl ? promoEl.value.trim() : '';
+            const priceEl = document.getElementById('new-rest-price');
+            const rawPriceInput = priceEl ? priceEl.value.trim() : '';
+            const avgPriceVal = parseRawPriceValue(rawPriceInput);
+            const checkedOccs = Array.from(document.querySelectorAll('input[name="new-rest-occ"]:checked')).map(el => el.value);
 
             if (!name) {
                 showToast('⚠️ 請輸入餐廳名稱');
@@ -6091,6 +6675,8 @@ function doPost(e) {
                 dist: 220,
                 promoBadge
             };
+            if (avgPriceVal !== null) newRest.avgPrice = avgPriceVal;
+            if (checkedOccs.length > 0) newRest.occasions = checkedOccs;
 
             restaurantsDB.unshift(newRest);
             curatedRealRestaurantsList.unshift(newRest);
@@ -6103,6 +6689,8 @@ function doPost(e) {
             document.getElementById('new-rest-address').value = '';
             document.getElementById('new-rest-phone').value = '';
             if (document.getElementById('new-rest-promo')) document.getElementById('new-rest-promo').value = '';
+            if (document.getElementById('new-rest-price')) document.getElementById('new-rest-price').value = '';
+            document.querySelectorAll('input[name="new-rest-occ"]').forEach(el => { el.checked = false; });
             document.getElementById('dir-add-rest-form').classList.add('hidden');
 
             // 永久保存自訂餐廳至本地 LocalStorage，雙重保障改 Code 絕不消失
@@ -6113,6 +6701,8 @@ function doPost(e) {
             writeLSv3(LS_V3.RESTS, savedCustomRests);
 
             showToast(`⏳ 正在將「${name}」同步寫入 Google Sheet...`);
+            const finalPrice = getRestaurantAvgPrice(newRest);
+            const finalOccsStr = getRestaurantOccasions(newRest).join(',');
             const combinedInfo = `${address} ｜ ${cuisine} ｜ ${mall} ｜ ${phone} ｜ 220m${promoBadge ? ' ｜ 🎟️ ' + promoBadge.replace(/^🎟️\s*/, '') : ''}`;
             const ok = await postToSheetV4('restaurants', [
                 station,
@@ -6122,8 +6712,10 @@ function doPost(e) {
                 mall,
                 phone,
                 220,
-                promoBadge
-            ], newRest);
+                promoBadge,
+                finalPrice,
+                finalOccsStr
+            ], { ...newRest, avgPrice: finalPrice, occasions: finalOccsStr });
 
             if (ok) {
                 await new Promise(r => setTimeout(r, 900));
@@ -6581,7 +7173,16 @@ function doPost(e) {
                 rawMall = `${rawStation}核心商圈`;
             }
 
-            return {
+            const rawPriceCell = Array.isArray(r)
+                ? r[8]
+                : (r.avgPrice ?? r.price ?? r.budget ?? r['價位'] ?? r['預算'] ?? r['人均消費'] ?? (Array.isArray(r._cells) ? r._cells[8] : ''));
+            const rawOccCell = Array.isArray(r)
+                ? r[9]
+                : (r.occasions ?? r.occasion ?? r['場景'] ?? r['飯腳'] ?? r['飯腳場景'] ?? (Array.isArray(r._cells) ? r._cells[9] : ''));
+            const parsedAvgPrice = parseRawPriceValue(rawPriceCell);
+            const parsedOccs = parseRawOccasionsValue(rawOccCell);
+
+            const parsedObj = {
                 name: rawName,
                 station: rawStation,
                 mall: rawMall,
@@ -6591,6 +7192,9 @@ function doPost(e) {
                 dist: rawDist || 250,
                 promoBadge: rawPromo.replace(/^🎟️\s*/, '').trim()
             };
+            if (parsedAvgPrice !== null) parsedObj.avgPrice = parsedAvgPrice;
+            if (parsedOccs.length > 0) parsedObj.occasions = parsedOccs;
+            return parsedObj;
         }
 
         async function postToSheetV4(sheetName, rowArr, objFallback = {}) {
@@ -7220,6 +7824,7 @@ function doPost(e) {
             renderCommunityPosts();
             updateQuotaUI();
             setHomeQuickDrawMode('restaurant');
+            initAllBudgetOccasionControls();
             autoRefreshGrantedGPS();
             // 先載入本地 IndexedDB 與 window.name 快訊及自訂圖片，再執行 Google Sheet 同步，防止雲端舊資料覆蓋本地修改
             await loadNewsFromIndependentDB();
