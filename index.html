@@ -513,6 +513,102 @@
             cursor: grabbing;
             transform: scale(1.18);
         }
+
+        /* ==================== 滑卡配對模式 (Swipe-to-Match) 專屬樣式 ==================== */
+        .pfy-swipe-stage {
+            position: relative;
+            width: 100%;
+            max-width: 390px;
+            height: 410px;
+            margin: 0 auto;
+            touch-action: pan-y;
+            perspective: 1000px;
+        }
+        .pfy-swipe-card {
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            background-color: var(--pfy-surface);
+            border: 2.5px solid #18181B;
+            box-shadow: 0 10px 0px #18181B;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            user-select: none;
+            -webkit-user-select: none;
+            will-change: transform, opacity;
+        }
+        body.dark-mode .pfy-swipe-card {
+            border-color: #FF5A36;
+            box-shadow: 0 10px 0px rgba(255, 90, 54, 0.35);
+        }
+        .pfy-swipe-card.is-top {
+            cursor: grab;
+            z-index: 20;
+            touch-action: none;
+        }
+        .pfy-swipe-card.is-top:active {
+            cursor: grabbing;
+        }
+        .pfy-swipe-card.is-next {
+            z-index: 10;
+            transform: scale(0.95) translateY(14px);
+            opacity: 0.75;
+            pointer-events: none;
+            transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+        }
+        .pfy-swipe-card.is-third {
+            z-index: 5;
+            transform: scale(0.9) translateY(26px);
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        .pfy-swipe-card.is-animating {
+            transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease;
+        }
+        .pfy-swipe-stamp {
+            position: absolute;
+            top: 20px;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            border: 3.5px solid currentColor;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 30;
+            background-color: rgba(255, 255, 255, 0.94);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .pfy-swipe-stamp-like {
+            left: 16px;
+            color: #0D9488 !important;
+            transform: rotate(-14deg);
+        }
+        .pfy-swipe-stamp-nope {
+            right: 16px;
+            color: #E11D48 !important;
+            transform: rotate(14deg);
+        }
+        .pfy-swipe-action-btn {
+            border: 2px solid #18181B;
+            box-shadow: 0 4px 0px #18181B;
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+        }
+        .pfy-swipe-action-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 0px #18181B;
+        }
+        .pfy-swipe-action-btn:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0px #18181B;
+        }
+        .pfy-swipe-action-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -621,6 +717,10 @@
                         <span>👯 多人連線抽籤房</span>
                         <span class="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-mono-tag">LIVE</span>
                     </button>
+                    <button onclick="switchModule('swipe'); toggleSideMenu();" id="nav-btn-swipe" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-bold text-gray-300 hover:bg-gray-800 transition">
+                        <span>🃏 滑卡配對 (單人/雙人)</span>
+                        <span class="text-[9px] bg-pink-500/20 text-pink-300 px-1.5 py-0.5 rounded font-mono-tag">NEW</span>
+                    </button>
                     <button onclick="switchModule(8); toggleSideMenu();" id="nav-btn-8" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-bold text-gray-300 hover:bg-gray-800 transition">
                         <span>📖 全港餐廳名單</span>
                     </button>
@@ -717,6 +817,14 @@
                                             <span class="font-black text-xs text-white truncate">多人連線抽籤房（開房一齊提名／Ban ‧ 朋友免登入）</span>
                                         </div>
                                         <span class="px-1.5 py-0.5 rounded bg-amber-400 text-black text-[10px] font-mono-tag font-black shrink-0">LIVE ➔</span>
+                                    </button>
+
+                                    <button onclick="switchModule('swipe')" class="col-span-2 px-3 py-2.5 rounded-xl bg-gray-900 hover:border-pink-500 border border-pink-500/50 flex items-center justify-between text-left transition group">
+                                        <div class="flex items-center space-x-2 min-w-0">
+                                            <span class="text-base shrink-0">🃏</span>
+                                            <span class="font-black text-xs text-white truncate">滑卡速選／雙人配對（左滑 Ban ‧ 右滑留低）</span>
+                                        </div>
+                                        <span class="px-1.5 py-0.5 rounded bg-pink-600 text-white text-[10px] font-mono-tag font-black shrink-0">NEW ➔</span>
                                     </button>
                                 </div>
                             </div>
@@ -1766,6 +1874,224 @@
                 </div>
             </section>
 
+
+            <!-- ==================== MODULE SWIPE: 🃏 滑卡速選／雙人配對 ==================== -->
+            <section id="module-swipe" class="hidden space-y-4">
+                <div class="glass-card rounded-2xl p-4 sm:p-6 space-y-5">
+                    <!-- 頂部標題列 -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-gray-800 pb-3.5">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-2 py-0.5 rounded bg-pink-600 text-white text-[10px] font-mono-tag font-black">SWIPE TO MATCH</span>
+                                <span class="text-[10px] font-mono-tag text-amber-400 font-bold">左滑 Ban ‧ 右滑留低 ‧ 單人／雙人皆可</span>
+                            </div>
+                            <h2 class="text-xl sm:text-2xl font-black text-white mt-1">🃏 滑卡揀食模式（單人速選 ‧ 雙人配對）</h2>
+                        </div>
+                        <div class="flex items-center space-x-2 self-start">
+                            <button onclick="resetSwipeToSetup()" id="btn-swipe-back-setup" class="hidden px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs font-bold text-gray-300 transition">⚙️ 重設條件</button>
+                            <button onclick="switchModule('home')" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs font-bold text-gray-300 transition">← 返回首頁</button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 1: 開局設定畫面 -->
+                    <div id="swipe-setup-view" class="space-y-4">
+                        <!-- 玩法二選一 -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button type="button" onclick="setSwipeMode('solo')" id="swipe-mode-btn-solo" class="p-4 rounded-2xl border-2 border-pink-500 bg-gradient-to-br from-pink-950/50 via-gray-900 to-gray-950 text-left space-y-1.5 transition shadow">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-base sm:text-lg font-black text-white">🙋 單人速選模式</span>
+                                    <span id="swipe-mode-badge-solo" class="px-2 py-0.5 rounded-full bg-pink-600 text-white text-[10px] font-black">已選擇</span>
+                                </div>
+                                <p class="text-xs text-gray-300 leading-relaxed">自己極速滑卡篩走唔想食嘅餐廳，再從心水名單一鍵擲骰拍板！</p>
+                            </button>
+
+                            <button type="button" onclick="setSwipeMode('duo')" id="swipe-mode-btn-duo" class="p-4 rounded-2xl border-2 border-gray-800 bg-gray-900/90 hover:border-emerald-500/60 text-left space-y-1.5 transition">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-base sm:text-lg font-black text-white">💑 雙人同機配對</span>
+                                    <span id="swipe-mode-badge-duo" class="px-2 py-0.5 rounded-full bg-gray-800 text-gray-400 text-[10px] font-bold">Pass &amp; Play</span>
+                                </div>
+                                <p class="text-xs text-gray-300 leading-relaxed">兩人輪流滑同一批餐廳（附防偷睇交棒頁），即時配對雙方共同心水！</p>
+                            </button>
+                        </div>
+
+                        <!-- 雙人暱稱輸入欄（雙人模式才顯示） -->
+                        <div id="swipe-duo-names-row" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-gray-900/90 border border-emerald-500/40">
+                            <div class="space-y-1">
+                                <label class="text-xs font-black text-pink-400">👤 第一位玩家暱稱：</label>
+                                <input id="swipe-p1-name" type="text" maxlength="12" value="飯腳 A" placeholder="例如：男朋友 / 阿明" class="w-full px-3 py-2 rounded-xl bg-gray-800 border border-gray-700 text-xs font-bold text-white">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-black text-emerald-400">👤 第二位玩家暱稱：</label>
+                                <input id="swipe-p2-name" type="text" maxlength="12" value="飯腳 B" placeholder="例如：女朋友 / 阿美" class="w-full px-3 py-2 rounded-xl bg-gray-800 border border-gray-700 text-xs font-bold text-white">
+                            </div>
+                        </div>
+
+                        <!-- 地區、菜式與卡數篩選 -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="p-3.5 rounded-xl bg-gray-900/80 border border-gray-800 space-y-1.5">
+                                <label class="block text-xs font-black text-gray-300">🚇 揀選港鐵站地區：</label>
+                                <select id="swipe-station-select" onchange="updateSwipePoolHint()" class="w-full px-3 py-2 rounded-xl bg-gray-800 border border-gray-700 text-xs sm:text-sm font-bold text-white cursor-pointer">
+                                    <option value="全港隨機">🚇 全港隨機 (85站)</option>
+                                </select>
+                            </div>
+
+                            <div class="p-3.5 rounded-xl bg-gray-900/80 border border-gray-800 space-y-1.5">
+                                <label class="block text-xs font-black text-gray-300">🍜 篩選菜式：</label>
+                                <select id="swipe-cuisine-select" onchange="updateSwipePoolHint()" class="w-full px-3 py-2 rounded-xl bg-gray-800 border border-gray-700 text-xs sm:text-sm font-bold text-white cursor-pointer">
+                                    <option value="全部菜式">🍜 全部菜式 (不限)</option>
+                                    <option value="港式茶記/冰室">☕ 港式茶記/冰室</option>
+                                    <option value="米線/粉麵">🍜 米線/粉麵</option>
+                                    <option value="日本料理">🍣 日本料理</option>
+                                    <option value="台灣菜/小食">🧋 台灣菜/小食</option>
+                                    <option value="西餐/Cafe">🍔 西餐/Cafe</option>
+                                    <option value="火鍋/燒肉">🥩 火鍋/燒肉</option>
+                                    <option value="中菜/點心">🥟 中菜/點心</option>
+                                    <option value="東南亞菜">🍲 東南亞菜</option>
+                                </select>
+                            </div>
+
+                            <div class="p-3.5 rounded-xl bg-gray-900/80 border border-gray-800 space-y-1.5">
+                                <label class="block text-xs font-black text-gray-300">🃏 每局滑卡張數：</label>
+                                <div class="grid grid-cols-4 gap-1.5 pt-0.5">
+                                    <button type="button" onclick="setSwipeDeckSize(6)" id="swipe-size-6" class="py-1.5 rounded-lg bg-gray-800 text-gray-300 text-xs font-bold transition">6張</button>
+                                    <button type="button" onclick="setSwipeDeckSize(8)" id="swipe-size-8" class="py-1.5 rounded-lg bg-pink-600 text-white text-xs font-black transition">8張</button>
+                                    <button type="button" onclick="setSwipeDeckSize(10)" id="swipe-size-10" class="py-1.5 rounded-lg bg-gray-800 text-gray-300 text-xs font-bold transition">10張</button>
+                                    <button type="button" onclick="setSwipeDeckSize(12)" id="swipe-size-12" class="py-1.5 rounded-lg bg-gray-800 text-gray-300 text-xs font-bold transition">12張</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 預算價位雙向拉條 ＋ 飯腳場景 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="p-3.5 rounded-xl bg-gray-900/80 border border-gray-800 space-y-1.5">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-black text-gray-300">💰 預算價位（$0 – $1000+）：</span>
+                                    <div class="flex items-center space-x-2">
+                                        <span id="swipe-budget-label" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-black font-mono-tag">不限 ($0 – $1000+)</span>
+                                        <button type="button" id="swipe-budget-reset" onclick="resetDualBudgetSlider('swipe')" class="hidden text-[10px] text-pink-400 underline font-bold">重設</button>
+                                    </div>
+                                </div>
+                                <div class="pfy-dual-slider">
+                                    <div class="pfy-dual-slider-track"></div>
+                                    <div id="swipe-budget-fill" class="pfy-dual-slider-fill" style="left:0%;width:100%;"></div>
+                                    <input type="range" id="swipe-budget-min" min="0" max="1000" step="10" value="0" oninput="onDualBudgetSliderInput('swipe','min')" class="pfy-range-input" style="z-index:3;">
+                                    <input type="range" id="swipe-budget-max" min="0" max="1000" step="10" value="1000" oninput="onDualBudgetSliderInput('swipe','max')" class="pfy-range-input" style="z-index:4;">
+                                </div>
+                                <div class="flex justify-between text-[10px] font-mono-tag text-gray-400 px-0.5">
+                                    <span>$0</span><span>$250</span><span>$500</span><span>$750</span><span>$1000+</span>
+                                </div>
+                            </div>
+
+                            <div class="p-3.5 rounded-xl bg-gray-900/80 border border-gray-800 space-y-2 flex flex-col justify-center">
+                                <span class="text-xs font-black text-gray-300">👥 飯腳場景：</span>
+                                <div id="swipe-occasion-pills" class="flex flex-wrap gap-1.5"></div>
+                            </div>
+                        </div>
+
+                        <!-- 開始滑卡 CTA -->
+                        <div class="p-4 rounded-2xl bg-gradient-to-br from-pink-950/50 via-gray-900 to-gray-950 border border-pink-500/40 text-center space-y-3">
+                            <div id="swipe-pool-hint" class="text-xs font-bold text-gray-300">🎯 條件已就緒，按下開始立即抽取 8 張候選餐廳卡！</div>
+                            <button type="button" onclick="startSwipeSession()" class="neon-button px-8 py-3.5 rounded-2xl text-sm sm:text-base font-black tracking-wide inline-flex items-center justify-center space-x-2">
+                                <span id="swipe-start-btn-label">🚀 開始單人速選滑卡！</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: 主滑卡舞台 -->
+                    <div id="swipe-play-view" class="hidden space-y-4">
+                        <!-- 頂部進度條與狀態 -->
+                        <div class="max-w-md mx-auto space-y-2">
+                            <div class="flex items-center justify-between text-xs">
+                                <span id="swipe-turn-badge" class="px-2.5 py-1 rounded-full bg-pink-600 text-white font-black">🙋 單人速選</span>
+                                <span id="swipe-progress-text" class="font-mono-tag font-black text-white">第 1 / 8 張</span>
+                                <span id="swipe-liked-counter" class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-mono-tag font-black">♥ 留低: 0</span>
+                            </div>
+                            <div class="w-full h-2.5 rounded-full bg-gray-800 overflow-hidden border border-gray-700">
+                                <div id="swipe-progress-bar" class="h-full transition-all duration-300 rounded-full" style="width: 0%; background: linear-gradient(90deg, #FF5A36, #F59E0B);"></div>
+                            </div>
+                        </div>
+
+                        <!-- 疊卡互動區 -->
+                        <div id="swipe-card-stack" class="pfy-swipe-stage"></div>
+
+                        <!-- 底部三大立體觸控按鈕 -->
+                        <div class="max-w-sm mx-auto flex items-center justify-center gap-3 pt-4">
+                            <button type="button" onclick="swipeCurrentCard('left')" class="pfy-swipe-action-btn flex-1 py-3 px-4 rounded-2xl bg-rose-600 text-white text-sm font-black flex items-center justify-center space-x-1.5">
+                                <span>✕</span>
+                                <span>唔食</span>
+                            </button>
+
+                            <button type="button" onclick="undoLastSwipe()" id="btn-swipe-undo" class="pfy-swipe-action-btn px-3.5 py-3 rounded-2xl bg-gray-800 text-amber-300 text-xs font-black flex flex-col items-center justify-center leading-tight shrink-0" title="撤回上一張卡">
+                                <span>↩️ 撤回</span>
+                                <span id="swipe-undo-left-badge" class="text-[10px] font-mono-tag text-gray-400">剩2次</span>
+                            </button>
+
+                            <button type="button" onclick="swipeCurrentCard('right')" class="pfy-swipe-action-btn flex-1 py-3 px-4 rounded-2xl bg-emerald-600 text-white text-sm font-black flex items-center justify-center space-x-1.5">
+                                <span>♥</span>
+                                <span>留低</span>
+                            </button>
+                        </div>
+
+                        <p class="text-center text-[11px] text-gray-400">
+                            💡 手指／滑鼠左右拖拉卡片，或直接撳掣 <span class="hidden sm:inline">‧ 電腦支援鍵盤 <kbd class="px-1.5 py-0.5 rounded bg-gray-800 border border-gray-700 font-mono-tag">←</kbd> / <kbd class="px-1.5 py-0.5 rounded bg-gray-800 border border-gray-700 font-mono-tag">→</kbd></span>
+                        </p>
+                    </div>
+
+                    <!-- STEP 3: 雙人防偷睇交棒遮罩 -->
+                    <div id="swipe-handoff-view" class="hidden py-8 px-4">
+                        <div class="max-w-md mx-auto p-6 rounded-3xl bg-gray-900 border-2 border-emerald-500 text-center space-y-5 shadow-xl">
+                            <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-3xl border-2 border-zinc-900 shadow">
+                                🤫
+                            </div>
+                            <div class="space-y-2">
+                                <div class="inline-block px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-mono-tag font-black">PASS &amp; PLAY // 防偷睇保護</div>
+                                <h3 id="swipe-handoff-title" class="text-xl font-black text-white">飯腳 A 已經完成選擇！</h3>
+                                <p id="swipe-handoff-desc" class="text-xs sm:text-sm text-gray-300 leading-relaxed">
+                                    系統已保密鎖定心水名單。請將電話交俾下一位玩家，準備好先撳下面粒掣開始滑同一批餐廳！
+                                </p>
+                            </div>
+                            <button type="button" onclick="startSecondPlayerSwipeTurn()" id="btn-swipe-start-p2" class="w-full neon-button py-3.5 px-6 rounded-2xl text-sm sm:text-base font-black">
+                                👉 我係飯腳 B，開始滑卡！
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4: 配對／速選結算頁 -->
+                    <div id="swipe-result-view" class="hidden space-y-5">
+                        <!-- 結算橫幅 -->
+                        <div id="swipe-result-banner" class="p-5 rounded-2xl bg-gradient-to-br from-pink-950/50 via-gray-900 to-gray-950 border-2 border-pink-500/60 text-center space-y-3"></div>
+
+                        <!-- 擲骰最終拍板結果舞台（全寬上下分層排版，絕不壓字） -->
+                        <div id="swipe-final-winner-stage" class="hidden p-4 sm:p-5 rounded-2xl bg-gray-950 border-2 border-amber-400 text-left overflow-hidden"></div>
+
+                        <!-- 留低／共同配對餐廳清單 -->
+                        <div id="swipe-result-list-wrap" class="space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <h3 id="swipe-result-list-title" class="text-xs sm:text-sm font-black text-white">❤️ 候選心水清單：</h3>
+                                <span class="text-[11px] text-gray-400">點擊「就食呢間」即時展開導航及分享</span>
+                            </div>
+                            <div id="swipe-result-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                        </div>
+
+                        <!-- 雙人各自單方面留低參考區（僅雙人模式顯示） -->
+                        <div id="swipe-duo-extra-wrap" class="hidden p-4 rounded-2xl bg-gray-900/70 border border-gray-800 space-y-2.5">
+                            <div class="text-xs font-black text-amber-300">👀 雙方各自揀咗邊啲（單方面留低參考）：</div>
+                            <div id="swipe-duo-extra-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs"></div>
+                        </div>
+
+                        <!-- 底部重玩按鈕列 -->
+                        <div class="flex flex-wrap items-center justify-center gap-2.5 pt-2 border-t border-gray-800">
+                            <button type="button" onclick="startSwipeSession(true)" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-black shadow transition">
+                                🔄 換過批新餐廳再滑一局
+                            </button>
+                            <button type="button" onclick="resetSwipeToSetup()" class="px-5 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white text-xs sm:text-sm font-bold transition">
+                                ⚙️ 修改地區／模式再玩
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
@@ -2087,7 +2413,8 @@
             home:   { min: 0, max: 1000, occasion: '全部場景' },
             gacha:  { min: 0, max: 1000, occasion: '全部場景' },
             nearby: { min: 0, max: 1000, occasion: '全部場景' },
-            dir:    { min: 0, max: 1000, occasion: '全部場景' }
+            dir:    { min: 0, max: 1000, occasion: '全部場景' },
+            swipe:  { min: 0, max: 1000, occasion: '全部場景' }
         };
 
         function parseRawPriceValue(val) {
@@ -2370,11 +2697,13 @@
                 renderNearbyCandidates();
             } else if (ctx === 'dir') {
                 renderDirectoryListOnly();
+            } else if (ctx === 'swipe') {
+                if (typeof updateSwipePoolHint === 'function') updateSwipePoolHint();
             }
         }
 
         function initAllBudgetOccasionControls() {
-            ['home', 'gacha', 'nearby', 'dir'].forEach(ctx => {
+            ['home', 'gacha', 'nearby', 'dir', 'swipe'].forEach(ctx => {
                 updateDualBudgetSliderVisual(ctx);
                 renderOccasionPills(ctx);
             });
@@ -3145,6 +3474,8 @@
             if (mealSel) mealSel.innerHTML = optionsHtml;
             const partyStSel = document.getElementById('party-create-station-select');
             if (partyStSel) partyStSel.innerHTML = optionsHtml;
+            const swipeStSel = document.getElementById('swipe-station-select');
+            if (swipeStSel) swipeStSel.innerHTML = optionsHtml;
             if (newRestStSel) {
                 newRestStSel.innerHTML = stations.map(s => `<option value="${s}" ${s === '荃灣' ? 'selected' : ''}>🚇 ${s}站</option>`).join('');
             }
@@ -5851,7 +6182,7 @@
         }
 
         function switchModule(mod) {
-            const allMods = ['home', 'news', 'nearby', 'community', 'party', 1, 2, 3, 4, 8];
+            const allMods = ['home', 'news', 'nearby', 'community', 'party', 'swipe', 1, 2, 3, 4, 8];
             allMods.forEach(m => {
                 const sec = document.getElementById(`module-${m}`);
                 if (sec) sec.classList.add('hidden');
@@ -5890,6 +6221,7 @@
                         : 'flex flex-col items-center justify-center py-1.5 px-3 rounded-xl text-gray-400 font-bold transition';
                 }
             });
+            if (mod === 'swipe' && typeof updateSwipePoolHint === 'function') updateSwipePoolHint();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -7818,6 +8150,744 @@ function doPost(e) {
             }
         }
 
+
+        // ==================== 16. 🃏 滑卡揀食模式引擎（單人速選 ＋ 雙人同機配對） ====================
+        const swipeState = {
+            mode: 'solo', // 'solo' | 'duo'
+            deckSize: 8,
+            p1Name: '飯腳 A',
+            p2Name: '飯腳 B',
+            deck: [],
+            currentPlayer: 1, // 1 or 2
+            currentIndex: 0,
+            p1Likes: [],
+            p2Likes: [],
+            history: [],
+            undoLeft: 2,
+            isAnimating: false,
+            rollingFinal: false,
+            seenKeys: new Set()
+        };
+
+        function escapeSwipeHTML(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function escapeSwipeJsAttr(str) {
+            return String(str || '')
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'")
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function setSwipeMode(mode) {
+            swipeState.mode = (mode === 'duo') ? 'duo' : 'solo';
+            const btnSolo = document.getElementById('swipe-mode-btn-solo');
+            const btnDuo = document.getElementById('swipe-mode-btn-duo');
+            const badgeSolo = document.getElementById('swipe-mode-badge-solo');
+            const badgeDuo = document.getElementById('swipe-mode-badge-duo');
+            const duoNamesRow = document.getElementById('swipe-duo-names-row');
+            const startLbl = document.getElementById('swipe-start-btn-label');
+
+            if (swipeState.mode === 'solo') {
+                if (btnSolo) btnSolo.className = 'p-4 rounded-2xl border-2 border-pink-500 bg-gradient-to-br from-pink-950/50 via-gray-900 to-gray-950 text-left space-y-1.5 transition shadow';
+                if (btnDuo) btnDuo.className = 'p-4 rounded-2xl border-2 border-gray-800 bg-gray-900/90 hover:border-emerald-500/60 text-left space-y-1.5 transition';
+                if (badgeSolo) { badgeSolo.textContent = '已選擇'; badgeSolo.className = 'px-2 py-0.5 rounded-full bg-pink-600 text-white text-[10px] font-black'; }
+                if (badgeDuo) { badgeDuo.textContent = 'Pass & Play'; badgeDuo.className = 'px-2 py-0.5 rounded-full bg-gray-800 text-gray-400 text-[10px] font-bold'; }
+                if (duoNamesRow) duoNamesRow.classList.add('hidden');
+                if (startLbl) startLbl.textContent = '🚀 開始單人速選滑卡！';
+            } else {
+                if (btnDuo) btnDuo.className = 'p-4 rounded-2xl border-2 border-emerald-500 bg-gradient-to-br from-emerald-950/60 via-gray-900 to-gray-950 text-left space-y-1.5 transition shadow';
+                if (btnSolo) btnSolo.className = 'p-4 rounded-2xl border-2 border-gray-800 bg-gray-900/90 hover:border-pink-500/60 text-left space-y-1.5 transition';
+                if (badgeDuo) { badgeDuo.textContent = '已選擇'; badgeDuo.className = 'px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black'; }
+                if (badgeSolo) { badgeSolo.textContent = 'Solo'; badgeSolo.className = 'px-2 py-0.5 rounded-full bg-gray-800 text-gray-400 text-[10px] font-bold'; }
+                if (duoNamesRow) duoNamesRow.classList.remove('hidden');
+                if (startLbl) startLbl.textContent = '🚀 開始雙人配對滑卡！';
+            }
+            updateSwipePoolHint();
+        }
+
+        function setSwipeDeckSize(size) {
+            swipeState.deckSize = parseInt(size, 10) || 8;
+            [6, 8, 10, 12].forEach(n => {
+                const b = document.getElementById(`swipe-size-${n}`);
+                if (b) {
+                    b.className = (n === swipeState.deckSize)
+                        ? 'py-1.5 rounded-lg bg-pink-600 text-white text-xs font-black transition'
+                        : 'py-1.5 rounded-lg bg-gray-800 text-gray-300 text-xs font-bold transition';
+                }
+            });
+            updateSwipePoolHint();
+        }
+
+        function buildSwipeFilteredPool() {
+            const stSel = document.getElementById('swipe-station-select');
+            const cuiSel = document.getElementById('swipe-cuisine-select');
+            const station = stSel ? stSel.value : '全港隨機';
+            const cuisine = cuiSel ? cuiSel.value : '全部菜式';
+
+            let pool = restaurantsDB.slice();
+            let relaxedNote = '';
+
+            if (station !== '全港隨機') {
+                const bySt = pool.filter(r => r.station === station);
+                if (bySt.length > 0) pool = bySt;
+                else relaxedNote = `（${station}站暫無收錄，已自動放寬全港候選）`;
+            }
+            if (cuisine !== '全部菜式') {
+                const byCui = pool.filter(r => r.cuisine === cuisine);
+                if (byCui.length > 0) pool = byCui;
+                else if (!relaxedNote) relaxedNote = `（此區暫無「${cuisine}」，已自動放寬菜式）`;
+            }
+
+            const byBudgetOcc = pool.filter(r => matchesBudgetAndOccasion(r, 'swipe'));
+            if (byBudgetOcc.length >= Math.min(3, pool.length)) {
+                pool = byBudgetOcc;
+            } else if (byBudgetOcc.length > 0) {
+                // 優先排前面，不足再從同區補齊
+                const ids = new Set(byBudgetOcc.map(r => `${r.name}__${r.station}`));
+                pool = [...byBudgetOcc, ...pool.filter(r => !ids.has(`${r.name}__${r.station}`))];
+            } else if (!relaxedNote && (isBudgetFilterActive('swipe') || filterBudgetOccasionState.swipe.occasion !== '全部場景')) {
+                relaxedNote = '（此價位／場景組合較嚴格，已自動放寬條件）';
+            }
+            return { pool, station, cuisine, relaxedNote };
+        }
+
+        function updateSwipePoolHint() {
+            const hintEl = document.getElementById('swipe-pool-hint');
+            if (!hintEl) return;
+            const { pool, station, cuisine, relaxedNote } = buildSwipeFilteredPool();
+            const countToDraw = Math.min(swipeState.deckSize, pool.length);
+            const modeLabel = swipeState.mode === 'duo' ? '雙人輪流配對' : '單人速選';
+            const areaLabel = station === '全港隨機' ? '全港隨機' : `${station}站`;
+            const cuiLabel = cuisine === '全部菜式' ? '全部菜式' : cuisine;
+            hintEl.innerHTML = `🎯 <strong>${modeLabel}</strong> ‧ ${escapeSwipeHTML(areaLabel)} ‧ ${escapeSwipeHTML(cuiLabel)} ‧ 即將抽出 <strong class="text-amber-300">${countToDraw} 張</strong> 餐廳卡 ${escapeSwipeHTML(relaxedNote)}`;
+        }
+
+        function showSwipeSubView(viewName) {
+            ['setup', 'play', 'handoff', 'result'].forEach(v => {
+                const el = document.getElementById(`swipe-${v}-view`);
+                if (el) {
+                    if (v === viewName) el.classList.remove('hidden');
+                    else el.classList.add('hidden');
+                }
+            });
+            const backBtn = document.getElementById('btn-swipe-back-setup');
+            if (backBtn) {
+                if (viewName === 'setup') backBtn.classList.add('hidden');
+                else backBtn.classList.remove('hidden');
+            }
+        }
+
+        function resetSwipeToSetup() {
+            swipeState.isAnimating = false;
+            swipeState.rollingFinal = false;
+            showSwipeSubView('setup');
+            updateSwipePoolHint();
+        }
+
+        function shuffleSwipeArray(arr) {
+            const copy = arr.slice();
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function startSwipeSession(preferFreshBatch) {
+            const { pool, relaxedNote } = buildSwipeFilteredPool();
+            if (!pool || pool.length === 0) {
+                showToast('⚠️ 候選池暫無餐廳，請放寬條件再試');
+                return;
+            }
+
+            const p1Input = document.getElementById('swipe-p1-name');
+            const p2Input = document.getElementById('swipe-p2-name');
+            swipeState.p1Name = (p1Input && p1Input.value.trim()) ? p1Input.value.trim() : '飯腳 A';
+            swipeState.p2Name = (p2Input && p2Input.value.trim()) ? p2Input.value.trim() : '飯腳 B';
+
+            let candidates = pool.slice();
+            if (preferFreshBatch && swipeState.seenKeys.size > 0) {
+                const unseen = candidates.filter(r => !swipeState.seenKeys.has(`${r.name}__${r.station}`));
+                if (unseen.length >= Math.min(swipeState.deckSize, candidates.length)) {
+                    candidates = unseen;
+                } else if (unseen.length > 0) {
+                    const seenPart = shuffleSwipeArray(candidates.filter(r => swipeState.seenKeys.has(`${r.name}__${r.station}`)));
+                    candidates = [...shuffleSwipeArray(unseen), ...seenPart];
+                } else {
+                    swipeState.seenKeys.clear();
+                    candidates = shuffleSwipeArray(candidates);
+                }
+            } else {
+                candidates = shuffleSwipeArray(candidates);
+            }
+
+            const deck = candidates.slice(0, Math.min(swipeState.deckSize, candidates.length));
+            deck.forEach(r => swipeState.seenKeys.add(`${r.name}__${r.station}`));
+
+            swipeState.deck = deck;
+            swipeState.currentPlayer = 1;
+            swipeState.currentIndex = 0;
+            swipeState.p1Likes = [];
+            swipeState.p2Likes = [];
+            swipeState.history = [];
+            swipeState.undoLeft = 2;
+            swipeState.isAnimating = false;
+            swipeState.rollingFinal = false;
+
+            const finalStage = document.getElementById('swipe-final-winner-stage');
+            if (finalStage) { finalStage.classList.add('hidden'); finalStage.innerHTML = ''; }
+
+            if (relaxedNote) showToast(`💡 ${relaxedNote.replace(/[（）]/g, '')}`);
+            showSwipeSubView('play');
+            renderSwipeDeckUI();
+        }
+
+        function startSecondPlayerSwipeTurn() {
+            swipeState.currentPlayer = 2;
+            swipeState.currentIndex = 0;
+            swipeState.history = [];
+            swipeState.undoLeft = 2;
+            swipeState.isAnimating = false;
+            showSwipeSubView('play');
+            renderSwipeDeckUI();
+        }
+
+        function buildSwipeCardInnerHTML(r) {
+            const vis = getCuisineVisual(r.cuisine);
+            const walkMins = Math.max(1, Math.round((r.dist || 250) / 75));
+            const promoHtml = renderPromoBadgeHTML(r);
+            return `
+                <div class="pfy-swipe-stamp pfy-swipe-stamp-like">♥ 留低</div>
+                <div class="pfy-swipe-stamp pfy-swipe-stamp-nope">✕ 唔食</div>
+
+                <!-- 卡片頂部港鐵與距離 -->
+                <div class="px-4 py-2.5 bg-gray-900 border-b border-gray-800 flex items-center justify-between gap-2 text-[11px]">
+                    <span class="font-black text-emerald-400 truncate">🚇 ${escapeSwipeHTML(r.station)}站 ‧ 步行約 ${walkMins} 分鐘</span>
+                    <span class="px-2 py-0.5 rounded bg-gray-800 text-pink-300 font-bold shrink-0">${escapeSwipeHTML(r.cuisine || '人氣食肆')}</span>
+                </div>
+
+                <!-- 卡片中央菜系視覺區 -->
+                <div class="flex-1 flex flex-col items-center justify-center p-5 bg-gradient-to-br from-pink-950/50 via-gray-900 to-gray-950 relative text-center space-y-2">
+                    <div class="w-20 h-20 rounded-3xl border-2 border-zinc-900 flex items-center justify-center text-5xl shadow-lg ${vis.bg}">
+                        ${vis.icon}
+                    </div>
+                    ${promoHtml ? `<div class="pt-1">${promoHtml}</div>` : ''}
+                    <h3 class="text-xl sm:text-2xl font-black text-white leading-snug line-clamp-2 px-1">
+                        ${escapeSwipeHTML(r.name)}
+                    </h3>
+                    <div class="text-xs font-bold text-amber-300">
+                        📍 ${escapeSwipeHTML(r.mall || (r.station + '區'))}
+                    </div>
+                </div>
+
+                <!-- 卡片底部資訊與價位場景 -->
+                <div class="p-4 bg-gray-900 border-t border-gray-800 space-y-2 text-left">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        ${renderPriceAndOccasionBadgesHTML(r, false)}
+                    </div>
+                    <div class="text-[11px] text-gray-400 line-clamp-2 leading-relaxed">
+                        🏠 ${escapeSwipeHTML(r.address || (r.station + '站附近'))}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSwipeDeckUI() {
+            const stack = document.getElementById('swipe-card-stack');
+            const turnBadge = document.getElementById('swipe-turn-badge');
+            const progText = document.getElementById('swipe-progress-text');
+            const progBar = document.getElementById('swipe-progress-bar');
+            const likedCounter = document.getElementById('swipe-liked-counter');
+            const undoBtn = document.getElementById('btn-swipe-undo');
+            const undoBadge = document.getElementById('swipe-undo-left-badge');
+            if (!stack) return;
+
+            const total = swipeState.deck.length;
+            const idx = swipeState.currentIndex;
+            const curLikes = swipeState.currentPlayer === 1 ? swipeState.p1Likes : swipeState.p2Likes;
+
+            if (turnBadge) {
+                if (swipeState.mode === 'solo') {
+                    turnBadge.textContent = '🙋 單人速選中';
+                    turnBadge.className = 'px-2.5 py-1 rounded-full bg-pink-600 text-white font-black';
+                } else if (swipeState.currentPlayer === 1) {
+                    turnBadge.textContent = `👤 ${swipeState.p1Name} 揀緊`;
+                    turnBadge.className = 'px-2.5 py-1 rounded-full bg-pink-600 text-white font-black';
+                } else {
+                    turnBadge.textContent = `👤 ${swipeState.p2Name} 揀緊`;
+                    turnBadge.className = 'px-2.5 py-1 rounded-full bg-emerald-600 text-white font-black';
+                }
+            }
+
+            if (progText) progText.textContent = `第 ${Math.min(idx + 1, total)} / ${total} 張`;
+            if (progBar) progBar.style.width = `${Math.round((idx / Math.max(1, total)) * 100)}%`;
+
+            if (likedCounter) {
+                if (swipeState.mode === 'duo' && swipeState.currentPlayer === 2) {
+                    const p1Set = new Set(swipeState.p1Likes.map(r => `${r.name}__${r.station}`));
+                    const liveMatches = swipeState.p2Likes.filter(r => p1Set.has(`${r.name}__${r.station}`)).length;
+                    likedCounter.textContent = `♥ 留低:${curLikes.length} ‧ 🔥撞中:${liveMatches}`;
+                } else {
+                    likedCounter.textContent = `♥ 已留低: ${curLikes.length} 間`;
+                }
+            }
+
+            if (undoBtn) undoBtn.disabled = (swipeState.history.length === 0 || swipeState.undoLeft <= 0);
+            if (undoBadge) undoBadge.textContent = `剩${swipeState.undoLeft}次`;
+
+            stack.innerHTML = '';
+            // 最多同時渲染 3 張卡呈現疊卡景深
+            const sliceEnd = Math.min(total, idx + 3);
+            for (let i = sliceEnd - 1; i >= idx; i--) {
+                const r = swipeState.deck[i];
+                const card = document.createElement('div');
+                const offset = i - idx;
+                card.className = 'pfy-swipe-card ' + (offset === 0 ? 'is-top' : (offset === 1 ? 'is-next' : 'is-third'));
+                card.innerHTML = buildSwipeCardInnerHTML(r);
+                if (offset === 0) {
+                    attachSwipeCardDragEvents(card);
+                }
+                stack.appendChild(card);
+            }
+        }
+
+        function attachSwipeCardDragEvents(card) {
+            let startX = 0, startY = 0, curX = 0, curY = 0;
+            let dragging = false;
+            let lockedAxis = null; // 'x' | 'y'
+            const likeStamp = card.querySelector('.pfy-swipe-stamp-like');
+            const nopeStamp = card.querySelector('.pfy-swipe-stamp-nope');
+
+            function onStart(clientX, clientY) {
+                if (swipeState.isAnimating) return;
+                dragging = true;
+                lockedAxis = null;
+                startX = clientX;
+                startY = clientY;
+                curX = 0;
+                curY = 0;
+                card.classList.remove('is-animating');
+            }
+
+            function onMove(clientX, clientY, ev) {
+                if (!dragging) return;
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+
+                if (!lockedAxis && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
+                    lockedAxis = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y';
+                }
+                if (lockedAxis === 'y') return;
+                if (ev && ev.cancelable) ev.preventDefault();
+
+                curX = dx;
+                curY = dy * 0.25;
+                const rot = Math.max(-22, Math.min(22, dx * 0.085));
+                card.style.transform = `translate3d(${curX}px, ${curY}px, 0) rotate(${rot}deg)`;
+
+                const ratio = Math.min(1, Math.abs(dx) / 85);
+                if (dx > 12) {
+                    if (likeStamp) likeStamp.style.opacity = String(ratio);
+                    if (nopeStamp) nopeStamp.style.opacity = '0';
+                } else if (dx < -12) {
+                    if (nopeStamp) nopeStamp.style.opacity = String(ratio);
+                    if (likeStamp) likeStamp.style.opacity = '0';
+                } else {
+                    if (likeStamp) likeStamp.style.opacity = '0';
+                    if (nopeStamp) nopeStamp.style.opacity = '0';
+                }
+            }
+
+            function onEnd() {
+                if (!dragging) return;
+                dragging = false;
+                if (curX >= 85) {
+                    swipeCurrentCard('right', card);
+                } else if (curX <= -85) {
+                    swipeCurrentCard('left', card);
+                } else {
+                    card.classList.add('is-animating');
+                    card.style.transform = 'translate3d(0px, 0px, 0) rotate(0deg)';
+                    if (likeStamp) likeStamp.style.opacity = '0';
+                    if (nopeStamp) nopeStamp.style.opacity = '0';
+                }
+            }
+
+            card.addEventListener('touchstart', (e) => {
+                if (e.touches.length !== 1) return;
+                onStart(e.touches[0].clientX, e.touches[0].clientY);
+            }, { passive: true });
+            card.addEventListener('touchmove', (e) => {
+                if (!dragging || e.touches.length !== 1) return;
+                onMove(e.touches[0].clientX, e.touches[0].clientY, e);
+            }, { passive: false });
+            card.addEventListener('touchend', onEnd);
+            card.addEventListener('touchcancel', onEnd);
+
+            card.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return;
+                onStart(e.clientX, e.clientY);
+                const mm = (ev) => onMove(ev.clientX, ev.clientY, ev);
+                const mu = () => {
+                    window.removeEventListener('mousemove', mm);
+                    window.removeEventListener('mouseup', mu);
+                    onEnd();
+                };
+                window.addEventListener('mousemove', mm);
+                window.addEventListener('mouseup', mu);
+            });
+        }
+
+        function swipeCurrentCard(dir, existingTopCard) {
+            if (swipeState.isAnimating) return;
+            if (swipeState.currentIndex >= swipeState.deck.length) return;
+
+            const stack = document.getElementById('swipe-card-stack');
+            const topCard = existingTopCard || (stack ? stack.querySelector('.pfy-swipe-card.is-top') : null);
+            const curRest = swipeState.deck[swipeState.currentIndex];
+            if (!curRest) return;
+
+            swipeState.isAnimating = true;
+
+            if (topCard) {
+                const likeStamp = topCard.querySelector('.pfy-swipe-stamp-like');
+                const nopeStamp = topCard.querySelector('.pfy-swipe-stamp-nope');
+                if (dir === 'right') {
+                    if (likeStamp) likeStamp.style.opacity = '1';
+                    if (nopeStamp) nopeStamp.style.opacity = '0';
+                } else {
+                    if (nopeStamp) nopeStamp.style.opacity = '1';
+                    if (likeStamp) likeStamp.style.opacity = '0';
+                }
+                topCard.classList.add('is-animating');
+                const flyX = dir === 'right' ? 520 : -520;
+                const flyRot = dir === 'right' ? 24 : -24;
+                topCard.style.transform = `translate3d(${flyX}px, 36px, 0) rotate(${flyRot}deg)`;
+                topCard.style.opacity = '0';
+            }
+
+            // 記錄選擇
+            const likesArr = swipeState.currentPlayer === 1 ? swipeState.p1Likes : swipeState.p2Likes;
+            if (dir === 'right') {
+                likesArr.push(curRest);
+                if (swipeState.mode === 'duo' && swipeState.currentPlayer === 2) {
+                    const matched = swipeState.p1Likes.some(r => r.name === curRest.name && r.station === curRest.station);
+                    if (matched && navigator.vibrate) {
+                        try { navigator.vibrate([25, 30, 25]); } catch (e) {}
+                    }
+                }
+            }
+            swipeState.history.push({ index: swipeState.currentIndex, dir, rest: curRest });
+            swipeState.currentIndex++;
+
+            setTimeout(() => {
+                swipeState.isAnimating = false;
+                if (swipeState.currentIndex >= swipeState.deck.length) {
+                    if (swipeState.mode === 'duo' && swipeState.currentPlayer === 1) {
+                        const titleEl = document.getElementById('swipe-handoff-title');
+                        const descEl = document.getElementById('swipe-handoff-desc');
+                        const p2Btn = document.getElementById('btn-swipe-start-p2');
+                        if (titleEl) titleEl.textContent = `✅ ${swipeState.p1Name} 已經完成選擇！`;
+                        if (descEl) descEl.textContent = `系統已保密鎖定 ${swipeState.p1Name} 嘅心水清單 🤫 請交部電話俾「${swipeState.p2Name}」，準備好先撳掣開始滑同一批 ${swipeState.deck.length} 間餐廳！`;
+                        if (p2Btn) p2Btn.textContent = `👉 我係 ${swipeState.p2Name}，開始滑卡！`;
+                        showSwipeSubView('handoff');
+                    } else {
+                        renderSwipeResultsView();
+                    }
+                } else {
+                    renderSwipeDeckUI();
+                }
+            }, 240);
+        }
+
+        function undoLastSwipe() {
+            if (swipeState.isAnimating) return;
+            if (swipeState.history.length === 0 || swipeState.undoLeft <= 0) return;
+
+            const last = swipeState.history.pop();
+            swipeState.currentIndex = last.index;
+            swipeState.undoLeft--;
+
+            if (last.dir === 'right') {
+                const likesArr = swipeState.currentPlayer === 1 ? swipeState.p1Likes : swipeState.p2Likes;
+                likesArr.pop();
+            }
+            renderSwipeDeckUI();
+            showToast(`↩️ 已撤回「${last.rest.name}」（本回合剩餘 ${swipeState.undoLeft} 次撤回）`);
+        }
+
+        function renderSwipeResultsView() {
+            showSwipeSubView('result');
+            const banner = document.getElementById('swipe-result-banner');
+            const finalStage = document.getElementById('swipe-final-winner-stage');
+            const listWrap = document.getElementById('swipe-result-list-wrap');
+            const listTitle = document.getElementById('swipe-result-list-title');
+            const grid = document.getElementById('swipe-result-cards-grid');
+            const extraWrap = document.getElementById('swipe-duo-extra-wrap');
+            const extraGrid = document.getElementById('swipe-duo-extra-grid');
+            if (!banner || !grid) return;
+
+            if (finalStage) { finalStage.classList.add('hidden'); finalStage.innerHTML = ''; }
+            if (extraWrap) extraWrap.classList.add('hidden');
+
+            if (swipeState.mode === 'solo') {
+                const likes = swipeState.p1Likes;
+                if (likes.length === 0) {
+                    banner.innerHTML = `
+                        <div class="text-3xl">😅</div>
+                        <h3 class="text-lg sm:text-xl font-black text-white">呢批 ${swipeState.deck.length} 間全部都唔啱心水？</h3>
+                        <p class="text-xs text-gray-300">唔緊要！可以交俾命運由呢批餐廳盲抽 1 間，或者即刻換過批新餐廳再滑！</p>
+                        <div class="flex flex-wrap justify-center gap-2 pt-1">
+                            <button type="button" onclick="spinSwipeWinnerFromPool('deck')" class="neon-button px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black">🎲 交俾命運喺呢批盲抽 1 間！</button>
+                            <button type="button" onclick="startSwipeSession(true)" class="px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-xs sm:text-sm font-black">🔄 換新一批再滑</button>
+                        </div>
+                    `;
+                    if (listWrap) listWrap.classList.add('hidden');
+                } else if (likes.length === 1) {
+                    banner.innerHTML = `
+                        <div class="text-3xl">🎯</div>
+                        <h3 class="text-lg sm:text-xl font-black text-white">唯一心水拍板！今餐就食佢！</h3>
+                        <p class="text-xs text-gray-300">你喺 ${swipeState.deck.length} 間入面精挑細選出唯一 1 間心水餐廳：</p>
+                    `;
+                    if (listWrap) listWrap.classList.add('hidden');
+                    showSwipeFinalWinnerCard(likes[0], '🎯 單人速選唯一拍板');
+                } else {
+                    banner.innerHTML = `
+                        <div class="text-3xl">🎉</div>
+                        <h3 class="text-lg sm:text-xl font-black text-white">你留低咗 <span class="text-amber-300">${likes.length} 間</span> 心水餐廳！</h3>
+                        <p class="text-xs text-gray-300">揀唔落手？直接撳下面粒掣，喺呢 ${likes.length} 間入面一秒擲骰幫你拍板！</p>
+                        <div class="pt-1">
+                            <button type="button" onclick="spinSwipeWinnerFromPool('soloLikes')" class="neon-button px-6 py-3 rounded-2xl text-sm sm:text-base font-black shadow-lg">
+                                🎲 喺呢 ${likes.length} 間心水入面一秒擲骰拍板！
+                            </button>
+                        </div>
+                    `;
+                    if (listWrap) listWrap.classList.remove('hidden');
+                    if (listTitle) listTitle.textContent = `❤️ 你留低嘅心水餐廳（${likes.length} 間）：`;
+                    renderSwipeCandidateGrid(grid, likes, 'soloLikes');
+                }
+            } else {
+                // 雙人配對結算
+                const p1Map = new Map(swipeState.p1Likes.map(r => [`${r.name}__${r.station}`, r]));
+                const p2Map = new Map(swipeState.p2Likes.map(r => [`${r.name}__${r.station}`, r]));
+                const matches = swipeState.p2Likes.filter(r => p1Map.has(`${r.name}__${r.station}`));
+                const p1Only = swipeState.p1Likes.filter(r => !p2Map.has(`${r.name}__${r.station}`));
+                const p2Only = swipeState.p2Likes.filter(r => !p1Map.has(`${r.name}__${r.station}`));
+                const unionMap = new Map();
+                [...swipeState.p1Likes, ...swipeState.p2Likes].forEach(r => unionMap.set(`${r.name}__${r.station}`, r));
+                const unionList = Array.from(unionMap.values());
+
+                if (matches.length === 1) {
+                    banner.innerHTML = `
+                        <div class="text-3xl">💘</div>
+                        <h3 class="text-lg sm:text-xl font-black text-white">PERFECT MATCH！唯一共同心水！</h3>
+                        <p class="text-xs text-gray-300">「${escapeSwipeHTML(swipeState.p1Name)}」同「${escapeSwipeHTML(swipeState.p2Name)}」一拍即合，唔使再拗今餐食乜！</p>
+                    `;
+                    if (listWrap) listWrap.classList.add('hidden');
+                    showSwipeFinalWinnerCard(matches[0], '💘 雙人一拍即合 MATCH');
+                } else if (matches.length >= 2) {
+                    banner.innerHTML = `
+                        <div class="text-3xl">🎉</div>
+                        <h3 class="text-lg sm:text-xl font-black text-white">MATCH！你哋有 <span class="text-amber-300">${matches.length} 間</span> 共同心水！</h3>
+                        <p class="text-xs text-gray-300">雙方都向右滑留低咗呢 ${matches.length} 間餐廳，直接擲骰拍板決定最終大獎！</p>
+                        <div class="pt-1">
+                            <button type="button" onclick="spinSwipeWinnerFromPool('matches')" class="neon-button px-6 py-3 rounded-2xl text-sm sm:text-base font-black shadow-lg">
+                                🎲 喺呢 ${matches.length} 間共同心水入面擲骰拍板！
+                            </button>
+                        </div>
+                    `;
+                    if (listWrap) listWrap.classList.remove('hidden');
+                    if (listTitle) listTitle.textContent = `💘 雙方共同心水餐廳（${matches.length} 間）：`;
+                    renderSwipeCandidateGrid(grid, matches, 'matches');
+                } else {
+                    // 0 間重合
+                    banner.innerHTML = `
+                        <div class="text-3xl">😅</div>
+                        <h3 class="text-lg sm:text-xl font-black text-white">兩位口味大不同！0 間完全撞中</h3>
+                        <p class="text-xs text-gray-300">不如交俾天意，從兩位各自留低嘅心水餐廳中公平盲抽 1 間，或者換批新餐廳再滑！</p>
+                        <div class="flex flex-wrap justify-center gap-2 pt-1">
+                            ${unionList.length > 0 ? `<button type="button" onclick="spinSwipeWinnerFromPool('union')" class="neon-button px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black">🎲 從雙方各自心水（共 ${unionList.length} 間）盲抽 1 間！</button>` : `<button type="button" onclick="spinSwipeWinnerFromPool('deck')" class="neon-button px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black">🎲 由系統盲抽 1 間決定！</button>`}
+                            <button type="button" onclick="startSwipeSession(true)" class="px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-xs sm:text-sm font-black">🔄 換新一批再滑</button>
+                        </div>
+                    `;
+                    if (listWrap) listWrap.classList.add('hidden');
+                }
+
+                // 顯示雙方單方面留低參考
+                if (extraWrap && extraGrid && (p1Only.length > 0 || p2Only.length > 0)) {
+                    extraWrap.classList.remove('hidden');
+                    extraGrid.innerHTML = `
+                        <div class="p-3 rounded-xl bg-gray-950 border border-gray-800 space-y-1.5">
+                            <div class="font-black text-pink-400">👤 ${escapeSwipeHTML(swipeState.p1Name)} 獨自留低（${p1Only.length} 間）：</div>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${p1Only.length > 0 ? p1Only.map(r => `<button type="button" onclick="pickSwipeSpecificByName('${escapeSwipeJsAttr(r.name)}', '${escapeSwipeJsAttr(r.station)}')" class="px-2 py-1 rounded-lg bg-gray-800 hover:bg-pink-600 text-gray-200 hover:text-white text-[11px] font-bold transition">${escapeSwipeHTML(r.name)}</button>`).join('') : '<span class="text-gray-500">無</span>'}
+                            </div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-gray-950 border border-gray-800 space-y-1.5">
+                            <div class="font-black text-emerald-400">👤 ${escapeSwipeHTML(swipeState.p2Name)} 獨自留低（${p2Only.length} 間）：</div>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${p2Only.length > 0 ? p2Only.map(r => `<button type="button" onclick="pickSwipeSpecificByName('${escapeSwipeJsAttr(r.name)}', '${escapeSwipeJsAttr(r.station)}')" class="px-2 py-1 rounded-lg bg-gray-800 hover:bg-emerald-600 text-gray-200 hover:text-white text-[11px] font-bold transition">${escapeSwipeHTML(r.name)}</button>`).join('') : '<span class="text-gray-500">無</span>'}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function renderSwipeCandidateGrid(grid, list, poolKey) {
+            grid.innerHTML = list.map((r, i) => {
+                const jsName = String(r.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                const jsSt = String(r.station || '').replace(/'/g, "\\'");
+                const jsAddr = String(r.address || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                return `
+                    <div class="p-3.5 rounded-2xl bg-gray-900 border border-gray-800 hover:border-pink-500 transition flex flex-col justify-between gap-2.5 text-left">
+                        <div class="space-y-1.5">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="px-2 py-0.5 rounded bg-gray-800 text-pink-300 text-[10px] font-bold">🚇 ${escapeSwipeHTML(r.station)} • ${escapeSwipeHTML(r.cuisine)}</span>
+                                ${renderPriceAndOccasionBadgesHTML(r, true)}
+                                ${renderPromoBadgeHTML(r)}
+                            </div>
+                            <div class="text-base font-black text-white">${escapeSwipeHTML(r.name)}</div>
+                            <div class="text-[11px] text-gray-400">📍 ${escapeSwipeHTML(r.address || r.mall)}</div>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pt-2 border-t border-gray-800">
+                            <button type="button" onclick="pickSwipeSpecificByName('${jsName}', '${jsSt}')" class="px-3 py-1.5 rounded-lg bg-pink-600 text-white text-[11px] font-black transition">✅ 就食呢間！</button>
+                            <button type="button" onclick="jumpToDirectoryRestaurant('${jsName}', '${jsSt}')" class="px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-200 text-[11px] font-bold transition">📖 餐廳名單</button>
+                            <button type="button" onclick="toggleFavorite('${jsName}', '${jsSt}', '${jsAddr}')" class="px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-rose-600 text-pink-400 hover:text-white text-[11px] font-bold transition">❤️ 收藏</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function pickSwipeSpecificByName(name, station) {
+            const found = swipeState.deck.find(r => r.name === name && r.station === station) ||
+                          restaurantsDB.find(r => r.name === name && r.station === station);
+            if (!found) return;
+            showSwipeFinalWinnerCard(found, '✅ 自選拍板結果');
+        }
+
+        function spinSwipeWinnerFromPool(poolType) {
+            if (swipeState.rollingFinal) return;
+            let pool = [];
+            if (poolType === 'soloLikes') {
+                pool = swipeState.p1Likes.slice();
+            } else if (poolType === 'matches') {
+                const p1Map = new Map(swipeState.p1Likes.map(r => [`${r.name}__${r.station}`, r]));
+                pool = swipeState.p2Likes.filter(r => p1Map.has(`${r.name}__${r.station}`));
+            } else if (poolType === 'union') {
+                const m = new Map();
+                [...swipeState.p1Likes, ...swipeState.p2Likes].forEach(r => m.set(`${r.name}__${r.station}`, r));
+                pool = Array.from(m.values());
+            } else {
+                pool = swipeState.deck.slice();
+            }
+            if (pool.length === 0) pool = swipeState.deck.slice();
+            if (pool.length === 0) return;
+
+            const stage = document.getElementById('swipe-final-winner-stage');
+            if (!stage) return;
+            stage.classList.remove('hidden');
+            swipeState.rollingFinal = true;
+
+            stage.innerHTML = getDiceJumpRollStageHTML(
+                '🎲 骰子由左跳滾至中央 // 正在從心水名單鎖定命運餐廳...',
+                '準備爆出最終結果...'
+            );
+            stage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            let ticks = 0;
+            const maxTicks = 12;
+            const timer = setInterval(() => {
+                ticks++;
+                const lbl = document.getElementById('dice-rolling-candidate-label');
+                if (lbl) {
+                    const tmp = pool[Math.floor(Math.random() * pool.length)];
+                    lbl.textContent = `🏠 ${tmp.name} (${tmp.station})`;
+                }
+                if (ticks >= maxTicks) {
+                    clearInterval(timer);
+                    swipeState.rollingFinal = false;
+                    const winR = pool[Math.floor(Math.random() * pool.length)];
+                    const badge = poolType === 'matches' ? '💘 共同心水擲骰拍板' : (poolType === 'union' ? '🎲 雙方心水公平盲抽' : '💥 骰子爆出命運餐廳');
+                    showSwipeFinalWinnerCard(winR, badge);
+                }
+            }, 78);
+        }
+
+        function showSwipeFinalWinnerCard(winR, badgeText) {
+            const stage = document.getElementById('swipe-final-winner-stage');
+            if (!stage || !winR) return;
+            stage.classList.remove('hidden');
+            const jsName = String(winR.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const jsSt = String(winR.station || '').replace(/'/g, "\\'");
+            const jsMall = String(winR.mall || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const jsCui = String(winR.cuisine || '').replace(/'/g, "\\'");
+            const jsAddr = String(winR.address || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const jsPhone = String(winR.phone || '').replace(/'/g, "\\'");
+            const transitUrl = typeof buildTransitMapsUrl === 'function'
+                ? buildTransitMapsUrl(winR)
+                : ('https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(`${winR.name} ${winR.address || winR.station}`) + '&travelmode=transit');
+            const openriceUrl = 'https://www.openrice.com/zh/hongkong/restaurants?what=' + encodeURIComponent(`${winR.name} ${winR.station}`);
+
+            stage.innerHTML = `
+                <div class="animate-winner-pop space-y-3 text-left w-full">
+                    <div class="space-y-1.5 w-full min-w-0">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <span class="px-2.5 py-0.5 rounded bg-amber-400 text-black text-[10px] font-black">${escapeSwipeHTML(badgeText || '💥 最終拍板餐廳')}</span>
+                            <span class="px-2 py-0.5 rounded bg-gray-800 text-pink-300 text-[10px] font-bold">🚇 ${escapeSwipeHTML(winR.station)} • ${escapeSwipeHTML(winR.cuisine)}</span>
+                            ${renderPriceAndOccasionBadgesHTML(winR, true)}
+                            ${renderPromoBadgeHTML(winR)}
+                        </div>
+                        <div onclick="jumpToDirectoryRestaurant('${jsName}', '${jsSt}')" class="text-lg sm:text-2xl font-black text-white hover:text-pink-400 cursor-pointer transition leading-snug">
+                            🏠 ${escapeSwipeHTML(winR.name)}
+                        </div>
+                        <div class="text-xs text-gray-300 leading-relaxed">📍 ${escapeSwipeHTML(winR.address || winR.mall)}${winR.phone ? ' | 📞 ' + escapeSwipeHTML(winR.phone) : ''}</div>
+                        <div class="w-full">${typeof renderLiveRouteBoxHTML === 'function' ? renderLiveRouteBoxHTML(winR, true) : ''}</div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 pt-2.5 border-t border-gray-800">
+                        <button type="button" onclick="jumpToDirectoryRestaurant('${jsName}', '${jsSt}')" class="px-3 py-2 rounded-xl bg-pink-600 text-white text-xs font-black transition">📖 餐廳名單</button>
+                        <a href="${transitUrl}" target="_blank" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition">🚌 公共交通導航</a>
+                        <a href="${openriceUrl}" target="_blank" class="px-3 py-2 rounded-xl bg-amber-400 hover:brightness-105 text-black text-xs font-black transition">🥣 OpenRice 睇相</a>
+                        <button type="button" onclick="shareResultToWhatsApp('${jsName}', '${jsSt}', '${jsMall}', '${jsCui}', '${jsAddr}', '${jsPhone}')" class="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black transition">🟢 WhatsApp 拍板分享</button>
+                        <button type="button" onclick="toggleFavorite('${jsName}', '${jsSt}', '${jsAddr}')" class="px-3 py-2 rounded-xl bg-gray-800 hover:bg-rose-600 text-pink-400 hover:text-white text-xs font-black transition">❤️ 收藏</button>
+                    </div>
+                </div>
+            `;
+            stage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showToast(`🎉 拍板成功：今餐食【${winR.name}】！`);
+        }
+
+        // 鍵盤快捷鍵支援（僅於滑卡進行中且未聚焦於輸入框時觸發）
+        document.addEventListener('keydown', function(e) {
+            const mod = document.getElementById('module-swipe');
+            const playView = document.getElementById('swipe-play-view');
+            if (!mod || mod.classList.contains('hidden')) return;
+            if (!playView || playView.classList.contains('hidden')) return;
+            const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                swipeCurrentCard('left');
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                swipeCurrentCard('right');
+            } else if (e.key === 'Backspace' || e.key === 'z' || e.key === 'Z') {
+                e.preventDefault();
+                undoLastSwipe();
+            }
+        });
+
         window.onload = async function() {
             restoreCleanLocalDataV4();
             initNearbySelect();
@@ -7825,6 +8895,7 @@ function doPost(e) {
             updateQuotaUI();
             setHomeQuickDrawMode('restaurant');
             initAllBudgetOccasionControls();
+            setSwipeMode('solo');
             autoRefreshGrantedGPS();
             // 先載入本地 IndexedDB 與 window.name 快訊及自訂圖片，再執行 Google Sheet 同步，防止雲端舊資料覆蓋本地修改
             await loadNewsFromIndependentDB();
